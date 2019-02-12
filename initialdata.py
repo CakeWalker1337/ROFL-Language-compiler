@@ -1,6 +1,11 @@
+import re as re
+
 tokens = [
     # Literals (identifier, integer constant, float constant, string constant)
-    'ID', 'INTEGER', 'FLOAT', 'STRING',
+    'ID', 'INTEGER', 'FLOAT', 'STRING', 'NULL', 'BOOLEAN',
+
+    # Data type declaration
+    'DATATYPE',
 
     # Operators (+, -, *, /, %, %%, |, &, !, <, <=, >, >=, ==, !=)
     'PLUS', 'MINUS', 'TIMES', 'DIVIDE', 'IDIVIDE', 'MODULO',
@@ -23,7 +28,7 @@ tokens = [
     'CPPCOMMENT', 'COMMENT',
 
     # Other
-    'newline'
+    'NEWLINE'
 ]
 
 # Operators
@@ -64,10 +69,19 @@ t_SEMI             = r';'
 t_COLON            = r':'
 
 # Identifiers
-t_ID = r'[A-Za-z_][A-Za-z0-9_]*'
+def t_ID(t):
+    r'[A-Za-z_][A-Za-z0-9_]*'
+    if (re.match(r'(int|string|float|array|boolean)', t.value)):
+        t.type = 'DATATYPE'
+    elif (re.match(r'(true|false)', t.value)):
+        t.type = 'BOOLEAN'
+    return t
 
 # Integer literal
 t_INTEGER = r'\d+([uU]|[lL]|[uU][lL]|[lL][uU])?'
+
+# Null literal
+t_NULL = r'null'
 
 # Floating literal
 t_FLOAT = r'((\d+)(\.\d+)(e(\+|-)?(\d+))? | (\d+)e(\+|-)?(\d+))([lL]|[fF])?'
@@ -85,14 +99,14 @@ def t_CPPCOMMENT(t):
     return t
  
 # Define a rule so we can track line numbers
-def t_newline(t):
+def t_NEWLINE(t):
     r'\n+'
     t.lexer.lineno += len(t.value)
     t.value = None
     return t
 
 def t_STRING(t):
-    r'\"([^\\\n]|(\\.))*?\"|\'([^\\\n]|(\\.))*?\''
+    r'(\"|\')([^\\\n]|(\\.))*?(\"|\')'
     t.value = t.value[1:len(t.value) - 1]
     return t
 
