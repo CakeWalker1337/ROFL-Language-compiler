@@ -1,0 +1,105 @@
+tokens = [
+    # Literals (identifier, integer constant, float constant, string constant)
+    'ID', 'INTEGER', 'FLOAT', 'STRING',
+
+    # Operators (+, -, *, /, %, %%, |, &, !, <, <=, >, >=, ==, !=)
+    'PLUS', 'MINUS', 'TIMES', 'DIVIDE', 'IDIVIDE', 'MODULO',
+    'LOR', 'LAND', 'LNOT',
+    'LT', 'LE', 'GT', 'GE', 'EQ', 'NE',
+
+    # Assignment (=)
+    'EQUALS',
+
+    # Increment/decrement (++,--)
+    'INCREMENT', 'DECREMENT',
+
+    # Delimeters ( ) [ ] { } , . ; :
+    'LPAREN', 'RPAREN',
+    'LBRACKET', 'RBRACKET',
+    'LBRACE', 'RBRACE',
+    'COMMA', 'PERIOD', 'SEMI', 'COLON',
+
+    # Comments
+    'CPPCOMMENT', 'COMMENT',
+
+    # Other
+    'newline'
+]
+
+# Operators
+t_PLUS             = r'\+'
+t_MINUS            = r'-'
+t_TIMES            = r'\*'
+t_DIVIDE           = r'/'
+t_IDIVIDE          = r'%'
+t_MODULO           = r'%%'
+t_LOR               = r'\|'
+t_LAND              = r'&'
+t_LNOT             = r'!'
+t_LT               = r'<'
+t_GT               = r'>'
+t_LE               = r'<='
+t_GE               = r'>='
+t_EQ               = r'=='
+t_NE               = r'!='
+
+# Assignment operator
+
+t_EQUALS           = r'='
+
+# Increment/decrement
+t_INCREMENT        = r'\+\+'
+t_DECREMENT        = r'--'
+
+# Delimeters
+t_LPAREN           = r'\('
+t_RPAREN           = r'\)'
+t_LBRACKET         = r'\['
+t_RBRACKET         = r'\]'
+t_LBRACE           = r'\{'
+t_RBRACE           = r'\}'
+t_COMMA            = r','
+t_PERIOD           = r'\.'
+t_SEMI             = r';'
+t_COLON            = r':'
+
+# Identifiers
+t_ID = r'[A-Za-z_][A-Za-z0-9_]*'
+
+# Integer literal
+t_INTEGER = r'\d+([uU]|[lL]|[uU][lL]|[lL][uU])?'
+
+# Floating literal
+t_FLOAT = r'((\d+)(\.\d+)(e(\+|-)?(\d+))? | (\d+)e(\+|-)?(\d+))([lL]|[fF])?'
+
+# Comment (C-Style)
+def t_COMMENT(t):
+    r'/\*(.|\n)*?\*/'
+    t.lexer.lineno += t.value.count('\n')
+    return t
+
+# Comment (C++-Style)
+def t_CPPCOMMENT(t):
+    r'//.*\n'
+    t.lexer.lineno += 1
+    return t
+ 
+# Define a rule so we can track line numbers
+def t_newline(t):
+    r'\n+'
+    t.lexer.lineno += len(t.value)
+    t.value = None
+    return t
+
+def t_STRING(t):
+    r'\"([^\\\n]|(\\.))*?\"|\'([^\\\n]|(\\.))*?\''
+    t.value = t.value[1:len(t.value) - 1]
+    return t
+
+# A string containing ignored characters (spaces and tabs)
+t_ignore  = ' \t'
+
+# Error handling rule
+def t_error(t):
+    print("Illegal character '%s'" % t.value[0])
+    t.lexer.skip(1)
