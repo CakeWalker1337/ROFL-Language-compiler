@@ -1,0 +1,13 @@
+a = 3 + (4+5) //123
+    * 10 + -20 *2.2 { )
+    "компиляция"
+    'компиляция'
+    a | b; b = b + 1 1
+    b & a
+    null
+    int num
+    float num
+    string str
+    array arr
+    boolean true
+    44.44.44
