@@ -20,22 +20,22 @@ def findErrors(data):
                               ])
         
     # spare brackets check
-    for i in range(len(data) - 1): 
-        if (data[i][1] and re.match(r'[\(\{\[\"\']', data[i][1])):
-            bracket = data[i][1]
-            obj = {"line": data[i][2], "pos": data[i][3]}
-            try: bracketbeacon[bracket].append(obj)
-            except KeyError: bracketbeacon[bracket] = [obj]
-        elif (data[i][1] and re.match(r'[\)\}\]]', data[i][1])):
-            bracket = data[i][1]
-            obj = {"line": data[i][2], "pos": data[i][3]}
-            try: bracketbeacon[utils.getSecondBracket(bracket)].pop()
-            except (KeyError, IndexError): errordata.append(["Spare bracket", "<" + bracket + ">", obj["line"], obj["pos"]])
-
-    for bracket in bracketbeacon:
-        if (len(bracketbeacon[bracket]) % 2 != 0 and re.match(r'[\'\"]', bracket) or
-                len(bracketbeacon[bracket]) and not re.match(r'[\'\"]', bracket)):
-            errordata.append(["Bracket is missing", "<" + bracket + ">", bracketbeacon[bracket][0]["line"], bracketbeacon[bracket][0]["pos"]])
+    # for i in range(len(data) - 1):
+    #     if (data[i][1] and re.match(r'[\(\{\[\"\']', data[i][1])):
+    #         bracket = data[i][1]
+    #         obj = {"line": data[i][2], "pos": data[i][3]}
+    #         try: bracketbeacon[bracket].append(obj)
+    #         except KeyError: bracketbeacon[bracket] = [obj]
+    #     elif (data[i][1] and re.match(r'[\)\}\]]', data[i][1])):
+    #         bracket = data[i][1]
+    #         obj = {"line": data[i][2], "pos": data[i][3]}
+    #         try: bracketbeacon[utils.getSecondBracket(bracket)].pop()
+    #         except (KeyError, IndexError): errordata.append(["Spare bracket", "<" + bracket + ">", obj["line"], obj["pos"]])
+    #
+    # for bracket in bracketbeacon:
+    #     if (len(bracketbeacon[bracket]) % 2 != 0 and re.match(r'[\'\"]', bracket) or
+    #             len(bracketbeacon[bracket]) and not re.match(r'[\'\"]', bracket)):
+    #         errordata.append(["Bracket is missing", "<" + bracket + ">", bracketbeacon[bracket][0]["line"], bracketbeacon[bracket][0]["pos"]])
 
     return errordata, columns
 

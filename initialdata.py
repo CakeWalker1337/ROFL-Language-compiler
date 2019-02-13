@@ -1,5 +1,13 @@
 import re as re
 
+reserved = {
+    'if': 'IF',
+    'then': 'THEN',
+    'else': 'ELSE',
+    'while': 'WHILE',
+    'elif': 'ELIF'
+}
+
 tokens = [
     # Literals (identifier, integer constant, float constant, string constant)
     'ID', 'INTEGER', 'FLOAT', 'STRING', 'NULL', 'BOOLEAN',
@@ -29,7 +37,7 @@ tokens = [
 
     # Other
     'NEWLINE'
-]
+] + list(reserved.values())
 
 # Operators
 t_PLUS             = r'\+'
@@ -75,6 +83,8 @@ def t_ID(t):
         t.type = 'DATATYPE'
     elif (re.match(r'(true|false)', t.value)):
         t.type = 'BOOLEAN'
+    else:
+        t.type = reserved.get(t.value, 'ID')
     return t
 
 # Integer literal
