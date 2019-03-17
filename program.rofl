@@ -1,4 +1,4 @@
-a = 3 + (4+5) //123
+a =b 3 + (4+5) //123
     * 10 + -2089218481212419023 *2.2 { )
     "compilation"
     'compilation'
@@ -9,13 +9,12 @@ a = 3 + (4+5) //123
     float num
     string str
     array arr
-    boolean true
+    boolean truer
     44.44.44
     struct MyDataType {
 
     }
 metka:
-for
 whileefw
 whileshark
 fortran

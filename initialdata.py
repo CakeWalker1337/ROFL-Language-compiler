@@ -11,7 +11,7 @@ reserved = {
     'function': "FUNCTION",
     'skip': "SKIP",
     'return': "RETURN",
-    'do': "DO"
+    'do': "DO",
 }
 
 tokens = [
@@ -27,7 +27,7 @@ tokens = [
     'LT', 'LE', 'GT', 'GE', 'EQ', 'NE',
 
     # Assignment (=)
-    'EQUALS',
+    'ASSIGN',
 
     # Increment/decrement (++,--)
     'INCREMENT', 'DECREMENT',
@@ -66,7 +66,7 @@ t_NE               = r'!='
 
 # Assignment operator
 
-t_EQUALS           = r'='
+t_ASSIGN           = r'='
 
 # Increment/decrement
 t_INCREMENT        = r'\+\+'
@@ -89,7 +89,9 @@ def t_ID(t):
     r'[A-Za-z_][A-Za-z0-9_]*'
     if (re.match(r'(int|string|float|array|boolean)', t.value)):
         t.type = 'DATATYPE'
-    elif (re.match(r'(true|false)', t.value)):
+    # elif (re.match(r'(true|false)', t.value)):
+    #     t.type = 'BOOLEAN'
+    elif (t.value == 'true' or t.value == 'false'):
         t.type = 'BOOLEAN'
     else:
         t.type = reserved.get(t.value, 'ID')
