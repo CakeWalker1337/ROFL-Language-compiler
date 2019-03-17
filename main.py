@@ -1,3 +1,4 @@
+import sys
 import ply.lex as lex
 from initialdata import *
 import pandas
@@ -14,17 +15,8 @@ def findErrors(data):
     exceptions = r"(NEWLINE)"
     bracketbeacon = {}
 
-    #
-    # Token data sequence:
-    # type, value, line_number, line_pos
-    #
-    #
-    #
-
     # redundant repeating
     for i in range(len(data) - 1):
-        if (data[i][0] == data[i + 1][0] and not re.match(exceptions, data[i][0])):
-            addError("Redundant repeating",data[i+1])
         if data[i][0] == "INTEGER" and (int(data[i][1]) > (2**32)-1):
             addError("Integer type overflow", data[i])
 
@@ -55,30 +47,27 @@ def addError(message, token):
     #             len(bracketbeacon[bracket]) and not re.match(r'[\'\"]', bracket)):
     #         errordata.append(["Bracket is missing", "<" + bracket + ">", bracketbeacon[bracket][0]["line"], bracketbeacon[bracket][0]["pos"]])
 
+if  __name__ == "__main__":
+    filename = 'program.rofl'
 
+    if (len(sys.argv) > 1):
+        filename = sys.argv[1]
 
-filename = "program.rofl"
-lexer = lex.lex()
+    lexer = lex.lex()
 
-with io.open(filename, "r", encoding="utf8") as f:
-    text = f.read()
-    lexer.input(text)
+    with io.open(filename, "r", encoding="utf8") as f:
+        text = f.read()
+        lexer.input(text)
 
-    data = []
-    symbolcounter = 0
-    for token in lexer:
-        if (re.match(r'(NEWLINE)|(COMMENT)', token.type)):
-            symbolcounter = token.lexpos
-        data.append([token.type, token.value, token.lineno, token.lexpos - symbolcounter])
-    print(pandas.DataFrame([row[:3] for row in data], columns=["token_type", "token_value", "line_no"]))
-    
-    columns = findErrors(data)
-    if (len(errordata)):
-        print("ERRORS:")
-        print(pandas.DataFrame(errordata, columns=columns))
-
-
-
-
-    
-
+        data = []
+        symbolcounter = 0
+        for token in lexer:
+            if (re.match(r'(NEWLINE)|(COMMENT)', token.type)):
+                symbolcounter = token.lexpos
+            data.append([token.type, token.value, token.lineno, token.lexpos - symbolcounter])
+        print(pandas.DataFrame([row for row in data], columns=["token_type", "token_value", "line_no", "pos"]))
+        
+        columns = findErrors(data)
+        if (len(errordata)):
+            print("ERRORS:")
+            print(pandas.DataFrame(errordata, columns=columns))

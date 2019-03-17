@@ -12,17 +12,25 @@ reserved = {
     'skip': "SKIP",
     'return': "RETURN",
     'do': "DO",
+    'boolean': "DECL_BOOLEAN",
+    'float': "DECL_FLOAT",
+    'int': "DECL_INTEGER",
+    'string': "DECL_STRING",
+    'array': "DECL_ARRAY"
 }
 
 tokens = [
     # Literals (identifier, integer constant, float constant, string constant)
-    'ID', 'INTEGER', 'FLOAT', 'STRING', 'NULL', 'BOOLEAN',
+    'ID', 'CONST_INTEGER', 'CONST_FLOAT', 'CONST_STRING', 'NULL', 'CONST_BOOLEAN',
 
     # Data type declaration
     'DATATYPE',
 
+    # Comments
+    'COMMENT',
+
     # Operators (+, -, *, /, %, %%, ||, |, &&, &, !, <, <=, >, >=, ==, !=)
-    'PLUS', 'MINUS', 'TIMES', 'DIVIDE', 'IDIVIDE', 'MODULO',
+    'PLUS', 'MINUS', 'TIMES', 'DIVIDE', 'MODULO', 'IDIVIDE',
     'LOR', 'BOR', 'LAND', 'BAND', 'LNOT',
     'LT', 'LE', 'GT', 'GE', 'EQ', 'NE',
 
@@ -37,9 +45,6 @@ tokens = [
     'LBRACKET', 'RBRACKET',
     'LBRACE', 'RBRACE',
     'COMMA', 'DOT', 'SEMI', 'COLON',
-
-    # Comments
-    'CPPCOMMENT', 'COMMENT',
 
     # Other
     'NEWLINE'
@@ -84,36 +89,27 @@ t_DOT              = r'\.'
 t_SEMI             = r';'
 t_COLON            = r':'
 
+def t_CONST_BOOLEAN(t):
+    r'\b(true|false)\b'
+    return t
+
 # Identifiers
 def t_ID(t):
     r'[A-Za-z_][A-Za-z0-9_]*'
-    if (re.match(r'(int|string|float|array|boolean)', t.value)):
-        t.type = 'DATATYPE'
-    # elif (re.match(r'(true|false)', t.value)):
-    #     t.type = 'BOOLEAN'
-    elif (t.value == 'true' or t.value == 'false'):
-        t.type = 'BOOLEAN'
-    else:
-        t.type = reserved.get(t.value, 'ID')
+    t.type = reserved.get(t.value, 'ID')
     return t
 
 # Integer literal
-t_INTEGER = r'\d+([uU]|[lL]|[uU][lL]|[lL][uU])?'
+t_CONST_INTEGER = r'\d+([uU]|[lL]|[uU][lL]|[lL][uU])?'
 
 # Null literal
 t_NULL = r'null'
 
 # Floating literal
-t_FLOAT = r'((\d+)(\.\d+)(e(\+|-)?(\d+))? | (\d+)e(\+|-)?(\d+))([lL]|[fF])?'
+t_CONST_FLOAT = r'((\d+)(\.\d+)(e(\+|-)?(\d+))? | (\d+)e(\+|-)?(\d+))([lL]|[fF])?'
 
-# Comment (C-Style)
+# Comment
 def t_COMMENT(t):
-    r'/\*(.|\n)*?\*/'
-    t.lexer.lineno += t.value.count('\n')
-    return t
-
-# Comment (C++-Style)
-def t_CPPCOMMENT(t):
     r'//.*\n'
     t.lexer.lineno += 1
     return t
@@ -125,7 +121,7 @@ def t_NEWLINE(t):
     t.value = None
     return t
 
-def t_STRING(t):
+def t_CONST_STRING(t):
     r'(\"|\')([^\\\n]|(\\.))*?(\"|\')'
     t.value = t.value[1:len(t.value) - 1]
     return t
