@@ -4,21 +4,39 @@ import pandas
 import io
 import utils as utils
 
+
+errordata = []
+
 def findErrors(data):
     errordata = []
     columns = ["error", "token", "line", "position"]
 
     exceptions = r"(NEWLINE)"
     bracketbeacon = {}
+
+    #
+    # Token data sequence:
+    # type, value, line_number, line_pos
+    #
+    #
+    #
+
     # redundant repeating
     for i in range(len(data) - 1):
         if (data[i][0] == data[i + 1][0] and not re.match(exceptions, data[i][0])):
-            errordata.append(["Redundant repeating",                                # error message
-                              "<" + data[i + 1][0] + ", " + data[i + 1][1] + ">",   # token
-                              data[i + 1][2],                                       # line
-                              data[i + 1][3]                                        # position on line
-                              ])
-        
+            addError("Redundant repeating",data[i+1])
+        if data[i][0] == "INTEGER" and (int(data[i][1]) > (2**32)-1):
+            addError("Integer type overflow", data[i])
+
+    return columns
+
+def addError(message, token):
+    errordata.append([message,  # error message
+                      "<" + token[0] + ", " + token[1] + ">",  # token
+                      token[2],  # line
+                      token[3]  # position on line
+                      ])
+
     # spare brackets check
     # for i in range(len(data) - 1):
     #     if (data[i][1] and re.match(r'[\(\{\[\"\']', data[i][1])):
@@ -37,7 +55,7 @@ def findErrors(data):
     #             len(bracketbeacon[bracket]) and not re.match(r'[\'\"]', bracket)):
     #         errordata.append(["Bracket is missing", "<" + bracket + ">", bracketbeacon[bracket][0]["line"], bracketbeacon[bracket][0]["pos"]])
 
-    return errordata, columns
+
 
 filename = "program.rofl"
 lexer = lex.lex()
@@ -54,9 +72,13 @@ with io.open(filename, "r", encoding="utf8") as f:
         data.append([token.type, token.value, token.lineno, token.lexpos - symbolcounter])
     print(pandas.DataFrame([row[:3] for row in data], columns=["token_type", "token_value", "line_no"]))
     
-    errors, columns = findErrors(data)
-    if (len(errors)):
+    columns = findErrors(data)
+    if (len(errordata)):
         print("ERRORS:")
-        print(pandas.DataFrame(errors, columns=columns))
+        print(pandas.DataFrame(errordata, columns=columns))
+
+
+
+
     
 

@@ -2,10 +2,12 @@ import re as re
 
 reserved = {
     'if': 'IF',
-    'then': 'THEN',
+    'for': 'FOR',
     'else': 'ELSE',
     'while': 'WHILE',
-    'elif': 'ELIF'
+    'elif': 'ELIF',
+    'struct': 'STRUCT',
+    'goto': "GOTO"
 }
 
 tokens = [

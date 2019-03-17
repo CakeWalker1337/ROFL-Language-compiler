@@ -1,7 +1,7 @@
 a = 3 + (4+5) //123
-    * 10 + -20 *2.2 { )
-    "компиляция"
-    'компиляция'
+    * 10 + -2089218481212419023 *2.2 { )
+    "compilation"
+    'compilation'
     a | b; b = b + 1 1
     b & a
     null
@@ -11,3 +11,15 @@ a = 3 + (4+5) //123
     array arr
     boolean true
     44.44.44
+    struct MyDataType {
+
+    }
+metka:
+for
+whileefw
+whileshark
+fortran
+else
+elif
+while
+goto metka
