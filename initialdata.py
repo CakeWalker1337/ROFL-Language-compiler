@@ -7,7 +7,11 @@ reserved = {
     'while': 'WHILE',
     'elif': 'ELIF',
     'struct': 'STRUCT',
-    'goto': "GOTO"
+    'goto': "GOTO",
+    'function': "FUNCTION",
+    'skip': "SKIP",
+    'return': "RETURN",
+    'do': "DO"
 }
 
 tokens = [
@@ -17,9 +21,9 @@ tokens = [
     # Data type declaration
     'DATATYPE',
 
-    # Operators (+, -, *, /, %, %%, |, &, !, <, <=, >, >=, ==, !=)
+    # Operators (+, -, *, /, %, %%, ||, |, &&, &, !, <, <=, >, >=, ==, !=)
     'PLUS', 'MINUS', 'TIMES', 'DIVIDE', 'IDIVIDE', 'MODULO',
-    'LOR', 'LAND', 'LNOT',
+    'LOR', 'BOR', 'LAND', 'BAND', 'LNOT',
     'LT', 'LE', 'GT', 'GE', 'EQ', 'NE',
 
     # Assignment (=)
@@ -32,7 +36,7 @@ tokens = [
     'LPAREN', 'RPAREN',
     'LBRACKET', 'RBRACKET',
     'LBRACE', 'RBRACE',
-    'COMMA', 'PERIOD', 'SEMI', 'COLON',
+    'COMMA', 'DOT', 'SEMI', 'COLON',
 
     # Comments
     'CPPCOMMENT', 'COMMENT',
@@ -48,8 +52,10 @@ t_TIMES            = r'\*'
 t_DIVIDE           = r'/'
 t_IDIVIDE          = r'%'
 t_MODULO           = r'%%'
-t_LOR               = r'\|'
-t_LAND              = r'&'
+t_BOR               = r'\|'
+t_LOR              = r'\|\|'
+t_BAND              = r'&'
+t_LAND              = r'&&'
 t_LNOT             = r'!'
 t_LT               = r'<'
 t_GT               = r'>'
@@ -74,7 +80,7 @@ t_RBRACKET         = r'\]'
 t_LBRACE           = r'\{'
 t_RBRACE           = r'\}'
 t_COMMA            = r','
-t_PERIOD           = r'\.'
+t_DOT              = r'\.'
 t_SEMI             = r';'
 t_COLON            = r':'
 
