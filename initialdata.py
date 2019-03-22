@@ -1,5 +1,7 @@
 import re as re
 
+letterCount = 0
+
 reserved = {
     'if': 'IF',
     'for': 'FOR',
@@ -100,7 +102,7 @@ def t_ID(t):
     return t
 
 # Integer literal
-t_CONST_INTEGER = r'\d+([uU]|[lL]|[uU][lL]|[lL][uU])?'
+t_CONST_INTEGER = r'([+-]?[0-9]+)'
 
 # Null literal
 t_NULL = r'null'
@@ -116,13 +118,15 @@ def t_COMMENT(t):
  
 # Define a rule so we can track line numbers
 def t_NEWLINE(t):
-    r'\n+'
+    r'\n'
+    global letterCount
     t.lexer.lineno += len(t.value)
-    t.value = None
+    t.value = "NEWLINE"
+    letterCount = t.lexpos
     return t
 
 def t_CONST_STRING(t):
-    r'(\"|\')([^\\\n]|(\\.))*?(\"|\')'
+    r'((\")([^\\\n]|(\\.))*?(\"))|((\')([^\\\n]|(\\.))*?(\'))'
     t.value = t.value[1:len(t.value) - 1]
     return t
 
@@ -131,5 +135,8 @@ t_ignore  = ' \t'
 
 # Error handling rule
 def t_error(t):
-    print("Illegal character '%s'" % t.value[0])
+    if re.match(r'(\"|\')', t.value[0]):
+        print("Unclosed string literal", t.value, "at line", t.lineno, "pos", t.lexpos - letterCount)
+    else:
+        print("Illegal character '%s'" % t.value[0], "at line", t.lineno, "pos", t.lexpos)
     t.lexer.skip(1)

@@ -10,24 +10,21 @@ errordata = []
 
 def findErrors(data):
     errordata = []
-    columns = ["error", "token", "line", "position"]
 
-    exceptions = r"(NEWLINE)"
-    bracketbeacon = {}
 
     # redundant repeating
     for i in range(len(data) - 1):
-        if data[i][0] == "INTEGER" and (int(data[i][1]) > (2**32)-1):
-            addError("Integer type overflow", data[i])
-
-    return columns
-
-def addError(message, token):
-    errordata.append([message,  # error message
-                      "<" + token[0] + ", " + token[1] + ">",  # token
-                      token[2],  # line
-                      token[3]  # position on line
-                      ])
+        if data[i][0] == "CONST_INTEGER" and (abs(int(data[i][1])) > (2**32)-1):
+            errordata.append("Integer type overflow at line " + str(data[i][2]) + " pos " + str(data[i][3]))
+            # addError("Integer type overflow", data[i])
+    return errordata
+# #
+# def addError(message, token):
+#     errordata.append(message +  # error message
+#                       "<" + str(token[0]) + ", " + str(token[1]) + ">" +  # token
+#                      str(token[2]) +  # line
+#                      str(token[3])  # position on line
+#                       )
 
     # spare brackets check
     # for i in range(len(data) - 1):
@@ -65,9 +62,9 @@ if  __name__ == "__main__":
             if (re.match(r'(NEWLINE)|(COMMENT)', token.type)):
                 symbolcounter = token.lexpos
             data.append([token.type, token.value, token.lineno, token.lexpos - symbolcounter])
+
+        errors = findErrors(data)
+        for error in errors:
+            print(error)
+
         print(pandas.DataFrame([row for row in data], columns=["token_type", "token_value", "line_no", "pos"]))
-        
-        columns = findErrors(data)
-        if (len(errordata)):
-            print("ERRORS:")
-            print(pandas.DataFrame(errordata, columns=columns))
