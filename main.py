@@ -1,9 +1,11 @@
 import sys
 import ply.lex as lex
 from initialdata import *
+from yacc import *
 import pandas
 import io
 import utils as utils
+import ply.yacc as yacc
 
 
 errordata = []
@@ -68,3 +70,18 @@ if  __name__ == "__main__":
             print(error)
 
         print(pandas.DataFrame([row for row in data], columns=["token_type", "token_value", "line_no", "pos"]))
+
+        import logging
+
+        logging.basicConfig(
+            level=logging.DEBUG,
+            filename="parselog.txt",
+            filemode="w",
+            format="%(filename)10s:%(lineno)4d:%(message)s"
+        )
+        log = logging.getLogger()
+
+        parser = yacc.yacc(debug=True, debuglog=log)
+
+        result = parser.parse(text, lexer=lexer)
+        print(result)

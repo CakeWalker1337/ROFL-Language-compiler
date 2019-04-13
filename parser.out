@@ -1,0 +1,1354 @@
+Created by PLY version 3.11 (http://www.dabeaz.com/ply)
+
+Unused terminals:
+
+    ASSIGN
+    COLON
+    COMMA
+    COMMENT
+    CONST_BOOLEAN
+    CONST_FLOAT
+    CONST_STRING
+    DATATYPE
+    DECL_ARRAY
+    DECL_BOOLEAN
+    DECL_FLOAT
+    DECL_INTEGER
+    DECL_STRING
+    DECREMENT
+    DO
+    DOT
+    ELIF
+    ELSE
+    FOR
+    FUNCTION
+    GOTO
+    ID
+    IF
+    INCREMENT
+    LAND
+    LBRACE
+    LBRACKET
+    LNOT
+    LOR
+    NEWLINE
+    NULL
+    RBRACE
+    RBRACKET
+    RETURN
+    SEMI
+    SKIP
+    STRUCT
+    WHILE
+
+Grammar
+
+Rule 0     S' -> expression
+Rule 1     expression -> expression PLUS expression
+Rule 2     expression -> expression MINUS expression
+Rule 3     expression -> expression TIMES expression
+Rule 4     expression -> expression DIVIDE expression
+Rule 5     expression -> expression MODULO expression
+Rule 6     expression -> expression IDIVIDE expression
+Rule 7     expression -> expression BOR expression
+Rule 8     expression -> expression BAND expression
+Rule 9     expression -> expression LT expression
+Rule 10    expression -> expression GT expression
+Rule 11    expression -> expression GE expression
+Rule 12    expression -> expression LE expression
+Rule 13    expression -> expression EQ expression
+Rule 14    expression -> expression NE expression
+Rule 15    expression -> LPAREN expression RPAREN
+Rule 16    expression -> CONST_INTEGER
+
+Terminals, with rules where they appear
+
+ASSIGN               : 
+BAND                 : 8
+BOR                  : 7
+COLON                : 
+COMMA                : 
+COMMENT              : 
+CONST_BOOLEAN        : 
+CONST_FLOAT          : 
+CONST_INTEGER        : 16
+CONST_STRING         : 
+DATATYPE             : 
+DECL_ARRAY           : 
+DECL_BOOLEAN         : 
+DECL_FLOAT           : 
+DECL_INTEGER         : 
+DECL_STRING          : 
+DECREMENT            : 
+DIVIDE               : 4
+DO                   : 
+DOT                  : 
+ELIF                 : 
+ELSE                 : 
+EQ                   : 13
+FOR                  : 
+FUNCTION             : 
+GE                   : 11
+GOTO                 : 
+GT                   : 10
+ID                   : 
+IDIVIDE              : 6
+IF                   : 
+INCREMENT            : 
+LAND                 : 
+LBRACE               : 
+LBRACKET             : 
+LE                   : 12
+LNOT                 : 
+LOR                  : 
+LPAREN               : 15
+LT                   : 9
+MINUS                : 2
+MODULO               : 5
+NE                   : 14
+NEWLINE              : 
+NULL                 : 
+PLUS                 : 1
+RBRACE               : 
+RBRACKET             : 
+RETURN               : 
+RPAREN               : 15
+SEMI                 : 
+SKIP                 : 
+STRUCT               : 
+TIMES                : 3
+WHILE                : 
+error                : 
+
+Nonterminals, with rules where they appear
+
+expression           : 1 1 2 2 3 3 4 4 5 5 6 6 7 7 8 8 9 9 10 10 11 11 12 12 13 13 14 14 15 0
+
+Parsing method: LALR
+
+state 0
+
+    (0) S' -> . expression
+    (1) expression -> . expression PLUS expression
+    (2) expression -> . expression MINUS expression
+    (3) expression -> . expression TIMES expression
+    (4) expression -> . expression DIVIDE expression
+    (5) expression -> . expression MODULO expression
+    (6) expression -> . expression IDIVIDE expression
+    (7) expression -> . expression BOR expression
+    (8) expression -> . expression BAND expression
+    (9) expression -> . expression LT expression
+    (10) expression -> . expression GT expression
+    (11) expression -> . expression GE expression
+    (12) expression -> . expression LE expression
+    (13) expression -> . expression EQ expression
+    (14) expression -> . expression NE expression
+    (15) expression -> . LPAREN expression RPAREN
+    (16) expression -> . CONST_INTEGER
+
+    LPAREN          shift and go to state 2
+    CONST_INTEGER   shift and go to state 3
+
+    expression                     shift and go to state 1
+
+state 1
+
+    (0) S' -> expression .
+    (1) expression -> expression . PLUS expression
+    (2) expression -> expression . MINUS expression
+    (3) expression -> expression . TIMES expression
+    (4) expression -> expression . DIVIDE expression
+    (5) expression -> expression . MODULO expression
+    (6) expression -> expression . IDIVIDE expression
+    (7) expression -> expression . BOR expression
+    (8) expression -> expression . BAND expression
+    (9) expression -> expression . LT expression
+    (10) expression -> expression . GT expression
+    (11) expression -> expression . GE expression
+    (12) expression -> expression . LE expression
+    (13) expression -> expression . EQ expression
+    (14) expression -> expression . NE expression
+
+    PLUS            shift and go to state 4
+    MINUS           shift and go to state 5
+    TIMES           shift and go to state 6
+    DIVIDE          shift and go to state 7
+    MODULO          shift and go to state 8
+    IDIVIDE         shift and go to state 9
+    BOR             shift and go to state 10
+    BAND            shift and go to state 11
+    LT              shift and go to state 12
+    GT              shift and go to state 13
+    GE              shift and go to state 14
+    LE              shift and go to state 15
+    EQ              shift and go to state 16
+    NE              shift and go to state 17
+
+
+state 2
+
+    (15) expression -> LPAREN . expression RPAREN
+    (1) expression -> . expression PLUS expression
+    (2) expression -> . expression MINUS expression
+    (3) expression -> . expression TIMES expression
+    (4) expression -> . expression DIVIDE expression
+    (5) expression -> . expression MODULO expression
+    (6) expression -> . expression IDIVIDE expression
+    (7) expression -> . expression BOR expression
+    (8) expression -> . expression BAND expression
+    (9) expression -> . expression LT expression
+    (10) expression -> . expression GT expression
+    (11) expression -> . expression GE expression
+    (12) expression -> . expression LE expression
+    (13) expression -> . expression EQ expression
+    (14) expression -> . expression NE expression
+    (15) expression -> . LPAREN expression RPAREN
+    (16) expression -> . CONST_INTEGER
+
+    LPAREN          shift and go to state 2
+    CONST_INTEGER   shift and go to state 3
+
+    expression                     shift and go to state 18
+
+state 3
+
+    (16) expression -> CONST_INTEGER .
+
+    PLUS            reduce using rule 16 (expression -> CONST_INTEGER .)
+    MINUS           reduce using rule 16 (expression -> CONST_INTEGER .)
+    TIMES           reduce using rule 16 (expression -> CONST_INTEGER .)
+    DIVIDE          reduce using rule 16 (expression -> CONST_INTEGER .)
+    MODULO          reduce using rule 16 (expression -> CONST_INTEGER .)
+    IDIVIDE         reduce using rule 16 (expression -> CONST_INTEGER .)
+    BOR             reduce using rule 16 (expression -> CONST_INTEGER .)
+    BAND            reduce using rule 16 (expression -> CONST_INTEGER .)
+    LT              reduce using rule 16 (expression -> CONST_INTEGER .)
+    GT              reduce using rule 16 (expression -> CONST_INTEGER .)
+    GE              reduce using rule 16 (expression -> CONST_INTEGER .)
+    LE              reduce using rule 16 (expression -> CONST_INTEGER .)
+    EQ              reduce using rule 16 (expression -> CONST_INTEGER .)
+    NE              reduce using rule 16 (expression -> CONST_INTEGER .)
+    $end            reduce using rule 16 (expression -> CONST_INTEGER .)
+    RPAREN          reduce using rule 16 (expression -> CONST_INTEGER .)
+
+
+state 4
+
+    (1) expression -> expression PLUS . expression
+    (1) expression -> . expression PLUS expression
+    (2) expression -> . expression MINUS expression
+    (3) expression -> . expression TIMES expression
+    (4) expression -> . expression DIVIDE expression
+    (5) expression -> . expression MODULO expression
+    (6) expression -> . expression IDIVIDE expression
+    (7) expression -> . expression BOR expression
+    (8) expression -> . expression BAND expression
+    (9) expression -> . expression LT expression
+    (10) expression -> . expression GT expression
+    (11) expression -> . expression GE expression
+    (12) expression -> . expression LE expression
+    (13) expression -> . expression EQ expression
+    (14) expression -> . expression NE expression
+    (15) expression -> . LPAREN expression RPAREN
+    (16) expression -> . CONST_INTEGER
+
+    LPAREN          shift and go to state 2
+    CONST_INTEGER   shift and go to state 3
+
+    expression                     shift and go to state 19
+
+state 5
+
+    (2) expression -> expression MINUS . expression
+    (1) expression -> . expression PLUS expression
+    (2) expression -> . expression MINUS expression
+    (3) expression -> . expression TIMES expression
+    (4) expression -> . expression DIVIDE expression
+    (5) expression -> . expression MODULO expression
+    (6) expression -> . expression IDIVIDE expression
+    (7) expression -> . expression BOR expression
+    (8) expression -> . expression BAND expression
+    (9) expression -> . expression LT expression
+    (10) expression -> . expression GT expression
+    (11) expression -> . expression GE expression
+    (12) expression -> . expression LE expression
+    (13) expression -> . expression EQ expression
+    (14) expression -> . expression NE expression
+    (15) expression -> . LPAREN expression RPAREN
+    (16) expression -> . CONST_INTEGER
+
+    LPAREN          shift and go to state 2
+    CONST_INTEGER   shift and go to state 3
+
+    expression                     shift and go to state 20
+
+state 6
+
+    (3) expression -> expression TIMES . expression
+    (1) expression -> . expression PLUS expression
+    (2) expression -> . expression MINUS expression
+    (3) expression -> . expression TIMES expression
+    (4) expression -> . expression DIVIDE expression
+    (5) expression -> . expression MODULO expression
+    (6) expression -> . expression IDIVIDE expression
+    (7) expression -> . expression BOR expression
+    (8) expression -> . expression BAND expression
+    (9) expression -> . expression LT expression
+    (10) expression -> . expression GT expression
+    (11) expression -> . expression GE expression
+    (12) expression -> . expression LE expression
+    (13) expression -> . expression EQ expression
+    (14) expression -> . expression NE expression
+    (15) expression -> . LPAREN expression RPAREN
+    (16) expression -> . CONST_INTEGER
+
+    LPAREN          shift and go to state 2
+    CONST_INTEGER   shift and go to state 3
+
+    expression                     shift and go to state 21
+
+state 7
+
+    (4) expression -> expression DIVIDE . expression
+    (1) expression -> . expression PLUS expression
+    (2) expression -> . expression MINUS expression
+    (3) expression -> . expression TIMES expression
+    (4) expression -> . expression DIVIDE expression
+    (5) expression -> . expression MODULO expression
+    (6) expression -> . expression IDIVIDE expression
+    (7) expression -> . expression BOR expression
+    (8) expression -> . expression BAND expression
+    (9) expression -> . expression LT expression
+    (10) expression -> . expression GT expression
+    (11) expression -> . expression GE expression
+    (12) expression -> . expression LE expression
+    (13) expression -> . expression EQ expression
+    (14) expression -> . expression NE expression
+    (15) expression -> . LPAREN expression RPAREN
+    (16) expression -> . CONST_INTEGER
+
+    LPAREN          shift and go to state 2
+    CONST_INTEGER   shift and go to state 3
+
+    expression                     shift and go to state 22
+
+state 8
+
+    (5) expression -> expression MODULO . expression
+    (1) expression -> . expression PLUS expression
+    (2) expression -> . expression MINUS expression
+    (3) expression -> . expression TIMES expression
+    (4) expression -> . expression DIVIDE expression
+    (5) expression -> . expression MODULO expression
+    (6) expression -> . expression IDIVIDE expression
+    (7) expression -> . expression BOR expression
+    (8) expression -> . expression BAND expression
+    (9) expression -> . expression LT expression
+    (10) expression -> . expression GT expression
+    (11) expression -> . expression GE expression
+    (12) expression -> . expression LE expression
+    (13) expression -> . expression EQ expression
+    (14) expression -> . expression NE expression
+    (15) expression -> . LPAREN expression RPAREN
+    (16) expression -> . CONST_INTEGER
+
+    LPAREN          shift and go to state 2
+    CONST_INTEGER   shift and go to state 3
+
+    expression                     shift and go to state 23
+
+state 9
+
+    (6) expression -> expression IDIVIDE . expression
+    (1) expression -> . expression PLUS expression
+    (2) expression -> . expression MINUS expression
+    (3) expression -> . expression TIMES expression
+    (4) expression -> . expression DIVIDE expression
+    (5) expression -> . expression MODULO expression
+    (6) expression -> . expression IDIVIDE expression
+    (7) expression -> . expression BOR expression
+    (8) expression -> . expression BAND expression
+    (9) expression -> . expression LT expression
+    (10) expression -> . expression GT expression
+    (11) expression -> . expression GE expression
+    (12) expression -> . expression LE expression
+    (13) expression -> . expression EQ expression
+    (14) expression -> . expression NE expression
+    (15) expression -> . LPAREN expression RPAREN
+    (16) expression -> . CONST_INTEGER
+
+    LPAREN          shift and go to state 2
+    CONST_INTEGER   shift and go to state 3
+
+    expression                     shift and go to state 24
+
+state 10
+
+    (7) expression -> expression BOR . expression
+    (1) expression -> . expression PLUS expression
+    (2) expression -> . expression MINUS expression
+    (3) expression -> . expression TIMES expression
+    (4) expression -> . expression DIVIDE expression
+    (5) expression -> . expression MODULO expression
+    (6) expression -> . expression IDIVIDE expression
+    (7) expression -> . expression BOR expression
+    (8) expression -> . expression BAND expression
+    (9) expression -> . expression LT expression
+    (10) expression -> . expression GT expression
+    (11) expression -> . expression GE expression
+    (12) expression -> . expression LE expression
+    (13) expression -> . expression EQ expression
+    (14) expression -> . expression NE expression
+    (15) expression -> . LPAREN expression RPAREN
+    (16) expression -> . CONST_INTEGER
+
+    LPAREN          shift and go to state 2
+    CONST_INTEGER   shift and go to state 3
+
+    expression                     shift and go to state 25
+
+state 11
+
+    (8) expression -> expression BAND . expression
+    (1) expression -> . expression PLUS expression
+    (2) expression -> . expression MINUS expression
+    (3) expression -> . expression TIMES expression
+    (4) expression -> . expression DIVIDE expression
+    (5) expression -> . expression MODULO expression
+    (6) expression -> . expression IDIVIDE expression
+    (7) expression -> . expression BOR expression
+    (8) expression -> . expression BAND expression
+    (9) expression -> . expression LT expression
+    (10) expression -> . expression GT expression
+    (11) expression -> . expression GE expression
+    (12) expression -> . expression LE expression
+    (13) expression -> . expression EQ expression
+    (14) expression -> . expression NE expression
+    (15) expression -> . LPAREN expression RPAREN
+    (16) expression -> . CONST_INTEGER
+
+    LPAREN          shift and go to state 2
+    CONST_INTEGER   shift and go to state 3
+
+    expression                     shift and go to state 26
+
+state 12
+
+    (9) expression -> expression LT . expression
+    (1) expression -> . expression PLUS expression
+    (2) expression -> . expression MINUS expression
+    (3) expression -> . expression TIMES expression
+    (4) expression -> . expression DIVIDE expression
+    (5) expression -> . expression MODULO expression
+    (6) expression -> . expression IDIVIDE expression
+    (7) expression -> . expression BOR expression
+    (8) expression -> . expression BAND expression
+    (9) expression -> . expression LT expression
+    (10) expression -> . expression GT expression
+    (11) expression -> . expression GE expression
+    (12) expression -> . expression LE expression
+    (13) expression -> . expression EQ expression
+    (14) expression -> . expression NE expression
+    (15) expression -> . LPAREN expression RPAREN
+    (16) expression -> . CONST_INTEGER
+
+    LPAREN          shift and go to state 2
+    CONST_INTEGER   shift and go to state 3
+
+    expression                     shift and go to state 27
+
+state 13
+
+    (10) expression -> expression GT . expression
+    (1) expression -> . expression PLUS expression
+    (2) expression -> . expression MINUS expression
+    (3) expression -> . expression TIMES expression
+    (4) expression -> . expression DIVIDE expression
+    (5) expression -> . expression MODULO expression
+    (6) expression -> . expression IDIVIDE expression
+    (7) expression -> . expression BOR expression
+    (8) expression -> . expression BAND expression
+    (9) expression -> . expression LT expression
+    (10) expression -> . expression GT expression
+    (11) expression -> . expression GE expression
+    (12) expression -> . expression LE expression
+    (13) expression -> . expression EQ expression
+    (14) expression -> . expression NE expression
+    (15) expression -> . LPAREN expression RPAREN
+    (16) expression -> . CONST_INTEGER
+
+    LPAREN          shift and go to state 2
+    CONST_INTEGER   shift and go to state 3
+
+    expression                     shift and go to state 28
+
+state 14
+
+    (11) expression -> expression GE . expression
+    (1) expression -> . expression PLUS expression
+    (2) expression -> . expression MINUS expression
+    (3) expression -> . expression TIMES expression
+    (4) expression -> . expression DIVIDE expression
+    (5) expression -> . expression MODULO expression
+    (6) expression -> . expression IDIVIDE expression
+    (7) expression -> . expression BOR expression
+    (8) expression -> . expression BAND expression
+    (9) expression -> . expression LT expression
+    (10) expression -> . expression GT expression
+    (11) expression -> . expression GE expression
+    (12) expression -> . expression LE expression
+    (13) expression -> . expression EQ expression
+    (14) expression -> . expression NE expression
+    (15) expression -> . LPAREN expression RPAREN
+    (16) expression -> . CONST_INTEGER
+
+    LPAREN          shift and go to state 2
+    CONST_INTEGER   shift and go to state 3
+
+    expression                     shift and go to state 29
+
+state 15
+
+    (12) expression -> expression LE . expression
+    (1) expression -> . expression PLUS expression
+    (2) expression -> . expression MINUS expression
+    (3) expression -> . expression TIMES expression
+    (4) expression -> . expression DIVIDE expression
+    (5) expression -> . expression MODULO expression
+    (6) expression -> . expression IDIVIDE expression
+    (7) expression -> . expression BOR expression
+    (8) expression -> . expression BAND expression
+    (9) expression -> . expression LT expression
+    (10) expression -> . expression GT expression
+    (11) expression -> . expression GE expression
+    (12) expression -> . expression LE expression
+    (13) expression -> . expression EQ expression
+    (14) expression -> . expression NE expression
+    (15) expression -> . LPAREN expression RPAREN
+    (16) expression -> . CONST_INTEGER
+
+    LPAREN          shift and go to state 2
+    CONST_INTEGER   shift and go to state 3
+
+    expression                     shift and go to state 30
+
+state 16
+
+    (13) expression -> expression EQ . expression
+    (1) expression -> . expression PLUS expression
+    (2) expression -> . expression MINUS expression
+    (3) expression -> . expression TIMES expression
+    (4) expression -> . expression DIVIDE expression
+    (5) expression -> . expression MODULO expression
+    (6) expression -> . expression IDIVIDE expression
+    (7) expression -> . expression BOR expression
+    (8) expression -> . expression BAND expression
+    (9) expression -> . expression LT expression
+    (10) expression -> . expression GT expression
+    (11) expression -> . expression GE expression
+    (12) expression -> . expression LE expression
+    (13) expression -> . expression EQ expression
+    (14) expression -> . expression NE expression
+    (15) expression -> . LPAREN expression RPAREN
+    (16) expression -> . CONST_INTEGER
+
+    LPAREN          shift and go to state 2
+    CONST_INTEGER   shift and go to state 3
+
+    expression                     shift and go to state 31
+
+state 17
+
+    (14) expression -> expression NE . expression
+    (1) expression -> . expression PLUS expression
+    (2) expression -> . expression MINUS expression
+    (3) expression -> . expression TIMES expression
+    (4) expression -> . expression DIVIDE expression
+    (5) expression -> . expression MODULO expression
+    (6) expression -> . expression IDIVIDE expression
+    (7) expression -> . expression BOR expression
+    (8) expression -> . expression BAND expression
+    (9) expression -> . expression LT expression
+    (10) expression -> . expression GT expression
+    (11) expression -> . expression GE expression
+    (12) expression -> . expression LE expression
+    (13) expression -> . expression EQ expression
+    (14) expression -> . expression NE expression
+    (15) expression -> . LPAREN expression RPAREN
+    (16) expression -> . CONST_INTEGER
+
+    LPAREN          shift and go to state 2
+    CONST_INTEGER   shift and go to state 3
+
+    expression                     shift and go to state 32
+
+state 18
+
+    (15) expression -> LPAREN expression . RPAREN
+    (1) expression -> expression . PLUS expression
+    (2) expression -> expression . MINUS expression
+    (3) expression -> expression . TIMES expression
+    (4) expression -> expression . DIVIDE expression
+    (5) expression -> expression . MODULO expression
+    (6) expression -> expression . IDIVIDE expression
+    (7) expression -> expression . BOR expression
+    (8) expression -> expression . BAND expression
+    (9) expression -> expression . LT expression
+    (10) expression -> expression . GT expression
+    (11) expression -> expression . GE expression
+    (12) expression -> expression . LE expression
+    (13) expression -> expression . EQ expression
+    (14) expression -> expression . NE expression
+
+    RPAREN          shift and go to state 33
+    PLUS            shift and go to state 4
+    MINUS           shift and go to state 5
+    TIMES           shift and go to state 6
+    DIVIDE          shift and go to state 7
+    MODULO          shift and go to state 8
+    IDIVIDE         shift and go to state 9
+    BOR             shift and go to state 10
+    BAND            shift and go to state 11
+    LT              shift and go to state 12
+    GT              shift and go to state 13
+    GE              shift and go to state 14
+    LE              shift and go to state 15
+    EQ              shift and go to state 16
+    NE              shift and go to state 17
+
+
+state 19
+
+    (1) expression -> expression PLUS expression .
+    (1) expression -> expression . PLUS expression
+    (2) expression -> expression . MINUS expression
+    (3) expression -> expression . TIMES expression
+    (4) expression -> expression . DIVIDE expression
+    (5) expression -> expression . MODULO expression
+    (6) expression -> expression . IDIVIDE expression
+    (7) expression -> expression . BOR expression
+    (8) expression -> expression . BAND expression
+    (9) expression -> expression . LT expression
+    (10) expression -> expression . GT expression
+    (11) expression -> expression . GE expression
+    (12) expression -> expression . LE expression
+    (13) expression -> expression . EQ expression
+    (14) expression -> expression . NE expression
+
+    PLUS            reduce using rule 1 (expression -> expression PLUS expression .)
+    MINUS           reduce using rule 1 (expression -> expression PLUS expression .)
+    BOR             reduce using rule 1 (expression -> expression PLUS expression .)
+    BAND            reduce using rule 1 (expression -> expression PLUS expression .)
+    LT              reduce using rule 1 (expression -> expression PLUS expression .)
+    GT              reduce using rule 1 (expression -> expression PLUS expression .)
+    GE              reduce using rule 1 (expression -> expression PLUS expression .)
+    LE              reduce using rule 1 (expression -> expression PLUS expression .)
+    EQ              reduce using rule 1 (expression -> expression PLUS expression .)
+    NE              reduce using rule 1 (expression -> expression PLUS expression .)
+    $end            reduce using rule 1 (expression -> expression PLUS expression .)
+    RPAREN          reduce using rule 1 (expression -> expression PLUS expression .)
+    TIMES           shift and go to state 6
+    DIVIDE          shift and go to state 7
+    MODULO          shift and go to state 8
+    IDIVIDE         shift and go to state 9
+
+  ! TIMES           [ reduce using rule 1 (expression -> expression PLUS expression .) ]
+  ! DIVIDE          [ reduce using rule 1 (expression -> expression PLUS expression .) ]
+  ! MODULO          [ reduce using rule 1 (expression -> expression PLUS expression .) ]
+  ! IDIVIDE         [ reduce using rule 1 (expression -> expression PLUS expression .) ]
+  ! PLUS            [ shift and go to state 4 ]
+  ! MINUS           [ shift and go to state 5 ]
+  ! BOR             [ shift and go to state 10 ]
+  ! BAND            [ shift and go to state 11 ]
+  ! LT              [ shift and go to state 12 ]
+  ! GT              [ shift and go to state 13 ]
+  ! GE              [ shift and go to state 14 ]
+  ! LE              [ shift and go to state 15 ]
+  ! EQ              [ shift and go to state 16 ]
+  ! NE              [ shift and go to state 17 ]
+
+
+state 20
+
+    (2) expression -> expression MINUS expression .
+    (1) expression -> expression . PLUS expression
+    (2) expression -> expression . MINUS expression
+    (3) expression -> expression . TIMES expression
+    (4) expression -> expression . DIVIDE expression
+    (5) expression -> expression . MODULO expression
+    (6) expression -> expression . IDIVIDE expression
+    (7) expression -> expression . BOR expression
+    (8) expression -> expression . BAND expression
+    (9) expression -> expression . LT expression
+    (10) expression -> expression . GT expression
+    (11) expression -> expression . GE expression
+    (12) expression -> expression . LE expression
+    (13) expression -> expression . EQ expression
+    (14) expression -> expression . NE expression
+
+    PLUS            reduce using rule 2 (expression -> expression MINUS expression .)
+    MINUS           reduce using rule 2 (expression -> expression MINUS expression .)
+    BOR             reduce using rule 2 (expression -> expression MINUS expression .)
+    BAND            reduce using rule 2 (expression -> expression MINUS expression .)
+    LT              reduce using rule 2 (expression -> expression MINUS expression .)
+    GT              reduce using rule 2 (expression -> expression MINUS expression .)
+    GE              reduce using rule 2 (expression -> expression MINUS expression .)
+    LE              reduce using rule 2 (expression -> expression MINUS expression .)
+    EQ              reduce using rule 2 (expression -> expression MINUS expression .)
+    NE              reduce using rule 2 (expression -> expression MINUS expression .)
+    $end            reduce using rule 2 (expression -> expression MINUS expression .)
+    RPAREN          reduce using rule 2 (expression -> expression MINUS expression .)
+    TIMES           shift and go to state 6
+    DIVIDE          shift and go to state 7
+    MODULO          shift and go to state 8
+    IDIVIDE         shift and go to state 9
+
+  ! TIMES           [ reduce using rule 2 (expression -> expression MINUS expression .) ]
+  ! DIVIDE          [ reduce using rule 2 (expression -> expression MINUS expression .) ]
+  ! MODULO          [ reduce using rule 2 (expression -> expression MINUS expression .) ]
+  ! IDIVIDE         [ reduce using rule 2 (expression -> expression MINUS expression .) ]
+  ! PLUS            [ shift and go to state 4 ]
+  ! MINUS           [ shift and go to state 5 ]
+  ! BOR             [ shift and go to state 10 ]
+  ! BAND            [ shift and go to state 11 ]
+  ! LT              [ shift and go to state 12 ]
+  ! GT              [ shift and go to state 13 ]
+  ! GE              [ shift and go to state 14 ]
+  ! LE              [ shift and go to state 15 ]
+  ! EQ              [ shift and go to state 16 ]
+  ! NE              [ shift and go to state 17 ]
+
+
+state 21
+
+    (3) expression -> expression TIMES expression .
+    (1) expression -> expression . PLUS expression
+    (2) expression -> expression . MINUS expression
+    (3) expression -> expression . TIMES expression
+    (4) expression -> expression . DIVIDE expression
+    (5) expression -> expression . MODULO expression
+    (6) expression -> expression . IDIVIDE expression
+    (7) expression -> expression . BOR expression
+    (8) expression -> expression . BAND expression
+    (9) expression -> expression . LT expression
+    (10) expression -> expression . GT expression
+    (11) expression -> expression . GE expression
+    (12) expression -> expression . LE expression
+    (13) expression -> expression . EQ expression
+    (14) expression -> expression . NE expression
+
+    PLUS            reduce using rule 3 (expression -> expression TIMES expression .)
+    MINUS           reduce using rule 3 (expression -> expression TIMES expression .)
+    TIMES           reduce using rule 3 (expression -> expression TIMES expression .)
+    DIVIDE          reduce using rule 3 (expression -> expression TIMES expression .)
+    MODULO          reduce using rule 3 (expression -> expression TIMES expression .)
+    IDIVIDE         reduce using rule 3 (expression -> expression TIMES expression .)
+    BOR             reduce using rule 3 (expression -> expression TIMES expression .)
+    BAND            reduce using rule 3 (expression -> expression TIMES expression .)
+    LT              reduce using rule 3 (expression -> expression TIMES expression .)
+    GT              reduce using rule 3 (expression -> expression TIMES expression .)
+    GE              reduce using rule 3 (expression -> expression TIMES expression .)
+    LE              reduce using rule 3 (expression -> expression TIMES expression .)
+    EQ              reduce using rule 3 (expression -> expression TIMES expression .)
+    NE              reduce using rule 3 (expression -> expression TIMES expression .)
+    $end            reduce using rule 3 (expression -> expression TIMES expression .)
+    RPAREN          reduce using rule 3 (expression -> expression TIMES expression .)
+
+  ! PLUS            [ shift and go to state 4 ]
+  ! MINUS           [ shift and go to state 5 ]
+  ! TIMES           [ shift and go to state 6 ]
+  ! DIVIDE          [ shift and go to state 7 ]
+  ! MODULO          [ shift and go to state 8 ]
+  ! IDIVIDE         [ shift and go to state 9 ]
+  ! BOR             [ shift and go to state 10 ]
+  ! BAND            [ shift and go to state 11 ]
+  ! LT              [ shift and go to state 12 ]
+  ! GT              [ shift and go to state 13 ]
+  ! GE              [ shift and go to state 14 ]
+  ! LE              [ shift and go to state 15 ]
+  ! EQ              [ shift and go to state 16 ]
+  ! NE              [ shift and go to state 17 ]
+
+
+state 22
+
+    (4) expression -> expression DIVIDE expression .
+    (1) expression -> expression . PLUS expression
+    (2) expression -> expression . MINUS expression
+    (3) expression -> expression . TIMES expression
+    (4) expression -> expression . DIVIDE expression
+    (5) expression -> expression . MODULO expression
+    (6) expression -> expression . IDIVIDE expression
+    (7) expression -> expression . BOR expression
+    (8) expression -> expression . BAND expression
+    (9) expression -> expression . LT expression
+    (10) expression -> expression . GT expression
+    (11) expression -> expression . GE expression
+    (12) expression -> expression . LE expression
+    (13) expression -> expression . EQ expression
+    (14) expression -> expression . NE expression
+
+    PLUS            reduce using rule 4 (expression -> expression DIVIDE expression .)
+    MINUS           reduce using rule 4 (expression -> expression DIVIDE expression .)
+    TIMES           reduce using rule 4 (expression -> expression DIVIDE expression .)
+    DIVIDE          reduce using rule 4 (expression -> expression DIVIDE expression .)
+    MODULO          reduce using rule 4 (expression -> expression DIVIDE expression .)
+    IDIVIDE         reduce using rule 4 (expression -> expression DIVIDE expression .)
+    BOR             reduce using rule 4 (expression -> expression DIVIDE expression .)
+    BAND            reduce using rule 4 (expression -> expression DIVIDE expression .)
+    LT              reduce using rule 4 (expression -> expression DIVIDE expression .)
+    GT              reduce using rule 4 (expression -> expression DIVIDE expression .)
+    GE              reduce using rule 4 (expression -> expression DIVIDE expression .)
+    LE              reduce using rule 4 (expression -> expression DIVIDE expression .)
+    EQ              reduce using rule 4 (expression -> expression DIVIDE expression .)
+    NE              reduce using rule 4 (expression -> expression DIVIDE expression .)
+    $end            reduce using rule 4 (expression -> expression DIVIDE expression .)
+    RPAREN          reduce using rule 4 (expression -> expression DIVIDE expression .)
+
+  ! PLUS            [ shift and go to state 4 ]
+  ! MINUS           [ shift and go to state 5 ]
+  ! TIMES           [ shift and go to state 6 ]
+  ! DIVIDE          [ shift and go to state 7 ]
+  ! MODULO          [ shift and go to state 8 ]
+  ! IDIVIDE         [ shift and go to state 9 ]
+  ! BOR             [ shift and go to state 10 ]
+  ! BAND            [ shift and go to state 11 ]
+  ! LT              [ shift and go to state 12 ]
+  ! GT              [ shift and go to state 13 ]
+  ! GE              [ shift and go to state 14 ]
+  ! LE              [ shift and go to state 15 ]
+  ! EQ              [ shift and go to state 16 ]
+  ! NE              [ shift and go to state 17 ]
+
+
+state 23
+
+    (5) expression -> expression MODULO expression .
+    (1) expression -> expression . PLUS expression
+    (2) expression -> expression . MINUS expression
+    (3) expression -> expression . TIMES expression
+    (4) expression -> expression . DIVIDE expression
+    (5) expression -> expression . MODULO expression
+    (6) expression -> expression . IDIVIDE expression
+    (7) expression -> expression . BOR expression
+    (8) expression -> expression . BAND expression
+    (9) expression -> expression . LT expression
+    (10) expression -> expression . GT expression
+    (11) expression -> expression . GE expression
+    (12) expression -> expression . LE expression
+    (13) expression -> expression . EQ expression
+    (14) expression -> expression . NE expression
+
+    PLUS            reduce using rule 5 (expression -> expression MODULO expression .)
+    MINUS           reduce using rule 5 (expression -> expression MODULO expression .)
+    TIMES           reduce using rule 5 (expression -> expression MODULO expression .)
+    DIVIDE          reduce using rule 5 (expression -> expression MODULO expression .)
+    MODULO          reduce using rule 5 (expression -> expression MODULO expression .)
+    IDIVIDE         reduce using rule 5 (expression -> expression MODULO expression .)
+    BOR             reduce using rule 5 (expression -> expression MODULO expression .)
+    BAND            reduce using rule 5 (expression -> expression MODULO expression .)
+    LT              reduce using rule 5 (expression -> expression MODULO expression .)
+    GT              reduce using rule 5 (expression -> expression MODULO expression .)
+    GE              reduce using rule 5 (expression -> expression MODULO expression .)
+    LE              reduce using rule 5 (expression -> expression MODULO expression .)
+    EQ              reduce using rule 5 (expression -> expression MODULO expression .)
+    NE              reduce using rule 5 (expression -> expression MODULO expression .)
+    $end            reduce using rule 5 (expression -> expression MODULO expression .)
+    RPAREN          reduce using rule 5 (expression -> expression MODULO expression .)
+
+  ! PLUS            [ shift and go to state 4 ]
+  ! MINUS           [ shift and go to state 5 ]
+  ! TIMES           [ shift and go to state 6 ]
+  ! DIVIDE          [ shift and go to state 7 ]
+  ! MODULO          [ shift and go to state 8 ]
+  ! IDIVIDE         [ shift and go to state 9 ]
+  ! BOR             [ shift and go to state 10 ]
+  ! BAND            [ shift and go to state 11 ]
+  ! LT              [ shift and go to state 12 ]
+  ! GT              [ shift and go to state 13 ]
+  ! GE              [ shift and go to state 14 ]
+  ! LE              [ shift and go to state 15 ]
+  ! EQ              [ shift and go to state 16 ]
+  ! NE              [ shift and go to state 17 ]
+
+
+state 24
+
+    (6) expression -> expression IDIVIDE expression .
+    (1) expression -> expression . PLUS expression
+    (2) expression -> expression . MINUS expression
+    (3) expression -> expression . TIMES expression
+    (4) expression -> expression . DIVIDE expression
+    (5) expression -> expression . MODULO expression
+    (6) expression -> expression . IDIVIDE expression
+    (7) expression -> expression . BOR expression
+    (8) expression -> expression . BAND expression
+    (9) expression -> expression . LT expression
+    (10) expression -> expression . GT expression
+    (11) expression -> expression . GE expression
+    (12) expression -> expression . LE expression
+    (13) expression -> expression . EQ expression
+    (14) expression -> expression . NE expression
+
+    PLUS            reduce using rule 6 (expression -> expression IDIVIDE expression .)
+    MINUS           reduce using rule 6 (expression -> expression IDIVIDE expression .)
+    TIMES           reduce using rule 6 (expression -> expression IDIVIDE expression .)
+    DIVIDE          reduce using rule 6 (expression -> expression IDIVIDE expression .)
+    MODULO          reduce using rule 6 (expression -> expression IDIVIDE expression .)
+    IDIVIDE         reduce using rule 6 (expression -> expression IDIVIDE expression .)
+    BOR             reduce using rule 6 (expression -> expression IDIVIDE expression .)
+    BAND            reduce using rule 6 (expression -> expression IDIVIDE expression .)
+    LT              reduce using rule 6 (expression -> expression IDIVIDE expression .)
+    GT              reduce using rule 6 (expression -> expression IDIVIDE expression .)
+    GE              reduce using rule 6 (expression -> expression IDIVIDE expression .)
+    LE              reduce using rule 6 (expression -> expression IDIVIDE expression .)
+    EQ              reduce using rule 6 (expression -> expression IDIVIDE expression .)
+    NE              reduce using rule 6 (expression -> expression IDIVIDE expression .)
+    $end            reduce using rule 6 (expression -> expression IDIVIDE expression .)
+    RPAREN          reduce using rule 6 (expression -> expression IDIVIDE expression .)
+
+  ! PLUS            [ shift and go to state 4 ]
+  ! MINUS           [ shift and go to state 5 ]
+  ! TIMES           [ shift and go to state 6 ]
+  ! DIVIDE          [ shift and go to state 7 ]
+  ! MODULO          [ shift and go to state 8 ]
+  ! IDIVIDE         [ shift and go to state 9 ]
+  ! BOR             [ shift and go to state 10 ]
+  ! BAND            [ shift and go to state 11 ]
+  ! LT              [ shift and go to state 12 ]
+  ! GT              [ shift and go to state 13 ]
+  ! GE              [ shift and go to state 14 ]
+  ! LE              [ shift and go to state 15 ]
+  ! EQ              [ shift and go to state 16 ]
+  ! NE              [ shift and go to state 17 ]
+
+
+state 25
+
+    (7) expression -> expression BOR expression .
+    (1) expression -> expression . PLUS expression
+    (2) expression -> expression . MINUS expression
+    (3) expression -> expression . TIMES expression
+    (4) expression -> expression . DIVIDE expression
+    (5) expression -> expression . MODULO expression
+    (6) expression -> expression . IDIVIDE expression
+    (7) expression -> expression . BOR expression
+    (8) expression -> expression . BAND expression
+    (9) expression -> expression . LT expression
+    (10) expression -> expression . GT expression
+    (11) expression -> expression . GE expression
+    (12) expression -> expression . LE expression
+    (13) expression -> expression . EQ expression
+    (14) expression -> expression . NE expression
+
+    BOR             reduce using rule 7 (expression -> expression BOR expression .)
+    LT              reduce using rule 7 (expression -> expression BOR expression .)
+    GT              reduce using rule 7 (expression -> expression BOR expression .)
+    GE              reduce using rule 7 (expression -> expression BOR expression .)
+    LE              reduce using rule 7 (expression -> expression BOR expression .)
+    EQ              reduce using rule 7 (expression -> expression BOR expression .)
+    NE              reduce using rule 7 (expression -> expression BOR expression .)
+    $end            reduce using rule 7 (expression -> expression BOR expression .)
+    RPAREN          reduce using rule 7 (expression -> expression BOR expression .)
+    PLUS            shift and go to state 4
+    MINUS           shift and go to state 5
+    TIMES           shift and go to state 6
+    DIVIDE          shift and go to state 7
+    MODULO          shift and go to state 8
+    IDIVIDE         shift and go to state 9
+    BAND            shift and go to state 11
+
+  ! PLUS            [ reduce using rule 7 (expression -> expression BOR expression .) ]
+  ! MINUS           [ reduce using rule 7 (expression -> expression BOR expression .) ]
+  ! TIMES           [ reduce using rule 7 (expression -> expression BOR expression .) ]
+  ! DIVIDE          [ reduce using rule 7 (expression -> expression BOR expression .) ]
+  ! MODULO          [ reduce using rule 7 (expression -> expression BOR expression .) ]
+  ! IDIVIDE         [ reduce using rule 7 (expression -> expression BOR expression .) ]
+  ! BAND            [ reduce using rule 7 (expression -> expression BOR expression .) ]
+  ! BOR             [ shift and go to state 10 ]
+  ! LT              [ shift and go to state 12 ]
+  ! GT              [ shift and go to state 13 ]
+  ! GE              [ shift and go to state 14 ]
+  ! LE              [ shift and go to state 15 ]
+  ! EQ              [ shift and go to state 16 ]
+  ! NE              [ shift and go to state 17 ]
+
+
+state 26
+
+    (8) expression -> expression BAND expression .
+    (1) expression -> expression . PLUS expression
+    (2) expression -> expression . MINUS expression
+    (3) expression -> expression . TIMES expression
+    (4) expression -> expression . DIVIDE expression
+    (5) expression -> expression . MODULO expression
+    (6) expression -> expression . IDIVIDE expression
+    (7) expression -> expression . BOR expression
+    (8) expression -> expression . BAND expression
+    (9) expression -> expression . LT expression
+    (10) expression -> expression . GT expression
+    (11) expression -> expression . GE expression
+    (12) expression -> expression . LE expression
+    (13) expression -> expression . EQ expression
+    (14) expression -> expression . NE expression
+
+    BOR             reduce using rule 8 (expression -> expression BAND expression .)
+    BAND            reduce using rule 8 (expression -> expression BAND expression .)
+    LT              reduce using rule 8 (expression -> expression BAND expression .)
+    GT              reduce using rule 8 (expression -> expression BAND expression .)
+    GE              reduce using rule 8 (expression -> expression BAND expression .)
+    LE              reduce using rule 8 (expression -> expression BAND expression .)
+    EQ              reduce using rule 8 (expression -> expression BAND expression .)
+    NE              reduce using rule 8 (expression -> expression BAND expression .)
+    $end            reduce using rule 8 (expression -> expression BAND expression .)
+    RPAREN          reduce using rule 8 (expression -> expression BAND expression .)
+    PLUS            shift and go to state 4
+    MINUS           shift and go to state 5
+    TIMES           shift and go to state 6
+    DIVIDE          shift and go to state 7
+    MODULO          shift and go to state 8
+    IDIVIDE         shift and go to state 9
+
+  ! PLUS            [ reduce using rule 8 (expression -> expression BAND expression .) ]
+  ! MINUS           [ reduce using rule 8 (expression -> expression BAND expression .) ]
+  ! TIMES           [ reduce using rule 8 (expression -> expression BAND expression .) ]
+  ! DIVIDE          [ reduce using rule 8 (expression -> expression BAND expression .) ]
+  ! MODULO          [ reduce using rule 8 (expression -> expression BAND expression .) ]
+  ! IDIVIDE         [ reduce using rule 8 (expression -> expression BAND expression .) ]
+  ! BOR             [ shift and go to state 10 ]
+  ! BAND            [ shift and go to state 11 ]
+  ! LT              [ shift and go to state 12 ]
+  ! GT              [ shift and go to state 13 ]
+  ! GE              [ shift and go to state 14 ]
+  ! LE              [ shift and go to state 15 ]
+  ! EQ              [ shift and go to state 16 ]
+  ! NE              [ shift and go to state 17 ]
+
+
+state 27
+
+    (9) expression -> expression LT expression .
+    (1) expression -> expression . PLUS expression
+    (2) expression -> expression . MINUS expression
+    (3) expression -> expression . TIMES expression
+    (4) expression -> expression . DIVIDE expression
+    (5) expression -> expression . MODULO expression
+    (6) expression -> expression . IDIVIDE expression
+    (7) expression -> expression . BOR expression
+    (8) expression -> expression . BAND expression
+    (9) expression -> expression . LT expression
+    (10) expression -> expression . GT expression
+    (11) expression -> expression . GE expression
+    (12) expression -> expression . LE expression
+    (13) expression -> expression . EQ expression
+    (14) expression -> expression . NE expression
+
+    LT              reduce using rule 9 (expression -> expression LT expression .)
+    GT              reduce using rule 9 (expression -> expression LT expression .)
+    GE              reduce using rule 9 (expression -> expression LT expression .)
+    LE              reduce using rule 9 (expression -> expression LT expression .)
+    EQ              reduce using rule 9 (expression -> expression LT expression .)
+    NE              reduce using rule 9 (expression -> expression LT expression .)
+    $end            reduce using rule 9 (expression -> expression LT expression .)
+    RPAREN          reduce using rule 9 (expression -> expression LT expression .)
+    PLUS            shift and go to state 4
+    MINUS           shift and go to state 5
+    TIMES           shift and go to state 6
+    DIVIDE          shift and go to state 7
+    MODULO          shift and go to state 8
+    IDIVIDE         shift and go to state 9
+    BOR             shift and go to state 10
+    BAND            shift and go to state 11
+
+  ! PLUS            [ reduce using rule 9 (expression -> expression LT expression .) ]
+  ! MINUS           [ reduce using rule 9 (expression -> expression LT expression .) ]
+  ! TIMES           [ reduce using rule 9 (expression -> expression LT expression .) ]
+  ! DIVIDE          [ reduce using rule 9 (expression -> expression LT expression .) ]
+  ! MODULO          [ reduce using rule 9 (expression -> expression LT expression .) ]
+  ! IDIVIDE         [ reduce using rule 9 (expression -> expression LT expression .) ]
+  ! BOR             [ reduce using rule 9 (expression -> expression LT expression .) ]
+  ! BAND            [ reduce using rule 9 (expression -> expression LT expression .) ]
+  ! LT              [ shift and go to state 12 ]
+  ! GT              [ shift and go to state 13 ]
+  ! GE              [ shift and go to state 14 ]
+  ! LE              [ shift and go to state 15 ]
+  ! EQ              [ shift and go to state 16 ]
+  ! NE              [ shift and go to state 17 ]
+
+
+state 28
+
+    (10) expression -> expression GT expression .
+    (1) expression -> expression . PLUS expression
+    (2) expression -> expression . MINUS expression
+    (3) expression -> expression . TIMES expression
+    (4) expression -> expression . DIVIDE expression
+    (5) expression -> expression . MODULO expression
+    (6) expression -> expression . IDIVIDE expression
+    (7) expression -> expression . BOR expression
+    (8) expression -> expression . BAND expression
+    (9) expression -> expression . LT expression
+    (10) expression -> expression . GT expression
+    (11) expression -> expression . GE expression
+    (12) expression -> expression . LE expression
+    (13) expression -> expression . EQ expression
+    (14) expression -> expression . NE expression
+
+    LT              reduce using rule 10 (expression -> expression GT expression .)
+    GT              reduce using rule 10 (expression -> expression GT expression .)
+    GE              reduce using rule 10 (expression -> expression GT expression .)
+    LE              reduce using rule 10 (expression -> expression GT expression .)
+    EQ              reduce using rule 10 (expression -> expression GT expression .)
+    NE              reduce using rule 10 (expression -> expression GT expression .)
+    $end            reduce using rule 10 (expression -> expression GT expression .)
+    RPAREN          reduce using rule 10 (expression -> expression GT expression .)
+    PLUS            shift and go to state 4
+    MINUS           shift and go to state 5
+    TIMES           shift and go to state 6
+    DIVIDE          shift and go to state 7
+    MODULO          shift and go to state 8
+    IDIVIDE         shift and go to state 9
+    BOR             shift and go to state 10
+    BAND            shift and go to state 11
+
+  ! PLUS            [ reduce using rule 10 (expression -> expression GT expression .) ]
+  ! MINUS           [ reduce using rule 10 (expression -> expression GT expression .) ]
+  ! TIMES           [ reduce using rule 10 (expression -> expression GT expression .) ]
+  ! DIVIDE          [ reduce using rule 10 (expression -> expression GT expression .) ]
+  ! MODULO          [ reduce using rule 10 (expression -> expression GT expression .) ]
+  ! IDIVIDE         [ reduce using rule 10 (expression -> expression GT expression .) ]
+  ! BOR             [ reduce using rule 10 (expression -> expression GT expression .) ]
+  ! BAND            [ reduce using rule 10 (expression -> expression GT expression .) ]
+  ! LT              [ shift and go to state 12 ]
+  ! GT              [ shift and go to state 13 ]
+  ! GE              [ shift and go to state 14 ]
+  ! LE              [ shift and go to state 15 ]
+  ! EQ              [ shift and go to state 16 ]
+  ! NE              [ shift and go to state 17 ]
+
+
+state 29
+
+    (11) expression -> expression GE expression .
+    (1) expression -> expression . PLUS expression
+    (2) expression -> expression . MINUS expression
+    (3) expression -> expression . TIMES expression
+    (4) expression -> expression . DIVIDE expression
+    (5) expression -> expression . MODULO expression
+    (6) expression -> expression . IDIVIDE expression
+    (7) expression -> expression . BOR expression
+    (8) expression -> expression . BAND expression
+    (9) expression -> expression . LT expression
+    (10) expression -> expression . GT expression
+    (11) expression -> expression . GE expression
+    (12) expression -> expression . LE expression
+    (13) expression -> expression . EQ expression
+    (14) expression -> expression . NE expression
+
+    LT              reduce using rule 11 (expression -> expression GE expression .)
+    GT              reduce using rule 11 (expression -> expression GE expression .)
+    GE              reduce using rule 11 (expression -> expression GE expression .)
+    LE              reduce using rule 11 (expression -> expression GE expression .)
+    EQ              reduce using rule 11 (expression -> expression GE expression .)
+    NE              reduce using rule 11 (expression -> expression GE expression .)
+    $end            reduce using rule 11 (expression -> expression GE expression .)
+    RPAREN          reduce using rule 11 (expression -> expression GE expression .)
+    PLUS            shift and go to state 4
+    MINUS           shift and go to state 5
+    TIMES           shift and go to state 6
+    DIVIDE          shift and go to state 7
+    MODULO          shift and go to state 8
+    IDIVIDE         shift and go to state 9
+    BOR             shift and go to state 10
+    BAND            shift and go to state 11
+
+  ! PLUS            [ reduce using rule 11 (expression -> expression GE expression .) ]
+  ! MINUS           [ reduce using rule 11 (expression -> expression GE expression .) ]
+  ! TIMES           [ reduce using rule 11 (expression -> expression GE expression .) ]
+  ! DIVIDE          [ reduce using rule 11 (expression -> expression GE expression .) ]
+  ! MODULO          [ reduce using rule 11 (expression -> expression GE expression .) ]
+  ! IDIVIDE         [ reduce using rule 11 (expression -> expression GE expression .) ]
+  ! BOR             [ reduce using rule 11 (expression -> expression GE expression .) ]
+  ! BAND            [ reduce using rule 11 (expression -> expression GE expression .) ]
+  ! LT              [ shift and go to state 12 ]
+  ! GT              [ shift and go to state 13 ]
+  ! GE              [ shift and go to state 14 ]
+  ! LE              [ shift and go to state 15 ]
+  ! EQ              [ shift and go to state 16 ]
+  ! NE              [ shift and go to state 17 ]
+
+
+state 30
+
+    (12) expression -> expression LE expression .
+    (1) expression -> expression . PLUS expression
+    (2) expression -> expression . MINUS expression
+    (3) expression -> expression . TIMES expression
+    (4) expression -> expression . DIVIDE expression
+    (5) expression -> expression . MODULO expression
+    (6) expression -> expression . IDIVIDE expression
+    (7) expression -> expression . BOR expression
+    (8) expression -> expression . BAND expression
+    (9) expression -> expression . LT expression
+    (10) expression -> expression . GT expression
+    (11) expression -> expression . GE expression
+    (12) expression -> expression . LE expression
+    (13) expression -> expression . EQ expression
+    (14) expression -> expression . NE expression
+
+    LT              reduce using rule 12 (expression -> expression LE expression .)
+    GT              reduce using rule 12 (expression -> expression LE expression .)
+    GE              reduce using rule 12 (expression -> expression LE expression .)
+    LE              reduce using rule 12 (expression -> expression LE expression .)
+    EQ              reduce using rule 12 (expression -> expression LE expression .)
+    NE              reduce using rule 12 (expression -> expression LE expression .)
+    $end            reduce using rule 12 (expression -> expression LE expression .)
+    RPAREN          reduce using rule 12 (expression -> expression LE expression .)
+    PLUS            shift and go to state 4
+    MINUS           shift and go to state 5
+    TIMES           shift and go to state 6
+    DIVIDE          shift and go to state 7
+    MODULO          shift and go to state 8
+    IDIVIDE         shift and go to state 9
+    BOR             shift and go to state 10
+    BAND            shift and go to state 11
+
+  ! PLUS            [ reduce using rule 12 (expression -> expression LE expression .) ]
+  ! MINUS           [ reduce using rule 12 (expression -> expression LE expression .) ]
+  ! TIMES           [ reduce using rule 12 (expression -> expression LE expression .) ]
+  ! DIVIDE          [ reduce using rule 12 (expression -> expression LE expression .) ]
+  ! MODULO          [ reduce using rule 12 (expression -> expression LE expression .) ]
+  ! IDIVIDE         [ reduce using rule 12 (expression -> expression LE expression .) ]
+  ! BOR             [ reduce using rule 12 (expression -> expression LE expression .) ]
+  ! BAND            [ reduce using rule 12 (expression -> expression LE expression .) ]
+  ! LT              [ shift and go to state 12 ]
+  ! GT              [ shift and go to state 13 ]
+  ! GE              [ shift and go to state 14 ]
+  ! LE              [ shift and go to state 15 ]
+  ! EQ              [ shift and go to state 16 ]
+  ! NE              [ shift and go to state 17 ]
+
+
+state 31
+
+    (13) expression -> expression EQ expression .
+    (1) expression -> expression . PLUS expression
+    (2) expression -> expression . MINUS expression
+    (3) expression -> expression . TIMES expression
+    (4) expression -> expression . DIVIDE expression
+    (5) expression -> expression . MODULO expression
+    (6) expression -> expression . IDIVIDE expression
+    (7) expression -> expression . BOR expression
+    (8) expression -> expression . BAND expression
+    (9) expression -> expression . LT expression
+    (10) expression -> expression . GT expression
+    (11) expression -> expression . GE expression
+    (12) expression -> expression . LE expression
+    (13) expression -> expression . EQ expression
+    (14) expression -> expression . NE expression
+
+    LT              reduce using rule 13 (expression -> expression EQ expression .)
+    GT              reduce using rule 13 (expression -> expression EQ expression .)
+    GE              reduce using rule 13 (expression -> expression EQ expression .)
+    LE              reduce using rule 13 (expression -> expression EQ expression .)
+    EQ              reduce using rule 13 (expression -> expression EQ expression .)
+    NE              reduce using rule 13 (expression -> expression EQ expression .)
+    $end            reduce using rule 13 (expression -> expression EQ expression .)
+    RPAREN          reduce using rule 13 (expression -> expression EQ expression .)
+    PLUS            shift and go to state 4
+    MINUS           shift and go to state 5
+    TIMES           shift and go to state 6
+    DIVIDE          shift and go to state 7
+    MODULO          shift and go to state 8
+    IDIVIDE         shift and go to state 9
+    BOR             shift and go to state 10
+    BAND            shift and go to state 11
+
+  ! PLUS            [ reduce using rule 13 (expression -> expression EQ expression .) ]
+  ! MINUS           [ reduce using rule 13 (expression -> expression EQ expression .) ]
+  ! TIMES           [ reduce using rule 13 (expression -> expression EQ expression .) ]
+  ! DIVIDE          [ reduce using rule 13 (expression -> expression EQ expression .) ]
+  ! MODULO          [ reduce using rule 13 (expression -> expression EQ expression .) ]
+  ! IDIVIDE         [ reduce using rule 13 (expression -> expression EQ expression .) ]
+  ! BOR             [ reduce using rule 13 (expression -> expression EQ expression .) ]
+  ! BAND            [ reduce using rule 13 (expression -> expression EQ expression .) ]
+  ! LT              [ shift and go to state 12 ]
+  ! GT              [ shift and go to state 13 ]
+  ! GE              [ shift and go to state 14 ]
+  ! LE              [ shift and go to state 15 ]
+  ! EQ              [ shift and go to state 16 ]
+  ! NE              [ shift and go to state 17 ]
+
+
+state 32
+
+    (14) expression -> expression NE expression .
+    (1) expression -> expression . PLUS expression
+    (2) expression -> expression . MINUS expression
+    (3) expression -> expression . TIMES expression
+    (4) expression -> expression . DIVIDE expression
+    (5) expression -> expression . MODULO expression
+    (6) expression -> expression . IDIVIDE expression
+    (7) expression -> expression . BOR expression
+    (8) expression -> expression . BAND expression
+    (9) expression -> expression . LT expression
+    (10) expression -> expression . GT expression
+    (11) expression -> expression . GE expression
+    (12) expression -> expression . LE expression
+    (13) expression -> expression . EQ expression
+    (14) expression -> expression . NE expression
+
+    LT              reduce using rule 14 (expression -> expression NE expression .)
+    GT              reduce using rule 14 (expression -> expression NE expression .)
+    GE              reduce using rule 14 (expression -> expression NE expression .)
+    LE              reduce using rule 14 (expression -> expression NE expression .)
+    EQ              reduce using rule 14 (expression -> expression NE expression .)
+    NE              reduce using rule 14 (expression -> expression NE expression .)
+    $end            reduce using rule 14 (expression -> expression NE expression .)
+    RPAREN          reduce using rule 14 (expression -> expression NE expression .)
+    PLUS            shift and go to state 4
+    MINUS           shift and go to state 5
+    TIMES           shift and go to state 6
+    DIVIDE          shift and go to state 7
+    MODULO          shift and go to state 8
+    IDIVIDE         shift and go to state 9
+    BOR             shift and go to state 10
+    BAND            shift and go to state 11
+
+  ! PLUS            [ reduce using rule 14 (expression -> expression NE expression .) ]
+  ! MINUS           [ reduce using rule 14 (expression -> expression NE expression .) ]
+  ! TIMES           [ reduce using rule 14 (expression -> expression NE expression .) ]
+  ! DIVIDE          [ reduce using rule 14 (expression -> expression NE expression .) ]
+  ! MODULO          [ reduce using rule 14 (expression -> expression NE expression .) ]
+  ! IDIVIDE         [ reduce using rule 14 (expression -> expression NE expression .) ]
+  ! BOR             [ reduce using rule 14 (expression -> expression NE expression .) ]
+  ! BAND            [ reduce using rule 14 (expression -> expression NE expression .) ]
+  ! LT              [ shift and go to state 12 ]
+  ! GT              [ shift and go to state 13 ]
+  ! GE              [ shift and go to state 14 ]
+  ! LE              [ shift and go to state 15 ]
+  ! EQ              [ shift and go to state 16 ]
+  ! NE              [ shift and go to state 17 ]
+
+
+state 33
+
+    (15) expression -> LPAREN expression RPAREN .
+
+    PLUS            reduce using rule 15 (expression -> LPAREN expression RPAREN .)
+    MINUS           reduce using rule 15 (expression -> LPAREN expression RPAREN .)
+    TIMES           reduce using rule 15 (expression -> LPAREN expression RPAREN .)
+    DIVIDE          reduce using rule 15 (expression -> LPAREN expression RPAREN .)
+    MODULO          reduce using rule 15 (expression -> LPAREN expression RPAREN .)
+    IDIVIDE         reduce using rule 15 (expression -> LPAREN expression RPAREN .)
+    BOR             reduce using rule 15 (expression -> LPAREN expression RPAREN .)
+    BAND            reduce using rule 15 (expression -> LPAREN expression RPAREN .)
+    LT              reduce using rule 15 (expression -> LPAREN expression RPAREN .)
+    GT              reduce using rule 15 (expression -> LPAREN expression RPAREN .)
+    GE              reduce using rule 15 (expression -> LPAREN expression RPAREN .)
+    LE              reduce using rule 15 (expression -> LPAREN expression RPAREN .)
+    EQ              reduce using rule 15 (expression -> LPAREN expression RPAREN .)
+    NE              reduce using rule 15 (expression -> LPAREN expression RPAREN .)
+    $end            reduce using rule 15 (expression -> LPAREN expression RPAREN .)
+    RPAREN          reduce using rule 15 (expression -> LPAREN expression RPAREN .)
+
