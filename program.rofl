@@ -1,1 +1,13 @@
-asd + 10
+int a = 0;
+if (5 > 4){
+    a = 5;
+}
+else {
+    a = 4;
+}
+else {
+    a = 5;
+}
+//adwd
+
+int a = func(a, b).daw.adwd;

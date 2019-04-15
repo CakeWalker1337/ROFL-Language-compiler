@@ -81,7 +81,6 @@ if  __name__ == "__main__":
         )
         log = logging.getLogger()
 
-        parser = yacc.yacc(debug=True, debuglog=log)
-
+        parser = yacc.yacc(debug=0)
         result = parser.parse(text, lexer=lexer)
         print(result)

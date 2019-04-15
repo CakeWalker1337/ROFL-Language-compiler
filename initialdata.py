@@ -4,7 +4,6 @@ letterCount = 0
 
 reserved = {
     'if': 'IF',
-    'for': 'FOR',
     'else': 'ELSE',
     'while': 'WHILE',
     'elif': 'ELIF',
@@ -112,8 +111,9 @@ t_CONST_FLOAT = r'((\d+)(\.\d+)(e(\+|-)?(\d+))? | (\d+)e(\+|-)?(\d+))([lL]|[fF])
 
 # Comment
 def t_COMMENT(t):
-    r'//.*\n'
-    t.lexer.lineno += 1
+    r'//.*\n?'
+    if t.value.find('\n') != -1:
+      t.lexer.lineno += 1
     return t
  
 # Define a rule so we can track line numbers
