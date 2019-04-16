@@ -11,7 +11,7 @@ reserved = {
     'goto': "GOTO",
     'function': "FUNCTION",
     'skip': "SKIP",
-    'break': "BREAk",
+    'break': "BREAK",
     'return': "RETURN",
     'do': "DO",
     'boolean': "DECL_BOOLEAN",

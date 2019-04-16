@@ -67,6 +67,11 @@ def p_const_arr(p):
     p[0] = Node('ARRAY', p[2].parts)
 
 
+def p_array_element(p):
+    '''array_element : id LBRACKET expression RBRACKET'''
+    p[0] = Node('ARRAY_ELEMENT', [p[1], p[3]])
+
+
 def p_variable(p):
     '''variable_decl : datatype ID'''
     if (p[2] in names):
@@ -115,7 +120,8 @@ def p_content(p):
 
 def p_assignment(p):
     '''assignment : variable_decl ASSIGN expression SEMI
-                | id ASSIGN expression SEMI'''
+                | id ASSIGN expression SEMI
+                | array_element ASSIGN expression SEMI'''
     if len(p) == 5:
         p[0] = Node('ASSIGN', [p[1], p[3]])
     else:
@@ -164,6 +170,7 @@ def p_statement(p):
             | condition_full
             | while_loop
             | SKIP SEMI
+            | BREAK SEMI
             | GOTO mark SEMI
             | comment
     '''
@@ -179,6 +186,7 @@ def p_literal_expressions(p):
     '''expression : const_type
             | id
             | function_call
+            | array_element
     '''
     p[0] = p[1]
 
@@ -232,8 +240,7 @@ def p_binary_operators(p):
 # 2. Соответствие return и типа возвр функции
 # 3. Return внутри функции, а break и skip внутри if/while
 # 4. Объявлен ли id до его использования (также переобъявление).
-# 5.
-#
+# 5. Запрет объявления функции и структуры внутри функции.
 #
 #
 
