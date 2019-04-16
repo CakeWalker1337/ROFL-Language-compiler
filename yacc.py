@@ -39,11 +39,15 @@ precedence = (
     ('nonassoc', 'LBRACE', 'RBRACE')
 )
 
+names = {}
+
 start = 'statement_group'
 
 
 def p_id(p):
     'id : ID'
+    if not p[1] in names: 
+        print('Using of undefined identificator', '"'+p[1]+'"', 'at line', p.lineno(1))
     p[0] = Node('ID', [p[1]])
 
 
@@ -58,8 +62,16 @@ def p_const_values(p):
     p[0] = Node('CONST_VALUE', [p[1]])
 
 
+def p_const_arr(p):
+    '''const_type : LBRACKET call_args RBRACKET'''
+    p[0] = Node('ARRAY', p[2].parts)
+
+
 def p_variable(p):
-    'variable_decl : datatype id'
+    '''variable_decl : datatype ID'''
+    if (p[2] in names):
+        print('Redundant definition of "'+p[2]+'" at line ' + str(p.lineno(2)) + ', it\'s already defined at line', names[p[2]][1])
+    names[p[2]] = (p[1].parts[0], p.lineno(1))
     p[0] = Node('VARIABLE', [p[1], p[2]])
 
 
@@ -70,7 +82,6 @@ def p_datatypes(p):
             | DECL_STRING
             | DECL_ARRAY
     '''
-    print("datatype", p[1])
     p[0] = Node('DATATYPE', [p[1]])
 
 
@@ -113,7 +124,7 @@ def p_assignment(p):
 
 
 def p_empty(p):
-    'empty : '
+    '''empty : '''
     pass
 
 
@@ -167,6 +178,7 @@ def p_statement(p):
             | NEWLINE
             | statement NEWLINE
             | condition_statement
+            | condition_full
             | while_loop
             | SKIP SEMI
             | GOTO mark SEMI
@@ -255,11 +267,14 @@ def p_logic_expressions(p):
         p[0] = Node('LNOT', [p[2]])
 
 
+def p_full_condition(p):
+    '''condition_full : condition_statement else_cond'''
+    p[0] = p[1].add_parts([p[2]])
+
 def p_conditions(p):
     '''condition_statement : if_cond
             | condition_statement NEWLINE
             | condition_statement elif_cond
-            | condition_statement else_cond
     '''
     #TODO: Отловить ошибку, когда больше одного else (правило, исключающее этот кейс, подобрать не смог)
     if len(p) == 2:
@@ -276,17 +291,17 @@ def p_if_cond(p):
 
 
 def p_elif_cond(p):
-    'elif_cond : ELIF LPAREN statement RPAREN LBRACE statement_group RBRACE'
+    '''elif_cond : ELIF LPAREN expression RPAREN LBRACE statement_group RBRACE'''
     p[0] = Node('ELIF', [Node('CONDITION', [p[3]]), p[6]])
 
 
 def p_else_cond(p):
-    'else_cond : ELSE LBRACE statement_group RBRACE'
+    '''else_cond : ELSE LBRACE statement_group RBRACE'''
     p[0] = Node('ELSE', [p[3]])
 
 
 def p_loop(p):
-    'while_loop : DO LBRACE statement_group RBRACE WHILE LPAREN statement RPAREN SEMI'
+    'while_loop : DO LBRACE statement_group RBRACE WHILE LPAREN expression RPAREN SEMI'
     p[0] = Node('WHILE', [p[3], Node('CONDITION', [p[7]])])
 
 
@@ -302,7 +317,8 @@ def p_comments(p):
 
 def p_call_args(p):
     '''call_args : expression
-        | call_args COMMA expression'''
+        | call_args COMMA expression
+        | empty'''
     if len(p) == 4:
         p[0] = p[1].add_parts([p[3]])
     else:
@@ -316,4 +332,9 @@ def p_call(p):
 
 # Error rule for syntax errors
 def p_error(p):
-    print("Syntax error in input!", p)
+    if p is not None and p.value == 'NEWLINE': 
+        print('Semicolon is missing at line %s' % (p.lineno))
+    elif p is not None: 
+        print('Line %s, illegal token "%s"' % (p.lineno, p.value))
+    else:
+        print('Unexpected end of input')

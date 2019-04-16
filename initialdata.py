@@ -101,7 +101,7 @@ def t_ID(t):
     return t
 
 # Integer literal
-t_CONST_INTEGER = r'([+-]?[0-9]+)'
+t_CONST_INTEGER = r'([-]?[0-9]+)'
 
 # Null literal
 t_NULL = r'null'
