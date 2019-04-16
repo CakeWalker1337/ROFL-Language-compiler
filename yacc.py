@@ -81,6 +81,7 @@ def p_datatypes(p):
             | DECL_INTEGER
             | DECL_STRING
             | DECL_ARRAY
+            | DECL_VOID
     '''
     p[0] = Node('DATATYPE', [p[1]])
 
@@ -105,8 +106,6 @@ def p_content(p):
             | variable_decl SEMI
             | assignment
             | func
-            | NEWLINE
-            | content NEWLINE
     '''
     if len(p) == 2:
         p[0] = Node('CONTENT', [p[1]])
@@ -145,19 +144,6 @@ def p_func(p):
             p[0] = p[1].add_parts([p[3]])
 
 
-
-# def p_program(p):
-#     '''program : program content
-#             | program statement_group
-#             | content
-#             | statement_group
-#     '''
-#     if len(p) == 2:
-#         p[0] = Node('PROGRAM', [p[1]])
-#     else:
-#         p[0] = p[1].add_parts([p[2]])
-
-
 def p_statement_group(p):
     '''statement_group : statement_group statement
             | statement
@@ -175,9 +161,6 @@ def p_statement(p):
             | func
             | struct
             | variable_decl SEMI
-            | NEWLINE
-            | statement NEWLINE
-            | condition_statement
             | condition_full
             | while_loop
             | SKIP SEMI
@@ -198,6 +181,16 @@ def p_literal_expressions(p):
             | function_call
     '''
     p[0] = p[1]
+
+
+def p_unary_operators(p):
+    '''expression : expression INCREMENT
+            | expression DECREMENT
+    '''
+    if p[2] == '++':
+        p[0] = Node('PLUS', [p[1], Node('CONST_VALUE', ['1'])])
+    elif p[2] == '--':
+        p[0] = Node('MINUS', [p[1], Node('CONST_VALUE', ['1'])])
 
 
 def p_binary_operators(p):
@@ -235,6 +228,16 @@ def p_binary_operators(p):
         p[0] = p[1]
 
 
+# 1. Соответствие типов (константы, переменные, массивы)
+# 2. Соответствие return и типа возвр функции
+# 3. Return внутри функции, а break и skip внутри if/while
+# 4. Объявлен ли id до его использования (также переобъявление).
+# 5.
+#
+#
+#
+
+
 def p_logic_expressions(p):
     '''expression : expression LT expression
                 | expression GT expression
@@ -268,19 +271,22 @@ def p_logic_expressions(p):
 
 
 def p_full_condition(p):
-    '''condition_full : condition_statement else_cond'''
-    p[0] = p[1].add_parts([p[2]])
+    '''condition_full : condition_statement else_cond
+            | condition_statement '''
+    if len(p) == 2:
+        p[0] = p[1]
+    else:
+        p[0] = p[1].add_parts([p[2]])
+
+
 
 def p_conditions(p):
     '''condition_statement : if_cond
-            | condition_statement NEWLINE
             | condition_statement elif_cond
     '''
     #TODO: Отловить ошибку, когда больше одного else (правило, исключающее этот кейс, подобрать не смог)
     if len(p) == 2:
         p[0] = Node('CONDITION', [p[1]])
-    elif p[2] == "NEWLINE":
-        p[0] = p[1]
     else:
         p[0] = p[1].add_parts([p[2]])
 

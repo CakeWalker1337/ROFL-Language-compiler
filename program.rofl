@@ -1,24 +1,11 @@
 int a = 0;
-
-if (5 > 4){
-    a = 5;
-} 
-
-else {a = 5;} 
-
-a = ' 5 + 5 = 25 ' ;
-
-//adwd
-
-int a=func(a, b).daw.adwd;
-function func(): int {
-    a = 5 + 5;
-    b = 5;
-    return 2+1;
+int b = 5;
+if (a > b) {
+    a = b;
 }
-array data = [4, 5, 2, 3, 1];
-int buffer = 0;
-do {
-    doSmh(1,2,3);
-    print(5);
-} while(a + 5 > 2);
+elif (a > 6) {
+    a = 6;
+}
+else {
+    b = 1;
+}

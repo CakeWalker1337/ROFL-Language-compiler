@@ -11,21 +11,20 @@ reserved = {
     'goto': "GOTO",
     'function': "FUNCTION",
     'skip': "SKIP",
+    'break': "BREAk",
     'return': "RETURN",
     'do': "DO",
     'boolean': "DECL_BOOLEAN",
     'float': "DECL_FLOAT",
     'int': "DECL_INTEGER",
     'string': "DECL_STRING",
-    'array': "DECL_ARRAY"
+    'array': "DECL_ARRAY",
+    'void': "DECL_VOID"
 }
 
 tokens = [
     # Literals (identifier, integer constant, float constant, string constant)
     'ID', 'CONST_INTEGER', 'CONST_FLOAT', 'CONST_STRING', 'NULL', 'CONST_BOOLEAN',
-
-    # Data type declaration
-    'DATATYPE',
 
     # Comments
     'COMMENT',
@@ -48,7 +47,7 @@ tokens = [
     'COMMA', 'DOT', 'SEMI', 'COLON',
 
     # Other
-    'NEWLINE'
+   # 'NEWLINE'
 ] + list(reserved.values())
 
 # Operators
@@ -109,29 +108,28 @@ t_NULL = r'null'
 # Floating literal
 t_CONST_FLOAT = r'((\d+)(\.\d+)(e(\+|-)?(\d+))? | (\d+)e(\+|-)?(\d+))([lL]|[fF])?'
 
-# Comment
+
 def t_COMMENT(t):
     r'//.*\n?'
-    if t.value.find('\n') != -1:
-      t.lexer.lineno += 1
-    return t
- 
-# Define a rule so we can track line numbers
-def t_NEWLINE(t):
-    r'\n'
-    global letterCount
     t.lexer.lineno += len(t.value)
-    t.value = "NEWLINE"
-    letterCount = t.lexpos
-    return t
+    return None
+
 
 def t_CONST_STRING(t):
     r'((\")([^\\\n]|(\\.))*?(\"))|((\')([^\\\n]|(\\.))*?(\'))'
     t.value = t.value[1:len(t.value) - 1]
     return t
 
+
+def t_NEWLINE(t):
+    r'\n'
+    t.lexer.lineno += len(t.value)
+    return None
+
+
 # A string containing ignored characters (spaces and tabs)
 t_ignore  = ' \t'
+
 
 # Error handling rule
 def t_error(t):
