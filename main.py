@@ -61,5 +61,6 @@ if  __name__ == "__main__":
         result = parser.parse(text)
         print(result)
         nodes = []
-        get_all_nodes_by_name(result, "FUNCTION", nodes)
+      #  get_all_nodes_by_name(result, "FUNCTION", nodes)
+        check_keywords(result)
         print(nodes)

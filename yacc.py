@@ -8,6 +8,15 @@ class Node:
             st.append( str( part ) )
         return "\n".join(st)
 
+    def get_parts_by_name(self, name):
+        elems = []
+        for part in self.parts:
+            if type(part).__name__ != 'Node':
+                raise Exception("One of parts is not a Node. Can't take the name of object.")
+            if part.type == name:
+                elems.append(part)
+        return elems
+
     def __repr__(self):
         if self.type == '':
             return self.parts_str().replace("\n", "\n")
@@ -171,7 +180,7 @@ def p_statement_group(p):
             | statement
     '''
     if len(p) == 2:
-        p[0] = Node('STATEMENT_GROUP', [p[1]])
+        p[0] = Node('SCOPE', [p[1]])
     else:
         p[0] = p[1].add_parts([p[2]])
 
