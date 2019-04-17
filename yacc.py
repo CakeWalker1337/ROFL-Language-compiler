@@ -39,15 +39,12 @@ precedence = (
     ('nonassoc', 'LBRACE', 'RBRACE')
 )
 
-names = {}
 
 start = 'statement_group'
 
 
 def p_id(p):
     'id : ID'
-    if not p[1] in names: 
-        print('Using of undefined identificator', '"'+p[1]+'"', 'at line', p.lineno(1))
     p[0] = Node('ID', [p[1]])
 
 
@@ -74,9 +71,6 @@ def p_array_element(p):
 
 def p_variable(p):
     '''variable_decl : datatype ID'''
-    if (p[2] in names):
-        print('Redundant definition of "'+p[2]+'" at line ' + str(p.lineno(2)) + ', it\'s already defined at line', names[p[2]][1])
-    names[p[2]] = (p[1].parts[0], p.lineno(1))
     p[0] = Node('VARIABLE', [p[1], p[2]])
 
 
