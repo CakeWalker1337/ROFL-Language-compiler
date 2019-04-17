@@ -21,6 +21,28 @@ def findErrors(data):
             # addError("Integer type overflow", data[i])
     return errordata
 
+def parseVarError(node, variables={}, parent=None, scopevars=[]):
+    
+    try:
+        if node.type == 'VARIABLE':
+            # change it if you change a structure of the CONDITION node
+            if node.parts[1] in variables:
+                print('Redundant definition of "'+node.parts[1]+'" on line', node.line) # TODO: добавить номер строки
+            else:
+                variables[node.parts[1]] = node.parts[0].parts[0]
+                scopevars.append(node.parts[1])
+        elif node.type == 'ID':
+            if not node.parts[0] in variables:
+                print('Undefined variable "'+node.parts[0]+'" on line', node.line) #TODO: добавить номер строки
+        else:
+            for child in node.parts:
+                parseVarError(child, variables, node, [] if child.type == 'SCOPE' else scopevars)
+    except: pass
+    
+    if (node.type == 'SCOPE'):
+        for name in scopevars:
+            del variables[name]
+
 if  __name__ == "__main__":
     filename = 'program.rofl'
 
@@ -59,3 +81,4 @@ if  __name__ == "__main__":
         parser = yacc.yacc(debug=0)
         result = parser.parse(text)
         print(result)
+        parseVarError(result)
