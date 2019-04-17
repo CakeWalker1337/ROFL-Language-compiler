@@ -1,7 +1,18 @@
 array a = [1, 2, 3];
 a[1+1] = a[2];
-ff = func(1, 2);
+
+struct mystr {
+    function func2(int b, int c) : int {
+        return b+c;
+
+    }
+}
+
 function func(int b, int c) : void {
     return null;
 
 }
+
+
+
+ff = func(1, 2);

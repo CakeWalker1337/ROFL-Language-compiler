@@ -19,12 +19,13 @@ reserved = {
     'int': "DECL_INTEGER",
     'string': "DECL_STRING",
     'array': "DECL_ARRAY",
-    'void': "DECL_VOID"
+    'void': "DECL_VOID",
+    'null': "NULL"
 }
 
 tokens = [
     # Literals (identifier, integer constant, float constant, string constant)
-    'ID', 'CONST_INTEGER', 'CONST_FLOAT', 'CONST_STRING', 'NULL', 'CONST_BOOLEAN',
+    'ID', 'CONST_INTEGER', 'CONST_FLOAT', 'CONST_STRING', 'CONST_BOOLEAN',
 
     # Comments
     'COMMENT',
@@ -102,8 +103,7 @@ def t_ID(t):
 # Integer literal
 t_CONST_INTEGER = r'([-]?[0-9]+)'
 
-# Null literal
-t_NULL = r'null'
+
 
 # Floating literal
 t_CONST_FLOAT = r'((\d+)(\.\d+)(e(\+|-)?(\d+))? | (\d+)e(\+|-)?(\d+))([lL]|[fF])?'

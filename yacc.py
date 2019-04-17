@@ -46,20 +46,36 @@ start = 'statement_group'
 
 def p_id(p):
     'id : ID'
-    if not p[1] in names: 
-        print('Using of undefined identificator', '"'+p[1]+'"', 'at line', p.lineno(1))
+    # if not p[1] in names:
+    #     print('Using of undefined identificator', '"'+p[1]+'"', 'at line', p.lineno(1))
     p[0] = Node('ID', [p[1]])
 
 
 # 'ID', 'CONST_INTEGER', 'CONST_FLOAT', 'CONST_STRING', 'NULL', 'CONST_BOOLEAN',
-def p_const_values(p):
-    '''const_type : CONST_FLOAT
-            | CONST_STRING
-            | CONST_INTEGER
-            | CONST_BOOLEAN
-            | NULL
-    '''
-    p[0] = Node('CONST_VALUE', [p[1]])
+
+def p_const_type_float(p):
+    'const_type : CONST_FLOAT'
+    p[0] = Node('CONSTANT', [Node('DATATYPE', ['float']), Node('VALUE', [p[1]])])
+
+
+def p_const_type_string(p):
+    'const_type : CONST_STRING'
+    p[0] = Node('CONSTANT', [Node('DATATYPE', ['string']), Node('VALUE', [p[1]])])
+
+
+def p_const_type_integer(p):
+    'const_type : CONST_INTEGER'
+    p[0] = Node('CONSTANT', [Node('DATATYPE', ['integer']), Node('VALUE', [p[1]])])
+
+
+def p_const_type_boolean(p):
+    'const_type : CONST_BOOLEAN'
+    p[0] = Node('CONSTANT', [Node('DATATYPE', ['boolean']), Node('VALUE', [p[1]])])
+
+
+def p_const_type_null(p):
+    'const_type : NULL'
+    p[0] = Node('CONSTANT', [Node('DATATYPE', ['null']), Node('VALUE', [p[1]])])
 
 
 def p_const_arr(p):
@@ -73,10 +89,10 @@ def p_array_element(p):
 
 
 def p_variable(p):
-    '''variable_decl : datatype ID'''
-    if (p[2] in names):
-        print('Redundant definition of "'+p[2]+'" at line ' + str(p.lineno(2)) + ', it\'s already defined at line', names[p[2]][1])
-    names[p[2]] = (p[1].parts[0], p.lineno(1))
+    '''variable_decl : datatype id'''
+    # if (p[2] in names):
+    #     print('Redundant definition of "'+p[2]+'" at line ' + str(p.lineno(2)) + ', it\'s already defined at line', names[p[2]][1])
+    # names[p[2]] = (p[1].parts[0], p.lineno(1))
     p[0] = Node('VARIABLE', [p[1], p[2]])
 
 

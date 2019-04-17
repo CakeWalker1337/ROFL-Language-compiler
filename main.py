@@ -6,6 +6,7 @@ import pandas
 import io
 import utils as utils
 import ply.yacc as yacc
+from tree_parser import *
 
 
 errordata = []
@@ -59,3 +60,6 @@ if  __name__ == "__main__":
         parser = yacc.yacc(debug=0)
         result = parser.parse(text)
         print(result)
+        nodes = []
+        get_all_nodes_by_name(result, "FUNCTION", nodes)
+        print(nodes)
