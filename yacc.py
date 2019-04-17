@@ -41,7 +41,7 @@ precedence = (
 )
 
 
-start = 'SCOPE'
+start = 'scope'
 
 
 def p_id(p):
@@ -87,16 +87,8 @@ def p_array_element(p):
 
 
 def p_variable(p):
-<<<<<<< HEAD
     '''variable_decl : datatype ID'''
     p[0] = Node('VARIABLE', [p[1], p[2]], p.lineno(1))
-=======
-    '''variable_decl : datatype id'''
-    # if (p[2] in names):
-    #     print('Redundant definition of "'+p[2]+'" at line ' + str(p.lineno(2)) + ', it\'s already defined at line', names[p[2]][1])
-    # names[p[2]] = (p[1].parts[0], p.lineno(1))
-    p[0] = Node('VARIABLE', [p[1], p[2]])
->>>>>>> 25fba95914fdab7dd7fad4bb5476aad015ee6b78
 
 
 def p_datatypes(p):
@@ -153,7 +145,7 @@ def p_empty(p):
 
 
 def p_func(p):
-    ''' func : FUNCTION id LPAREN func_arg RPAREN COLON datatype LBRACE SCOPE RBRACE
+    ''' func : FUNCTION id LPAREN func_arg RPAREN COLON datatype LBRACE scope RBRACE
 
         func_arg : variable_decl
                 | empty
@@ -169,8 +161,8 @@ def p_func(p):
             p[0] = p[1].add_parts([p[3]])
 
 
-def p_SCOPE(p):
-    '''SCOPE : SCOPE statement
+def p_scope(p):
+    '''scope : scope statement
             | statement
     '''
     if len(p) == 2:
@@ -318,22 +310,22 @@ def p_conditions(p):
 
 
 def p_if_cond(p):
-    'if_cond : IF LPAREN expression RPAREN LBRACE SCOPE RBRACE'
+    'if_cond : IF LPAREN expression RPAREN LBRACE scope RBRACE'
     p[0] = Node('IF', [Node('CONDITION', [p[3]], p.lineno(1)), p[6]], p.lineno(1))
 
 
 def p_elif_cond(p):
-    '''elif_cond : ELIF LPAREN expression RPAREN LBRACE SCOPE RBRACE'''
+    '''elif_cond : ELIF LPAREN expression RPAREN LBRACE scope RBRACE'''
     p[0] = Node('ELIF', [Node('CONDITION', [p[3]], p.lineno(1)), p[6]], p.lineno(1))
 
 
 def p_else_cond(p):
-    '''else_cond : ELSE LBRACE SCOPE RBRACE'''
+    '''else_cond : ELSE LBRACE scope RBRACE'''
     p[0] = Node('ELSE', [p[3]], p.lineno(1))
 
 
 def p_loop(p):
-    'while_loop : DO LBRACE SCOPE RBRACE WHILE LPAREN expression RPAREN SEMI'
+    'while_loop : DO LBRACE scope RBRACE WHILE LPAREN expression RPAREN SEMI'
     p[0] = Node('WHILE', [p[3], Node('CONDITION', [p[7]], p.lineno(1))], p.lineno(1))
 
 
