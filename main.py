@@ -38,7 +38,7 @@ def parseVarError(node, variables={}, parent=None, scopevars=[]):
         elif node.type == 'STRUCT':
             name = node.parts[0].parts[0]
             if name in variables:
-                    print('Redundant definition of "'+name+'" on line', node.line)
+                print('Redundant definition of "'+name+'" on line', node.line)
             else:
                 variables[name] = 'struct'
                 scopevars.append(name)
@@ -68,20 +68,20 @@ if  __name__ == "__main__":
 
     with io.open(filename, "r", encoding="utf8") as f:
         text = f.read()
-        lexer.input(text)
+        # lexer.input(text)
 
-        data = []
-        symbolcounter = 0
-        for token in lexer:
-            if (re.match(r'(NEWLINE)|(COMMENT)', token.type)):
-                symbolcounter = token.lexpos
-            data.append([token.type, token.value, token.lineno, token.lexpos - symbolcounter])
+        # data = []
+        # symbolcounter = 0
+        # for token in lexer:
+        #     if (re.match(r'(NEWLINE)|(COMMENT)', token.type)):
+        #         symbolcounter = token.lexpos
+        #     data.append([token.type, token.value, token.lineno, token.lexpos - symbolcounter])
 
-        errors = findErrors(data)
-        for error in errors:
-            print(error)
+        # errors = findErrors(data)
+        # for error in errors:
+        #     print(error)
 
-        print(pandas.DataFrame([row for row in data], columns=["token_type", "token_value", "line_no", "pos"]))
+        # print(pandas.DataFrame([row for row in data], columns=["token_type", "token_value", "line_no", "pos"]))
 
         # import logging
 
