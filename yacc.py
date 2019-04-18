@@ -357,8 +357,8 @@ def p_call(p):
 # Error rule for syntax errors
 def p_error(p):
     if p is not None and p.value == 'NEWLINE': 
-        print('Semicolon is missing at line %s' % (p.lineno(1)))
+        print('Semicolon is missing at line %s' % (p.lineno))
     elif p is not None: 
-        print('Line %s, illegal token "%s"' % (p.lineno(1), p.value))
+        print('Line %s, illegal token "%s"' % (p.lineno, p.value))
     else:
         print('Unexpected end of input')
