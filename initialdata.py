@@ -111,7 +111,7 @@ t_CONST_FLOAT = r'((\d+)(\.\d+)(e(\+|-)?(\d+))? | (\d+)e(\+|-)?(\d+))([lL]|[fF])
 
 def t_COMMENT(t):
     r'//.*\n?'
-    t.lexer.lineno += len(t.value)
+    t.lexer.lineno += 1
     return None
 
 
@@ -123,7 +123,7 @@ def t_CONST_STRING(t):
 
 def t_NEWLINE(t):
     r'\n'
-    t.lexer.lineno += len(t.value)
+    t.lexer.lineno += 1
     return None
 
 
