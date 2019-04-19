@@ -10,6 +10,41 @@ def init_semantic(root):
     main_root = root
 
 
+def parse_chain_call_error(node):
+    pass
+
+
+def parse_var_error(node, variables):
+    childs = []
+    if is_node(node):
+        if node.type == 'VARIABLE':
+            if node.parts[1].parts[0] in variables:
+                print('Redundant definition of "'+node.parts[1]+'" on line', node.line)
+            else:
+                variables[node.parts[1].parts[0]] = node.parts[0].parts[0]
+        elif node.type == 'ID':
+            if not node.parts[0] in variables:
+                print('Undefined identificator "'+node.parts[0]+'" on line', node.line)
+        elif node.type == 'STRUCT':
+            name = node.parts[0].parts[0]
+            if name in variables:
+                print('Redundant definition of "'+name+'" on line', node.line)
+            else:
+                variables[name] = 'struct'
+                childs = node.get_element_by_tag("CONTEXT").parts
+        elif node.type == 'FUNCTION':
+            name = node.parts[0].parts[0]
+            if name in variables:
+                print('Redundant definition of "'+name+'" on line', node.line)
+            else:
+                variables[name] = 'function'
+                childs = node.get_element_by_tag("SCOPE").parts
+        else:
+            childs = node.parts
+        for child in childs:
+            parse_var_error(child, variables)
+
+
 def get_all_nodes_by_name(root, name, nodes):
     for elem in root.parts:
         if is_node(elem):

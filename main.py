@@ -11,9 +11,9 @@ from tree_parser import *
 
 errordata = []
 
+
 def findErrors(data):
     errordata = []
-
 
     # redundant repeating
     for i in range(len(data) - 1):
@@ -22,41 +22,6 @@ def findErrors(data):
             # addError("Integer type overflow", data[i])
     return errordata
 
-def parseVarError(node, variables={}, parent=None, scopevars=[]):
-    
-    try:
-        
-        if node.type == 'VARIABLE':
-            if node.parts[1] in variables:
-                print('Redundant definition of "'+node.parts[1]+'" on line', node.line)
-            else:
-                variables[node.parts[1]] = node.parts[0].parts[0]
-                scopevars.append(node.parts[1])
-        elif node.type == 'ID':
-            if not node.parts[0] in variables:
-                print('Undefined variable "'+node.parts[0]+'" on line', node.line)
-        elif node.type == 'STRUCT':
-            name = node.parts[0].parts[0]
-            if name in variables:
-                print('Redundant definition of "'+name+'" on line', node.line)
-            else:
-                variables[name] = 'struct'
-                scopevars.append(name)
-        elif node.type == 'FUNCTION':
-            name = node.parts[0].parts[0]
-            if name in variables:
-                print('Redundant definition of "'+name+'" on line', node.line)
-            else:
-                variables[name] = 'function'
-                scopevars.append(name)
-        else:
-            for child in node.parts:
-                parseVarError(child, variables, node, [] if child.type == 'SCOPE' else scopevars)
-    except: pass
-    
-    if (node.type == 'SCOPE'):
-        for name in scopevars:
-            del variables[name]
 
 if  __name__ == "__main__":
     filename = 'program.rofl'
@@ -96,6 +61,7 @@ if  __name__ == "__main__":
         parser = yacc.yacc(debug=0)
         result = parser.parse(text)
         print(result)
-        parseVarError(result)
+        parse_var_error(result, {})
+
         init_semantic(result)
-        print(get_expression_result_type(result.parts[1].parts[1]))
+        print(get_expression_result_type(result.parts[2].parts[1]))

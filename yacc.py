@@ -125,15 +125,19 @@ def p_struct(p):
 def p_content(p):
     '''content : content func
             | content variable_decl SEMI
-            | content assignment
+            | variable_decl ASSIGN expression SEMI
+            | content variable_decl ASSIGN expression SEMI
             | variable_decl SEMI
-            | assignment
             | func
     '''
-    if len(p) == 2:
-        p[0] = Node('CONTENT', [p[1]], p.lineno(1))
-    else:
+    if (len(p) == 3 and p[2] != ';') or len(p) == 4:
         p[0] = p[1].add_parts([p[2]])
+    elif len(p) == 2 or len(p) == 3:
+        p[0] = Node('CONTENT', [p[1]], p.lineno(1))
+    elif len(p) == 5:
+        p[0] = Node('CONTENT', [Node('ASSIGN', [p[1], p[3]], p[1].line)], p.lineno(1))
+    elif len(p) == 6:
+        p[0] = p[1].add_parts([Node('ASSIGN', [p[2], p[4]], p[2].line)])
 
 
 def p_assignment(p):
