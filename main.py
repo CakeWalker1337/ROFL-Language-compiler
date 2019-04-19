@@ -97,6 +97,5 @@ if  __name__ == "__main__":
         result = parser.parse(text)
         print(result)
         parseVarError(result)
-        nodes = []
-        get_all_nodes_by_name(result, "FUNCTION", nodes)
-        print(nodes)
+        init_semantic(result)
+        print(get_expression_result_type(result.parts[1].parts[1]))

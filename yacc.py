@@ -2,6 +2,13 @@ from initialdata import tokens
 
 
 class Node:
+
+    def get_element_by_tag(self, tag):
+        for part in self.parts:
+            if type(part).__name__ == 'Node' and part.type == tag:
+                return part
+        return None
+
     def parts_str(self):
         st = []
         for part in self.parts:
@@ -58,12 +65,12 @@ def p_const_type_float(p):
 
 def p_const_type_string(p):
     'const_type : CONST_STRING'
-    p[0] = Node('CONSTANT', [Node(', p.lineno(1)DATATYPE', ['string'], p.lineno(1)), Node('VALUE', [p[1]], p.lineno(1))], p.lineno(1))
+    p[0] = Node('CONSTANT', [Node('DATATYPE', ['string'], p.lineno(1)), Node('VALUE', [p[1]], p.lineno(1))], p.lineno(1))
 
 
 def p_const_type_integer(p):
     'const_type : CONST_INTEGER'
-    p[0] = Node('CONSTANT', [Node('DATATYPE', ['integer'], p.lineno(1)), Node('VALUE', [p[1]], p.lineno(1))], p.lineno(1))
+    p[0] = Node('CONSTANT', [Node('DATATYPE', ['int'], p.lineno(1)), Node('VALUE', [p[1]], p.lineno(1))], p.lineno(1))
 
 
 def p_const_type_boolean(p):
@@ -87,7 +94,7 @@ def p_array_element(p):
 
 
 def p_variable(p):
-    '''variable_decl : datatype ID'''
+    '''variable_decl : datatype id'''
     p[0] = Node('VARIABLE', [p[1], p[2]], p.lineno(1))
 
 
@@ -198,6 +205,7 @@ def p_literal_expressions(p):
             | id
             | function_call
             | array_element
+            | chain_call
     '''
     p[0] = p[1]
 
@@ -221,7 +229,6 @@ def p_binary_operators(p):
             | expression IDIVIDE expression
             | expression BOR expression
             | expression BAND expression
-            | expression DOT expression
     '''
     if len(p) == 4:
         if p[2] == '+':
@@ -241,8 +248,6 @@ def p_binary_operators(p):
             p[0] = Node('BOR', [p[1], p[3]], p.lineno(1))
         elif p[2] == '&':
             p[0] = Node('BAND', [p[1], p[3]], p.lineno(1))
-        elif p[2] == '.':
-            p[0] = Node('CHAIN_CALL', [p[1], p[3]], p.lineno(1))
     else:
         p[0] = p[1]
 
@@ -288,6 +293,21 @@ def p_logic_expressions(p):
         p[0] = Node('LNOT', [p[2]], p.lineno(1))
 
 
+def p_call(p):
+    '''call : id
+        | function_call'''
+    p[0] = p[1]
+
+
+def p_chain_call(p):
+    '''chain_call : call
+        | chain_call DOT call'''
+    if len(p) == 2:
+        p[0] = Node("CHAIN_CALL", [p[1]], p.lineno(1))
+    else:
+        p[0] = p[1].add_parts([p[3]])
+
+
 def p_full_condition(p):
     '''condition_full : condition_statement else_cond
             | condition_statement '''
@@ -295,7 +315,6 @@ def p_full_condition(p):
         p[0] = p[1]
     else:
         p[0] = p[1].add_parts([p[2]])
-
 
 
 def p_conditions(p):
@@ -349,7 +368,7 @@ def p_call_args(p):
         p[0] = Node('CALL_ARGS', [p[1]], p.lineno(1))
 
 
-def p_call(p):
+def p_func_call(p):
     'function_call : id LPAREN call_args RPAREN'
     p[0] = Node('FUNC_CALL', [p[1], p[3]], p.lineno(1))
 
