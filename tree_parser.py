@@ -34,7 +34,7 @@ def parse_var_error(node, variables):
                 print('Redundant definition of "'+name+'" on line', node.line)
             else:
                 variables[name] = 'struct'
-                childs = node.get_element_by_tag("CONTEXT").parts
+                childs = node.get_element_by_tag("CONTEXT").parts if node.get_element_by_tag("CONTEXT") else []
         elif node.type == 'FUNCTION':
             name = node.parts[0].parts[0]
             if name in variables:
@@ -187,3 +187,21 @@ def check_return_types(nodes):
         else:
             for val in returns:
                 pass
+
+
+def check_forbidden_definitions(tree):
+    functions = []
+    definitions = []
+    get_all_nodes_by_name(tree, 'FUNCTION', functions)
+    if (len(functions)):
+        for func in functions:
+            struct_definitions = []
+            get_all_nodes_by_name(func, 'STRUCT', struct_definitions)
+            func_definitions = []
+            get_all_nodes_by_name(func, 'FUNCTION', func_definitions)
+            definitions += func_definitions
+            definitions += struct_definitions
+    
+    for d in definitions:
+        print('Forbidden definition of', d.type, 'on line', d.line)
+
