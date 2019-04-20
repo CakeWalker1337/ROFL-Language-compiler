@@ -300,8 +300,7 @@ def p_logic_expressions(p):
 
 def p_call(p):
     '''call : id
-        | function_call
-        | array_element'''
+        | function_call'''
     p[0] = p[1]
 
 
