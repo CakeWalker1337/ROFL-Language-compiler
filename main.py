@@ -64,5 +64,7 @@ if  __name__ == "__main__":
         parse_var_error(result, {})
 
         init_semantic(result)
+        parse_chain_call_errors()
+        check_expression_results(result, False)
         check_forbidden_definitions(result)
         check_inner_commands(result)

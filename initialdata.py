@@ -18,7 +18,6 @@ reserved = {
     'float': "DECL_FLOAT",
     'int': "DECL_INTEGER",
     'string': "DECL_STRING",
-    'array': "DECL_ARRAY",
     'void': "DECL_VOID",
     'null': "NULL"
 }

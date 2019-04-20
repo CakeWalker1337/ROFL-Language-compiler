@@ -1,11 +1,12 @@
-array a = [];
-int b = a[0] + 1;
+int myFunc1 = 2;
 struct MyStruct {
-    int b = 5;
-    boolean f = 6;
+    int[] b;
+    boolean f = true;
+    function myFunc() : MyStruct {
+        MyStruct c;
+        return;
+    }
 }
+int[] arr = string[](5);
 MyStruct str;
-
-function a(int a, MyStruct c) : MyStruct {
-    return c;
-}
+arr[1] = 0.5;

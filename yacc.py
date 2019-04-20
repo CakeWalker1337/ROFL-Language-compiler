@@ -9,6 +9,13 @@ class Node:
                 return part
         return None
 
+    # def get_elements_by_tag(self, tag):
+    #     elems = []
+    #     for part in self.parts:
+    #         if type(part).__name__ == 'Node' and part.type == tag:
+    #             elems.append(part)
+    #     return elems
+
     def parts_str(self):
         st = []
         for part in self.parts:
@@ -43,8 +50,8 @@ precedence = (
     ('left', 'TIMES', 'DIVIDE', 'MODULO', 'IDIVIDE'),
     ('left', 'INCREMENT', 'DECREMENT'),
     ('left', 'DOT'),
-    ('nonassoc', 'LPAREN', 'RPAREN'),
     ('nonassoc', 'LBRACKET', 'RBRACKET'),
+    ('nonassoc', 'LPAREN', 'RPAREN'),
     ('nonassoc', 'LBRACE', 'RBRACE')
 )
 
@@ -58,36 +65,31 @@ def p_id(p):
 
 # 'ID', 'CONST_INTEGER', 'CONST_FLOAT', 'CONST_STRING', 'NULL', 'CONST_BOOLEAN',
 
-def p_const_type_float(p):
-    'const_type : CONST_FLOAT'
+def p_const_value_float(p):
+    'const_value : CONST_FLOAT'
     p[0] = Node('CONSTANT', [Node('DATATYPE', ['float'], p.lineno(1)), Node('VALUE', [p[1]], p.lineno(1))], p.lineno(1))
 
 
-def p_const_type_string(p):
-    'const_type : CONST_STRING'
+def p_const_value_string(p):
+    'const_value : CONST_STRING'
     p[0] = Node('CONSTANT', [Node('DATATYPE', ['string'], p.lineno(1)), Node('VALUE', [p[1]], p.lineno(1))],
                 p.lineno(1))
 
 
-def p_const_type_integer(p):
-    'const_type : CONST_INTEGER'
+def p_const_value_integer(p):
+    'const_value : CONST_INTEGER'
     p[0] = Node('CONSTANT', [Node('DATATYPE', ['int'], p.lineno(1)), Node('VALUE', [p[1]], p.lineno(1))], p.lineno(1))
 
 
-def p_const_type_boolean(p):
-    'const_type : CONST_BOOLEAN'
+def p_const_value_boolean(p):
+    'const_value : CONST_BOOLEAN'
     p[0] = Node('CONSTANT', [Node('DATATYPE', ['boolean'], p.lineno(1)), Node('VALUE', [p[1]], p.lineno(1))],
                 p.lineno(1))
 
 
-def p_const_type_null(p):
-    'const_type : NULL'
+def p_const_value_null(p):
+    'const_value : NULL'
     p[0] = Node('CONSTANT', [Node('DATATYPE', ['null'], p.lineno(1)), Node('VALUE', [p[1]], p.lineno(1))], p.lineno(1))
-
-
-def p_const_arr(p):
-    '''const_type : LBRACKET call_args RBRACKET'''
-    p[0] = Node('ARRAY', p[2].parts, p.lineno(1))
 
 
 def p_array_element(p):
@@ -97,29 +99,53 @@ def p_array_element(p):
 
 def p_variable(p):
     '''variable_decl : datatype id
-            | id id
+            | ID id
     '''
-    if p[1].type == "DATATYPE":
+    if type(p[1]).__name__ == "Node":
         p[0] = Node('VARIABLE', [p[1], p[2]], p.lineno(1))
     else:
-        p[0] = Node('VARIABLE', [Node("DATATYPE", [p[1].parts[0]], p[1].line), p[2]], p.lineno(1))
+        p[0] = Node('VARIABLE', [Node("DATATYPE", [p[1]], p.lineno(1)), p[2]], p.lineno(1))
 
 
-def p_datatypes(p):
-    '''datatype : DECL_BOOLEAN
+def p_array_alloc(p):
+    '''array_alloc : array_type LPAREN id RPAREN
+                | array_type LPAREN CONST_INTEGER RPAREN
+    '''
+    size = None
+    if type(p[3]).__name__ == "Node":
+        size = p[3]
+    else:
+        size = Node('CONSTANT', [Node('DATATYPE', ['int'], p.lineno(1)), Node('VALUE', [p[3]], p.lineno(1))], p.lineno(1))
+    p[0] = Node("ARRAY_ALLOC", [p[1], Node("SIZE", [size], p.lineno(1))], p.lineno(1))
+
+
+def p_primitives(p):
+    '''primitive_type : DECL_BOOLEAN
             | DECL_FLOAT
             | DECL_INTEGER
             | DECL_STRING
-            | DECL_ARRAY
             | DECL_VOID
     '''
-    p[0] = Node('DATATYPE', [p[1]], p.lineno(1))
+    p[0] = Node("DATATYPE", [p[1]], p.lineno(1))
+
+
+def p_array_type(p):
+    '''array_type : primitive_type LBRACKET RBRACKET
+            | id LBRACKET RBRACKET
+    '''
+    p[0] = Node("DATATYPE", [p[1].parts[0] + "[]"], p.lineno(1))
+
+
+def p_datatype(p):
+    '''datatype : primitive_type
+                | array_type
+    '''
+    p[0] = p[1]
 
 
 def p_delimiters(p):
     '''expression : LPAREN expression RPAREN
             | LBRACE expression RBRACE
-            | LBRACKET expression RBRACKET
     '''
     p[0] = p[2]
 
@@ -150,11 +176,12 @@ def p_content(p):
 def p_assignment(p):
     '''assignment : variable_decl ASSIGN expression SEMI
                 | id ASSIGN expression SEMI
-                | array_element ASSIGN expression SEMI'''
+                | variable_decl ASSIGN array_alloc SEMI
+                | id ASSIGN array_alloc SEMI
+                | array_element ASSIGN expression SEMI
+    '''
     if len(p) == 5:
         p[0] = Node('ASSIGN', [p[1], p[3]], p.lineno(1))
-    else:
-        p[0] = Node('ASSIGN', [p[1], p[4]], p.lineno(1))
 
 
 def p_empty(p):
@@ -220,7 +247,7 @@ def p_statement(p):
 
 
 def p_literal_expressions(p):
-    '''expression : const_type
+    '''expression : const_value
             | id
             | function_call
             | array_element
@@ -326,7 +353,8 @@ def p_chain_call(p):
 
 def p_full_condition(p):
     '''condition_full : condition_statement else_cond
-            | condition_statement '''
+            | condition_statement
+    '''
     if len(p) == 2:
         p[0] = p[1]
     else:
