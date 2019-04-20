@@ -11,7 +11,10 @@ def init_semantic(root):
 
 
 def parse_chain_call_error(node):
-    pass
+    if not is_node(node):
+        raise Exception("Can't interact with non-node element.")
+    if node.type != "CHAIN_CALL":
+        raise Exception("Node hasn't got a type CHAIN_CALL.")
 
 
 def parse_var_error(node, variables):
@@ -24,7 +27,7 @@ def parse_var_error(node, variables):
                 variables[node.parts[1].parts[0]] = node.parts[0].parts[0]
         elif node.type == 'ID':
             if not node.parts[0] in variables:
-                print('Undefined identificator "'+node.parts[0]+'" on line', node.line)
+                print('Undefined identifier "'+node.parts[0]+'" on line', node.line)
         elif node.type == 'STRUCT':
             name = node.parts[0].parts[0]
             if name in variables:
@@ -65,7 +68,7 @@ def get_nodes_with_id(root):
     def recursive_find(root, elems):
         for elem in root.parts:
             if is_node(elem):
-                if elem.type == "VARIABLE" or elem.type == "FUNCTION" or elem.type == "STRUCT":
+                if elem.type == "VARIABLE" or elem.type == "FUNCTION" or elem.type == "STRUCT" or elem.type == "MARK":
                     elems.append(elem)
                 recursive_find(elem, elems)
 
@@ -114,14 +117,12 @@ def is_expression(node):
         tnames = ['PLUS', 'MINUS', 'TIMES', 'DIVIDE', 'MODULO', 'IDIVIDE',
                   'LOR', 'BOR', 'LAND', 'BAND', 'LNOT',
                   'LT', 'LE', 'GT', 'GE', 'EQ', 'NE',
-                  'INCREMENT', 'DECREMENT']
+                  'INCREMENT', 'DECREMENT', 'CHAIN_CALL']
         return node.type in tnames
     return False
 
 
 def get_atom_type(atom):
-    if atom.type == "CHAIN_CALL":
-        return get_atom_type(atom.parts[len(atom.parts) - 1])
     if atom.type == "CONSTANT":
         return atom.get_element_by_tag("DATATYPE").parts[0]
     looked_id = None
