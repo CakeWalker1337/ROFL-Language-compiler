@@ -1,5 +1,11 @@
 array a = [];
 int b = a[0] + 1;
+struct MyStruct {
+    int b = 5;
+    boolean f = 6;
+}
+MyStruct str;
 
-
-
+function a(int a, MyStruct c) : MyStruct {
+    return c;
+}

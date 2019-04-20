@@ -198,7 +198,7 @@ def get_expression_result_type(root):
             return comp_res
     if is_node_atom(root):
         return get_atom_type(root)
-    print("its none")
+    print("its none %s" % root.type)
 
 
 def check_return_types(nodes):

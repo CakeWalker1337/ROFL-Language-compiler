@@ -64,6 +64,5 @@ if  __name__ == "__main__":
         parse_var_error(result, {})
 
         init_semantic(result)
-        print(get_expression_result_type(result.parts[0].parts[1]))
         check_forbidden_definitions(result)
         check_inner_commands(result)

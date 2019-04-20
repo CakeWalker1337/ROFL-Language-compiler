@@ -12,7 +12,7 @@ class Node:
     def parts_str(self):
         st = []
         for part in self.parts:
-            st.append( str( part ) )
+            st.append(str(part))
         return "\n".join(st)
 
     def __repr__(self):
@@ -48,7 +48,6 @@ precedence = (
     ('nonassoc', 'LBRACE', 'RBRACE')
 )
 
-
 start = 'scope'
 
 
@@ -66,7 +65,8 @@ def p_const_type_float(p):
 
 def p_const_type_string(p):
     'const_type : CONST_STRING'
-    p[0] = Node('CONSTANT', [Node('DATATYPE', ['string'], p.lineno(1)), Node('VALUE', [p[1]], p.lineno(1))], p.lineno(1))
+    p[0] = Node('CONSTANT', [Node('DATATYPE', ['string'], p.lineno(1)), Node('VALUE', [p[1]], p.lineno(1))],
+                p.lineno(1))
 
 
 def p_const_type_integer(p):
@@ -76,7 +76,8 @@ def p_const_type_integer(p):
 
 def p_const_type_boolean(p):
     'const_type : CONST_BOOLEAN'
-    p[0] = Node('CONSTANT', [Node('DATATYPE', ['boolean'], p.lineno(1)), Node('VALUE', [p[1]], p.lineno(1))], p.lineno(1))
+    p[0] = Node('CONSTANT', [Node('DATATYPE', ['boolean'], p.lineno(1)), Node('VALUE', [p[1]], p.lineno(1))],
+                p.lineno(1))
 
 
 def p_const_type_null(p):
@@ -95,8 +96,13 @@ def p_array_element(p):
 
 
 def p_variable(p):
-    '''variable_decl : datatype id'''
-    p[0] = Node('VARIABLE', [p[1], p[2]], p.lineno(1))
+    '''variable_decl : datatype id
+            | id id
+    '''
+    if p[1].type == "DATATYPE":
+        p[0] = Node('VARIABLE', [p[1], p[2]], p.lineno(1))
+    else:
+        p[0] = Node('VARIABLE', [Node("DATATYPE", [p[1].parts[0]], p[1].line), p[2]], p.lineno(1))
 
 
 def p_datatypes(p):
@@ -158,6 +164,7 @@ def p_empty(p):
 
 def p_func(p):
     ''' func : FUNCTION id LPAREN func_arg RPAREN COLON datatype LBRACE scope RBRACE
+                | FUNCTION id LPAREN func_arg RPAREN COLON id LBRACE scope RBRACE
 
         func_arg : variable_decl
                 | empty
@@ -165,7 +172,10 @@ def p_func(p):
 
     '''
     if p[1] == 'function':
-        p[0] = Node('FUNCTION', [p[2], p[4], p[7], p[9]], p.lineno(1))
+        if p[7].type == "DATATYPE":
+            p[0] = Node('FUNCTION', [p[2], p[4], p[7], p[9]], p.lineno(1))
+        else:
+            p[0] = Node('FUNCTION', [p[2], p[4], Node("DATATYPE", [p[7].parts[0]], p[7].line), p[9]], p.lineno(1))
     else:
         if len(p) == 2:
             p[0] = Node('FUNC_ARGS', [p[1]], p.lineno(1))
@@ -199,7 +209,7 @@ def p_statement(p):
             | comment
     '''
     if len(p) == 3:
-        if (isinstance(p[1], str)):
+        if isinstance(p[1], str):
             p[0] = Node(p[1].upper(), [], p.lineno(1))
         else:
             p[0] = p[1]
@@ -327,7 +337,7 @@ def p_conditions(p):
     '''condition_statement : if_cond
             | condition_statement elif_cond
     '''
-    #TODO: Отловить ошибку, когда больше одного else (правило, исключающее этот кейс, подобрать не смог)
+    # TODO: Отловить ошибку, когда больше одного else (правило, исключающее этот кейс, подобрать не смог)
     if len(p) == 2:
         p[0] = Node('CONDITION', [p[1]], p.lineno(1))
     else:
@@ -381,9 +391,9 @@ def p_func_call(p):
 
 # Error rule for syntax errors
 def p_error(p):
-    if p is not None and p.value == 'NEWLINE': 
+    if p is not None and p.value == 'NEWLINE':
         print('Semicolon is missing at line %s' % (p.lineno))
-    elif p is not None: 
+    elif p is not None:
         print('Line %s, illegal token "%s"' % (p.lineno, p.value))
     else:
         print('Unexpected end of input')
