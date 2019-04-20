@@ -68,3 +68,4 @@ if  __name__ == "__main__":
         check_expression_results(result, False)
         check_forbidden_definitions(result)
         check_inner_commands(result)
+        check_func_call(result)
