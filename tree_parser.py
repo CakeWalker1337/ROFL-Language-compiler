@@ -204,3 +204,38 @@ def check_forbidden_definitions(tree):
     for d in definitions:
         print('Forbidden definition of', d.type, 'on line', d.line)
 
+
+def check_inner_commands(tree):
+    
+    def check_return(tree, inside_func = False, func_datatype = None):
+        if is_node(tree):
+            for child in tree.parts:
+                if (is_node(child) and child.type == 'RETURN'):
+                    if (inside_func):
+                        if (len(child.parts)):
+                            return_type = get_expression_result_type(child.parts[0])
+                            if (return_type != func_datatype):
+                                print('You can\'t return', return_type, 'from', func_datatype, 'function, line', child.line)
+                        else:
+                            if (not func_datatype == 'void'):
+                                print('You can\'t return value from void function, line', child.line)
+                    else:
+                        print('You can\'t use operator "RETURN" outside of a function, line', child.line)
+                elif(is_node(child)):
+                    is_func = child.type == 'FUNCTION'
+                    datatype = None
+                    if (func_datatype): datatype = func_datatype
+                    elif (is_func): datatype = child.parts[2].parts[0]
+                    check_return(child, is_func or inside_func, datatype)
+    
+
+    def check_skip_break(tree, inside_cycle):
+        if is_node(tree):
+            for child in tree.parts:
+                if (is_node(child) and (child.type == 'SKIP' or child.type == 'BREAK')) and not inside_cycle:
+                    print('You can\'t use operator "'+child.type+'" outside of a cycle, line', child.line)
+                elif (is_node(child)):
+                    check_skip_break(child, child.type == 'WHILE' or inside_cycle)
+
+    check_return(tree, False)
+    check_skip_break(tree, False)

@@ -184,6 +184,7 @@ def p_scope(p):
 
 def p_statement(p):
     '''statement : RETURN expression SEMI
+            | RETURN SEMI
             | expression SEMI
             | assignment
             | func
@@ -197,7 +198,10 @@ def p_statement(p):
             | comment
     '''
     if len(p) == 3:
-        p[0] = p[1]
+        if (isinstance(p[1], str)):
+            p[0] = Node(p[1].upper(), [], p.lineno(1))
+        else:
+            p[0] = p[1]
     elif len(p) == 2:
         p[0] = p[1]
     else:

@@ -66,3 +66,5 @@ if  __name__ == "__main__":
         init_semantic(result)
         print(get_expression_result_type(result.parts[2].parts[1]))
         check_forbidden_definitions(result)
+        check_inner_commands(result)
+        
