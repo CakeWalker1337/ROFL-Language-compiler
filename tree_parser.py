@@ -266,3 +266,29 @@ def check_inner_commands(tree):
 
     check_return(tree, False)
     check_skip_break(tree, False)
+
+def check_func_call(tree):
+
+    calls = []
+    get_all_nodes_by_name(tree, 'FUNC_CALL', calls)
+    functions = []
+    get_all_nodes_by_name(tree, 'FUNCTION', functions)
+
+    for call in calls:
+        fun_id = call.parts[0].parts[0]
+        fun_def = None
+        for fun in functions:
+            if fun.parts[0].parts[0] == fun_id:
+                fun_def = fun
+                break
+        
+        if (fun_def):
+            types = []
+            for arg in fun_def.parts[1].parts:
+                types.append(arg.parts[0].parts[0])
+            
+            call_args = call.parts[1].parts
+            for i in range(len(call_args)):
+                if get_expression_result_type(call_args[i]) != types[i]:
+                    print('Wrong type of an argument "'+call_args[i].parts[0]+
+                    '" in the call of function "'+fun.parts[0].parts[0]+'", line', call_args[i].line)

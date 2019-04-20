@@ -66,3 +66,4 @@ if  __name__ == "__main__":
         init_semantic(result)
         check_forbidden_definitions(result)
         check_inner_commands(result)
+        check_func_call(result)
