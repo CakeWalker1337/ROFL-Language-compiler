@@ -42,6 +42,7 @@ precedence = (
     ('left', 'PLUS', 'MINUS'),
     ('left', 'TIMES', 'DIVIDE', 'MODULO', 'IDIVIDE'),
     ('left', 'INCREMENT', 'DECREMENT'),
+    ('left', 'DOT'),
     ('nonassoc', 'LPAREN', 'RPAREN'),
     ('nonassoc', 'LBRACKET', 'RBRACKET'),
     ('nonassoc', 'LBRACE', 'RBRACE')
@@ -308,12 +309,9 @@ def p_call(p):
 
 
 def p_chain_call(p):
-    '''chain_call : call
-        | chain_call DOT call'''
-    if len(p) == 2:
-        p[0] = Node("CHAIN_CALL", [p[1]], p.lineno(1))
-    else:
-        p[0] = p[1].add_parts([p[3]])
+    '''chain_call : id DOT call
+            | array_element DOT call'''
+    p[0] = Node("CHAIN_CALL", [p[1], p[3]], p.lineno(1))
 
 
 def p_full_condition(p):

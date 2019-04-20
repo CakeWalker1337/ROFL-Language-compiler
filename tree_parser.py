@@ -10,8 +10,12 @@ def init_semantic(root):
     main_root = root
 
 
-def parse_chain_call_error(node):
-    pass
+def parse_chain_call_error():
+    global main_root
+    calls = []
+    get_all_nodes_by_name(main_root, "CHAIN_CALL", calls)
+    for call in calls:
+        pass
 
 
 def parse_var_error(node, variables):
@@ -19,12 +23,12 @@ def parse_var_error(node, variables):
     if is_node(node):
         if node.type == 'VARIABLE':
             if node.parts[1].parts[0] in variables:
-                print('Redundant definition of "'+node.parts[1]+'" on line', node.line)
+                print('Redundant definition of "'+node.parts[1].parts[0]+'" on line', node.line)
             else:
                 variables[node.parts[1].parts[0]] = node.parts[0].parts[0]
         elif node.type == 'ID':
             if not node.parts[0] in variables:
-                print('Undefined identificator "'+node.parts[0]+'" on line', node.line)
+                print('Undefined identifier "'+node.parts[0]+'" on line', node.line)
         elif node.type == 'STRUCT':
             name = node.parts[0].parts[0]
             if name in variables:
@@ -65,7 +69,7 @@ def get_nodes_with_id(root):
     def recursive_find(root, elems):
         for elem in root.parts:
             if is_node(elem):
-                if elem.type == "VARIABLE" or elem.type == "FUNCTION" or elem.type == "STRUCT":
+                if elem.type == "VARIABLE" or elem.type == "FUNCTION" or elem.type == "STRUCT" or elem.type == "MARK":
                     elems.append(elem)
                 recursive_find(elem, elems)
 
@@ -79,6 +83,20 @@ def find_element_by_id(looked_id):
         if el.get_element_by_tag("ID").parts[0] == looked_id:
             return el
     return None
+
+
+def is_operation_arithmetic(oper):
+    tnames = ['PLUS', 'MINUS', 'TIMES', 'DIVIDE', 'MODULO', 'IDIVIDE']
+    return oper in tnames
+
+
+def is_operation_logic(oper):
+    tnames = ['LOR', 'LAND', 'LT', 'LE', 'GT', 'GE', 'EQ', 'NE']
+    return oper in tnames
+
+def is_operation_bit(oper):
+    tnames = ['BOR', 'BAND']
+    return oper in tnames
 
 
 def compare_expr(one, two, operation_type):
@@ -98,12 +116,20 @@ def compare_expr(one, two, operation_type):
                 is_type_arithmetic(one) and (operation_type == "INCREMENT" or operation_type == "DECREMENT")):
             return one
         return "error"
-    if one == "string" and operation_type == "PLUS":
-        return "string"
-    if is_type_arithmetic(one) and is_type_arithmetic(two):
-        return "float"
-    if one == two:
-        return one
+    if is_operation_logic(operation_type):
+        if one == "boolean" and two == "boolean":
+            return "boolean"
+        return "error"
+    if is_operation_arithmetic(operation_type):
+        if is_type_arithmetic(one) and is_type_arithmetic(two):
+            return "float"
+        if one == "string" and operation_type == "PLUS":
+            return "string"
+        return "error"
+    if is_operation_bit(operation_type):
+        if (one == "boolean" or one == "int") and one == two:
+            return one
+        return "error"
     if operation_type == "CHAIN_CALL":
         return two
     return "error"
@@ -114,14 +140,12 @@ def is_expression(node):
         tnames = ['PLUS', 'MINUS', 'TIMES', 'DIVIDE', 'MODULO', 'IDIVIDE',
                   'LOR', 'BOR', 'LAND', 'BAND', 'LNOT',
                   'LT', 'LE', 'GT', 'GE', 'EQ', 'NE',
-                  'INCREMENT', 'DECREMENT']
+                  'INCREMENT', 'DECREMENT', 'CHAIN_CALL', 'ARRAY_ELEMENT']
         return node.type in tnames
     return False
 
 
 def get_atom_type(atom):
-    if atom.type == "CHAIN_CALL":
-        return get_atom_type(atom.parts[len(atom.parts) - 1])
     if atom.type == "CONSTANT":
         return atom.get_element_by_tag("DATATYPE").parts[0]
     looked_id = None
@@ -149,8 +173,11 @@ def is_node(elem):
 
 def get_expression_result_type(root):
     if is_expression(root):
-        if len(root.parts) == 1:
-            first = get_expression_result_type(root.parts[0])
+        if len(root.parts) == 1 or root.type == "ARRAY_ELEMENT":
+            part = root.parts[0]
+            if root.type == "ARRAY_ELEMENT":
+                part = root.parts[1]
+            first = get_expression_result_type(part)
             if first == "end":
                 return "end"
             comp_res = compare_expr(first, None, root)
@@ -192,7 +219,7 @@ def check_forbidden_definitions(tree):
     functions = []
     definitions = []
     get_all_nodes_by_name(tree, 'FUNCTION', functions)
-    if (len(functions)):
+    if len(functions):
         for func in functions:
             struct_definitions = []
             get_all_nodes_by_name(func, 'STRUCT', struct_definitions)
