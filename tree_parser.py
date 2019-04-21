@@ -203,7 +203,7 @@ def compare_expr(one, two, operation_type):
             return one
         return "error"
     if is_operation_logic(operation_type):
-        if one == "boolean" and two == "boolean":
+        if one == two:
             return "boolean"
         return "error"
     if is_operation_arithmetic(operation_type):
@@ -269,7 +269,7 @@ def get_expression_result_type(root):
             first = get_expression_result_type(root.parts[0])
             if first == "end":
                 return "end"
-            comp_res = compare_expr(first, None, root)
+            comp_res = compare_expr(first, None, root.type)
             if comp_res == "error":
                 print("Expression error: operand has an unsuitable type (%s). Line: %s" % (
                     first, root.line))
@@ -281,7 +281,7 @@ def get_expression_result_type(root):
             second = get_expression_result_type(root.parts[1])
             if first == "end" or second == "end":
                 return "end"
-            comp_res = compare_expr(first, second, root)
+            comp_res = compare_expr(first, second, root.type)
             if comp_res == "error":
                 #print(root)
                 print(
@@ -319,6 +319,8 @@ def check_expression_results(root, has_errors):
                 elif part.type == "FUNCTION":
                     #print("yes")
                     next_node = part.get_element_by_tag("SCOPE")
+                elif part.type == 'CONDITION':
+                    next_node = part.parts[0].parts[0]
                 check_expression_results(next_node, has_errors)
 
 
