@@ -213,8 +213,12 @@ def p_func(p):
                 "DATATYPE", [p[7].parts[0]], p[7].line), p[9]], p.lineno(1))
     else:
         if len(p) == 2:
+            if type(p[1]).__name__ == "Node": # add "F_" prefix to avoid conflicts with var. definition
+                p[1].type = 'F_' + p[1].type
             p[0] = Node('FUNC_ARGS', [p[1]], p.lineno(1))
         else:
+            if type(p[3]).__name__ == "Node":
+                p[3].type = 'F_' + p[1].type
             p[0] = p[1].add_parts([p[3]])
 
 
@@ -422,9 +426,7 @@ def p_func_call(p):
 
 # Error rule for syntax errors
 def p_error(p):
-    if p is not None and p.value == 'NEWLINE':
-        print('Semicolon is missing at line %s' % (p.lineno))
-    elif p is not None:
+    if p is not None:
         print('Line %s, illegal token "%s"' % (p.lineno, p.value))
     else:
         print('Unexpected end of input')

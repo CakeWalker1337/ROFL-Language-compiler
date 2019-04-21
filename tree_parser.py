@@ -101,31 +101,26 @@ def check_var_definition(node):
     
     def get_name(x):
         if x.type == 'VARIABLE':
-            return x.parts[1].parts[0]
+            return x.parts[1].parts[0], x.type
         elif x.type == 'FUNCTION':
-            return x.parts[0].parts[0]
+            return x.parts[0].parts[0], x.type
         elif x.type == 'STRUCT':
-            return x.parts[0].parts[0]
+            return x.parts[0].parts[0], x.type
         elif x.type == 'ID':
-            return x.parts[0]
+            return x.parts[0], x.type
         else: 
             raise Exception('Wrong type in check_var_definition function, please debug it')
 
-    defs = get_all_nodes_by_name(node, ['VARIABLE', 'FUNCTION', 'STRUCT'])
+    ids = get_all_nodes_by_name(node, ['VARIABLE', 'FUNCTION', 'STRUCT', 'ID'])
     # Checking for redundant definition
-    names = []
-    for d in defs:
-        name = get_name(d)
-        if name in names:
-            print('Redundant definition of "'+name+'", line', d.line)
-        else: names.append(name)
-
-    ids = get_all_nodes_by_name(node, 'ID')
-
+    names = {}
     for i in ids:
-        name = get_name(i)
-        if not name in names:
+        name, id_type = get_name(i)
+        if not name in names and id_type == 'ID':
             print('Usage of undefined variable "'+name+'", line', i.line)
+        elif name in names and id_type != 'ID':
+            print('Redundant definition of "'+name+'", line', i.line)
+        else: names[name] = id_type
     
 
 # root - node object
@@ -288,7 +283,7 @@ def get_expression_result_type(root):
                 return "end"
             comp_res = compare_expr(first, second, root)
             if comp_res == "error":
-                print(root)
+                #print(root)
                 print(
                     "Expression error: operands have unsuitable types (%s, %s). line: %s" % (
                         first, second, root.parts[0].line))
@@ -404,7 +399,6 @@ def check_inner_commands(tree):
 def check_func_call(tree):
 
     calls = get_all_nodes_by_name(tree, 'FUNC_CALL')
-    
     functions = get_all_nodes_by_name(tree, 'FUNCTION')
 
     for call in calls:
