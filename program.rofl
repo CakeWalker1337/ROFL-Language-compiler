@@ -1,12 +1,16 @@
-int myFunc1 = 2;
-struct MyStruct {
-    int[] b;
-    boolean f = true;
-    function myFunc() : MyStruct {
-        MyStruct c;
-        return;
-    }
+function print(int num): void { 
+    // As if this function prints number 
+    return; 
+} 
+int a = 1; 
+int num;
+int b = 0; 
+do { 
+b = b + 10; 
+a = a + 1; 
+} while (a < 5);
+if (b > 40) { 
+    print(b); 
+} else { 
+    print(a); 
 }
-int[] arr = string[](5);
-MyStruct str;
-arr[1] = 0.5;

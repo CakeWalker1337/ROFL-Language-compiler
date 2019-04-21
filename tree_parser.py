@@ -112,7 +112,17 @@ def check_var_definition(node):
             raise Exception('Wrong type in check_var_definition function, please debug it')
 
     ids = get_all_nodes_by_name(node, ['VARIABLE', 'FUNCTION', 'STRUCT', 'ID'])
-    # Checking for redundant definition
+
+    funcs = get_all_nodes_by_name(node, 'FUNCTION')
+
+    # removing func arguments from definitions to avoid conflicts
+    for func in funcs:
+        defs = get_all_nodes_by_name(func.parts[1], 'VARIABLE')
+        for d in defs:
+            if d in ids:
+                ids.remove(d)
+                ids.remove(d.parts[1])
+
     names = {}
     for i in ids:
         name, id_type = get_name(i)
@@ -363,15 +373,15 @@ def check_inner_commands(tree):
                 if is_node(child) and child.type == 'RETURN':
                     if inside_func:
                         if len(child.parts):
+                            if func_datatype == 'void':
+                                print(
+                                    'You can\'t return value from void function, line', child.line)
+                                return
                             return_type = get_expression_result_type(
                                 child.parts[0])
                             if return_type != func_datatype:
                                 print('You can\'t return', return_type, 'from', func_datatype, 'function, line',
                                       child.line)
-                        else:
-                            if func_datatype == 'void':
-                                print(
-                                    'You can\'t return value from void function, line', child.line)
                     else:
                         print(
                             'You can\'t use operator "RETURN" outside of a function, line', child.line)

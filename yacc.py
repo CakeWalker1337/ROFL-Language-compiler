@@ -213,12 +213,8 @@ def p_func(p):
                 "DATATYPE", [p[7].parts[0]], p[7].line), p[9]], p.lineno(1))
     else:
         if len(p) == 2:
-            if type(p[1]).__name__ == "Node": # add "F_" prefix to avoid conflicts with var. definition
-                p[1].type = 'F_' + p[1].type
             p[0] = Node('FUNC_ARGS', [p[1]], p.lineno(1))
         else:
-            if type(p[3]).__name__ == "Node":
-                p[3].type = 'F_' + p[1].type
             p[0] = p[1].add_parts([p[3]])
 
 
