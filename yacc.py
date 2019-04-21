@@ -1,6 +1,5 @@
 from initialdata import tokens
 
-
 class Node:
 
     def get_element_by_tag(self, tag):
@@ -168,6 +167,7 @@ def p_content(p):
             | content variable_decl ASSIGN expression SEMI
             | variable_decl SEMI
             | func
+            | empty
     '''
     if (len(p) == 3 and p[2] != ';') or len(p) == 4:
         p[0] = p[1].add_parts([p[2]])
@@ -221,6 +221,7 @@ def p_func(p):
 def p_scope(p):
     '''scope : scope statement
             | statement
+            | empty
     '''
     if len(p) == 2:
         p[0] = Node('SCOPE', [p[1]], p.lineno(1))
@@ -367,7 +368,7 @@ def p_conditions(p):
             | condition_statement elif_cond
     '''
     if len(p) == 2:
-        p[0] = Node('CONDITION', [p[1]], p.lineno(1))
+        p[0] = Node('IF_CONDITION', [p[1]], p.lineno(1))
     else:
         p[0] = p[1].add_parts([p[2]])
 

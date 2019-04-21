@@ -1,16 +1,14 @@
-function print(int num): void { 
-    // As if this function prints number 
-    return; 
+struct adad {
+}
+
+function print(int num): void {
 } 
-int a = 1; 
+int a = 1;
 int num;
 int b = 0; 
-do { 
-b = b + 10; 
-a = a + 1; 
+do {
 } while (a < 5);
-if (b > 40) { 
-    print(b); 
+if (b + 1 > 0){
 } else { 
     print(a); 
 }

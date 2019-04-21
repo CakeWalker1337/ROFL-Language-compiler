@@ -60,13 +60,17 @@ if  __name__ == "__main__":
 
         parser = yacc.yacc(debug=0)
         result = parser.parse(text)
-        print(result)
+        if not result is None:
+            print(result)
 
-        init_semantic(result)
-        parse_chain_call_errors()
-        
-        check_var_definition(result)
-        check_expression_results(result, False)
-        check_forbidden_definitions(result)
-        check_inner_commands(result)
-        check_func_call(result)
+            init_semantic(result)
+            parse_chain_call_errors()
+
+            check_var_definition(result)
+            check_expression_results(result, False)
+            check_forbidden_definitions(result)
+            check_inner_commands(result)
+            check_func_call(result)
+            check_funcs_have_returns()
+        else:
+            print("There are some syntax errors detected in source code.")

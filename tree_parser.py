@@ -98,7 +98,7 @@ def parse_chain_call_errors():
 
 # Prints errors with undefined variables or errors with multiple definitions
 def check_var_definition(node):
-    
+
     def get_name(x):
         if x.type == 'VARIABLE':
             return x.parts[1].parts[0], x.type
@@ -108,7 +108,7 @@ def check_var_definition(node):
             return x.parts[0].parts[0], x.type
         elif x.type == 'ID':
             return x.parts[0], x.type
-        else: 
+        else:
             raise Exception('Wrong type in check_var_definition function, please debug it')
 
     ids = get_all_nodes_by_name(node, ['VARIABLE', 'FUNCTION', 'STRUCT', 'ID'])
@@ -131,7 +131,7 @@ def check_var_definition(node):
         elif name in names and id_type != 'ID':
             print('Redundant definition of "'+name+'", line', i.line)
         else: names[name] = id_type
-    
+
 
 # root - node object
 # name - string name or list of names
@@ -213,7 +213,7 @@ def compare_expr(one, two, operation_type):
             return one
         return "error"
     if is_operation_logic(operation_type):
-        if one == two:
+        if one == two or (is_type_arithmetic(one) and is_type_arithmetic(two)):
             return "boolean"
         return "error"
     if is_operation_arithmetic(operation_type):
@@ -282,7 +282,7 @@ def get_expression_result_type(root):
             comp_res = compare_expr(first, None, root.type)
             if comp_res == "error":
                 print("Expression error: operand has an unsuitable type (%s). Line: %s" % (
-                    first, root.line))
+                    first, root.parts[0].line))
                 return "end"
             return comp_res
         else:
@@ -293,7 +293,6 @@ def get_expression_result_type(root):
                 return "end"
             comp_res = compare_expr(first, second, root.type)
             if comp_res == "error":
-                #print(root)
                 print(
                     "Expression error: operands have unsuitable types (%s, %s). line: %s" % (
                         first, second, root.parts[0].line))
@@ -306,32 +305,32 @@ def get_expression_result_type(root):
 def check_expression_results(root, has_errors):
     if is_node(root):
         for part in root.parts:
-            if part.type == "ASSIGN":
-                expr1 = get_expression_result_type(part.parts[0])
-                expr2 = get_expression_result_type(part.parts[1])
-                if not (expr1 == "end" or expr2 == "end"):
-                    is_correct = False
-                    if is_type_arithmetic(expr1) and is_type_arithmetic(expr2):
-                        is_correct = True
-                    if expr1 == expr2:
-                        is_correct = True
-                    if not is_correct:
+            if is_node(part):
+                if part.type == "ASSIGN":
+                    expr1 = get_expression_result_type(part.parts[0])
+                    expr2 = get_expression_result_type(part.parts[1])
+                    if not (expr1 == "end" or expr2 == "end"):
+                        is_correct = False
+                        if is_type_arithmetic(expr1) and is_type_arithmetic(expr2):
+                            is_correct = True
+                        if expr1 == expr2:
+                            is_correct = True
+                        if not is_correct:
+                            has_errors = True
+                            print("Type cast exception: cannot cast type \"%s\" to \"%s\" at line: %s" % (
+                                expr2, expr1, part.line))
+                else:
+                    result = get_expression_result_type(part)
+                    if result == "end":
                         has_errors = True
-                        print("Type cast exception: cannot cast type \"%s\" to \"%s\" at line: %s" % (
-                            expr2, expr1, part.line))
-            else:
-                result = get_expression_result_type(part)
-                if result == "end":
-                    has_errors = True
-                next_node = None
-                if part.type == "STRUCT":
-                    next_node = part.get_element_by_tag("CONTENT")
-                elif part.type == "FUNCTION":
-                    #print("yes")
-                    next_node = part.get_element_by_tag("SCOPE")
-                elif part.type == 'CONDITION':
-                    next_node = part.parts[0].parts[0]
-                check_expression_results(next_node, has_errors)
+                    next_node = None
+                    if part.type == "STRUCT":
+                        next_node = part.get_element_by_tag("CONTENT")
+                    elif part.type == "FUNCTION":
+                        next_node = part.get_element_by_tag("SCOPE")
+                    else:
+                        next_node = part
+                    check_expression_results(next_node, has_errors)
 
 
 def check_return_types(nodes):
@@ -339,7 +338,7 @@ def check_return_types(nodes):
         scope = node.parts[3]
         return_value = node.parts[2].parts[0]
         returns = get_all_nodes_by_name(scope, "RETURN")
-        
+
         if len(returns) == 0:
             if return_value != "void":
                 print(
@@ -352,13 +351,13 @@ def check_return_types(nodes):
 def check_forbidden_definitions(tree):
     functions = get_all_nodes_by_name(tree, 'FUNCTION')
     definitions = []
-    
+
     if len(functions):
         for func in functions:
             struct_definitions = get_all_nodes_by_name(func, 'STRUCT')
-            
+
             func_definitions = get_all_nodes_by_name(func, 'FUNCTION')
-            
+
             definitions += func_definitions
             definitions += struct_definitions
 
@@ -436,3 +435,15 @@ def check_func_call(tree):
                 if get_expression_result_type(call_args[i]) != types[i]:
                     print('Wrong type of an argument "'+call_args[i].parts[0].parts[0] +
                           '" in the call of function "'+fun.parts[0].parts[0]+'", line', call_args[i].line)
+
+
+def check_funcs_have_returns():
+    global main_root
+    if main_root is not None:
+        funcs = get_all_nodes_by_name(main_root, "FUNCTION")
+        for func in funcs:
+            ftype = func.get_element_by_tag("DATATYPE")
+            scope = func.get_element_by_tag("SCOPE")
+            ret = scope.get_element_by_tag("RETURN")
+            if ret is None and ftype.parts[0] != "void":
+                print("Return error: function with type \"%s\" must return a value. Line: %s" % (ftype.parts[0], func.line))
