@@ -61,10 +61,11 @@ if  __name__ == "__main__":
         parser = yacc.yacc(debug=0)
         result = parser.parse(text)
         print(result)
-        parse_var_error(result, {})
 
         init_semantic(result)
         parse_chain_call_errors()
+        
+        check_var_definition(result)
         check_expression_results(result, False)
         check_forbidden_definitions(result)
         check_inner_commands(result)

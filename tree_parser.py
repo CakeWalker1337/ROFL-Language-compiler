@@ -12,8 +12,7 @@ def init_semantic(root):
 
 def parse_chain_call_errors():
     global main_root
-    calls = []
-    get_all_nodes_by_name(main_root, "CHAIN_CALL", calls)
+    calls = get_all_nodes_by_name(main_root, "CHAIN_CALL")
     for call in calls:
         prim = call.parts[0]
         second = call.parts[1]
@@ -26,10 +25,10 @@ def parse_chain_call_errors():
                     if decl.type == "STRUCT":
                         scope = decl.get_element_by_tag("CONTENT")
                         is_found = False
-                        variables = []
-                        funcs = []
-                        get_all_nodes_by_name(scope, "VARIABLE", variables)
-                        get_all_nodes_by_name(scope, "FUNCTION", funcs)
+
+                        variables = get_all_nodes_by_name(scope, "VARIABLE")
+                        funcs = get_all_nodes_by_name(scope, "FUNCTION")
+
                         funcs.extend(variables)
                         desired_id = None
                         if second.type == "ID":
@@ -64,10 +63,10 @@ def parse_chain_call_errors():
                     if decl.type == "STRUCT":
                         scope = decl.get_element_by_tag("CONTENT")
                         is_found = False
-                        variables = []
-                        funcs = []
-                        get_all_nodes_by_name(scope, "VARIABLE", variables)
-                        get_all_nodes_by_name(scope, "FUNCTION", funcs)
+
+                        variables = get_all_nodes_by_name(scope, "VARIABLE")
+                        funcs = get_all_nodes_by_name(scope, "FUNCTION")
+
                         funcs.extend(variables)
                         desired_id = None
                         if second.type == "ID":
@@ -97,48 +96,50 @@ def parse_chain_call_errors():
             raise Exception("Bad chain call. Check yacc rules.")
 
 
-def parse_var_error(node, variables):
-    childs = []
-    if is_node(node):
-        if node.type == 'VARIABLE':
-            if node.parts[1].parts[0] in variables:
-                print('Redundant definition of "' +
-                      node.parts[1].parts[0] + '" on line', node.line)
-            else:
-                variables[node.parts[1].parts[0]] = node.parts[0].parts[0]
-        elif node.type == 'ID':
-            if not node.parts[0] in variables:
-                print('Undefined identifier "' +
-                      node.parts[0] + '" on line', node.line)
-        elif node.type == 'STRUCT':
-            name = node.parts[0].parts[0]
-            if name in variables:
-                print('Redundant definition of "' +
-                      name + '" on line', node.line)
-            else:
-                variables[name] = 'struct'
-                childs = node.get_element_by_tag(
-                    "CONTENT").parts if node.get_element_by_tag("CONTENT") else []
-        elif node.type == 'FUNCTION':
-            name = node.parts[0].parts[0]
-            if name in variables:
-                print('Redundant definition of "' +
-                      name + '" on line', node.line)
-            else:
-                variables[name] = 'function'
-                childs = node.get_element_by_tag("SCOPE").parts
-        else:
-            childs = node.parts
-        for child in childs:
-            parse_var_error(child, variables)
+# Prints errors with undefined variables or errors with multiple definitions
+def check_var_definition(node):
+    
+    def get_name(x):
+        if x.type == 'VARIABLE':
+            return x.parts[1].parts[0]
+        elif x.type == 'FUNCTION':
+            return x.parts[0].parts[0]
+        elif x.type == 'STRUCT':
+            return x.parts[0].parts[0]
+        elif x.type == 'ID':
+            return x.parts[0]
+        else: 
+            raise Exception('Wrong type in check_var_definition function, please debug it')
 
+    defs = get_all_nodes_by_name(node, ['VARIABLE', 'FUNCTION', 'STRUCT'])
+    # Checking for redundant definition
+    names = []
+    for d in defs:
+        name = get_name(d)
+        if name in names:
+            print('Redundant definition of "'+name+'", line', d.line)
+        else: names.append(name)
 
-def get_all_nodes_by_name(root, name, nodes):
+    ids = get_all_nodes_by_name(node, 'ID')
+
+    for i in ids:
+        name = get_name(i)
+        if not name in names:
+            print('Usage of undefined variable "'+name+'", line', i.line)
+    
+
+# root - node object
+# name - string name or list of names
+def get_all_nodes_by_name(root, name):
+    nodes = []
     for elem in root.parts:
         if is_node(elem):
-            if elem.type == name:
+            if isinstance(name, str) and elem.type == name:
                 nodes.append(elem)
-            get_all_nodes_by_name(elem, name, nodes)
+            elif isinstance(name, list) and elem.type in name:
+                nodes.append(elem)
+            nodes = nodes + get_all_nodes_by_name(elem, name)
+    return nodes
 
 
 def is_type_arithmetic(typename):
@@ -321,7 +322,7 @@ def check_expression_results(root, has_errors):
                 if part.type == "STRUCT":
                     next_node = part.get_element_by_tag("CONTENT")
                 elif part.type == "FUNCTION":
-                    print("yes")
+                    #print("yes")
                     next_node = part.get_element_by_tag("SCOPE")
                 check_expression_results(next_node, has_errors)
 
@@ -330,8 +331,8 @@ def check_return_types(nodes):
     for node in nodes:
         scope = node.parts[3]
         return_value = node.parts[2].parts[0]
-        returns = []
-        get_all_nodes_by_name(scope, "RETURN", returns)
+        returns = get_all_nodes_by_name(scope, "RETURN")
+        
         if len(returns) == 0:
             if return_value != "void":
                 print(
@@ -342,15 +343,15 @@ def check_return_types(nodes):
 
 
 def check_forbidden_definitions(tree):
-    functions = []
+    functions = get_all_nodes_by_name(tree, 'FUNCTION')
     definitions = []
-    get_all_nodes_by_name(tree, 'FUNCTION', functions)
+    
     if len(functions):
         for func in functions:
-            struct_definitions = []
-            get_all_nodes_by_name(func, 'STRUCT', struct_definitions)
-            func_definitions = []
-            get_all_nodes_by_name(func, 'FUNCTION', func_definitions)
+            struct_definitions = get_all_nodes_by_name(func, 'STRUCT')
+            
+            func_definitions = get_all_nodes_by_name(func, 'FUNCTION')
+            
             definitions += func_definitions
             definitions += struct_definitions
 
@@ -402,10 +403,9 @@ def check_inner_commands(tree):
 
 def check_func_call(tree):
 
-    calls = []
-    get_all_nodes_by_name(tree, 'FUNC_CALL', calls)
-    functions = []
-    get_all_nodes_by_name(tree, 'FUNCTION', functions)
+    calls = get_all_nodes_by_name(tree, 'FUNC_CALL')
+    
+    functions = get_all_nodes_by_name(tree, 'FUNCTION')
 
     for call in calls:
         fun_id = call.parts[0].parts[0]
