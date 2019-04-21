@@ -270,11 +270,11 @@ def p_unary_operators(p):
             | expression DECREMENT
     '''
     if p[2] == '++':
-        p[0] = Node('PLUS', [p[1], Node('CONST_VALUE',
-                                        ['1'], p.lineno(1))], p.lineno(1))
+        p[0] = Node('PLUS', [p[1], Node('CONSTANT', [Node('DATATYPE', ['int'], p.lineno(1)),
+                             Node('VALUE', ["1"], p.lineno(1))], p.lineno(1))], p.lineno(1))
     elif p[2] == '--':
-        p[0] = Node('MINUS', [p[1], Node(
-            'CONST_VALUE', ['1'], p.lineno(1))], p.lineno(1))
+        p[0] = Node('MINUS', [p[1], Node('CONSTANT', [Node('DATATYPE', ['int'], p.lineno(1)),
+                             Node('VALUE', ["1"], p.lineno(1))], p.lineno(1))], p.lineno(1))
 
 
 def p_binary_operators(p):
@@ -287,24 +287,25 @@ def p_binary_operators(p):
             | expression BOR expression
             | expression BAND expression
     '''
+    line = p.lexer.lineno
     if len(p) == 4:
         if p[2] == '+':
-            p[0] = Node('PLUS', [p[1], p[3]], p.lineno(1))
+            p[0] = Node('PLUS', [p[1], p[3]], line)
         elif p[2] == '-':
-            p[0] = Node('MINUS', [p[1], p[3]], p.lineno(1))
+            p[0] = Node('MINUS', [p[1], p[3]], line)
         elif p[2] == '*':
-            p[0] = Node('TIMES', [p[1], p[3]], p.lineno(1))
+            p[0] = Node('TIMES', [p[1], p[3]], line)
         elif p[2] == '/':
-            p[0] = Node('DIVIDE', [p[1], p[3]], p.lineno(1))
+            p[0] = Node('DIVIDE', [p[1], p[3]], line)
         elif p[2] == '%':
-            p[0] = Node('MODULO', [p[1], p[3]], p.lineno(1))
+            p[0] = Node('MODULO', [p[1], p[3]], line)
         elif p[2] == '%%':
-            p[0] = Node('IDIVIDE', [p[1], p[3]], p.lineno(1))
+            p[0] = Node('IDIVIDE', [p[1], p[3]], line)
 
         elif p[2] == '|':
-            p[0] = Node('BOR', [p[1], p[3]], p.lineno(1))
+            p[0] = Node('BOR', [p[1], p[3]], line)
         elif p[2] == '&':
-            p[0] = Node('BAND', [p[1], p[3]], p.lineno(1))
+            p[0] = Node('BAND', [p[1], p[3]], line)
     else:
         p[0] = p[1]
 
@@ -320,25 +321,26 @@ def p_logic_expressions(p):
                 | expression LAND expression
                 | LNOT expression
     '''
+    line = p.lexer.lineno
     if len(p) == 4:
         if p[2] == '>':
-            p[0] = Node('LT', [p[1], p[3]], p.lineno(1))
+            p[0] = Node('LT', [p[1], p[3]], line)
         elif p[2] == '<':
-            p[0] = Node('GT', [p[1], p[3]], p.lineno(1))
+            p[0] = Node('GT', [p[1], p[3]], line)
         elif p[2] == '>=':
-            p[0] = Node('GE', [p[1], p[3]], p.lineno(1))
+            p[0] = Node('GE', [p[1], p[3]], line)
         elif p[2] == '<=':
-            p[0] = Node('LE', [p[1], p[3]], p.lineno(1))
+            p[0] = Node('LE', [p[1], p[3]], line)
         elif p[2] == '!=':
-            p[0] = Node('NE', [p[1], p[3]], p.lineno(1))
+            p[0] = Node('NE', [p[1], p[3]], line)
         elif p[2] == '==':
-            p[0] = Node('EQ', [p[1], p[3]], p.lineno(1))
+            p[0] = Node('EQ', [p[1], p[3]], line)
         elif p[2] == '||':
-            p[0] = Node('LOR', [p[1], p[3]], p.lineno(1))
+            p[0] = Node('LOR', [p[1], p[3]], line)
         elif p[2] == '&&':
-            p[0] = Node('LAND', [p[1], p[3]], p.lineno(1))
+            p[0] = Node('LAND', [p[1], p[3]], line)
     else:
-        p[0] = Node('LNOT', [p[2]], p.lineno(1))
+        p[0] = Node('LNOT', [p[2]], line)
 
 
 def p_call(p):

@@ -203,13 +203,11 @@ def compare_expr(one, two, operation_type):
     if one == "void" or two == "void":
         return "error"
     if one is None:
-        if (two == "boolean") | (
-                is_type_arithmetic(two) and (operation_type == "INCREMENT" or operation_type == "DECREMENT")):
+        if two == "boolean":
             return two
         return "error"
     if two is None:
-        if (one == "boolean") | (
-                is_type_arithmetic(one) and (operation_type == "INCREMENT" or operation_type == "DECREMENT")):
+        if one == "boolean":
             return one
         return "error"
     if is_operation_logic(operation_type):
