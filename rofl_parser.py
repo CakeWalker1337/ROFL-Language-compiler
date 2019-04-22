@@ -269,25 +269,32 @@ def p_scope(p):
 
 
 def p_return(p):
-    '''return : RETURN expression
-              | RETURN
+    '''return : RETURN expression SEMI
+              | RETURN SEMI
     '''
     line = p.lexer.lineno
-    if len(p) == 4:
+    if len(p) == 3:
         p[0] = Node('RETURN', childs=[p[2]], line=line)
     else:
         p[0] = Node('RETURN', childs=[], line=line)
 
 
+def p_return_error(p):
+    '''return_error : RETURN expression
+              | RETURN
+    '''
+    print("Expected \';\' at line %s" % p.lexer.lineno)
+
+
 def p_loop_keywords(p):
     '''loop_keyword : SKIP
-                      | BREAK'''
+                      | BREAK
+    '''
     p[0] = Node(p[1].upper(), line=p.lexer.lineno)
 
 
 def p_single_statement(p):
     '''statement : assignment SEMI
-            | return SEMI
             | expression SEMI
             | variable_decl SEMI
             | loop_keyword SEMI
@@ -298,7 +305,6 @@ def p_single_statement(p):
 
 def p_statement_error(p):
     '''statement_error : assignment
-            | return
             | expression
             | variable_decl
             | loop_keyword
@@ -309,10 +315,12 @@ def p_statement_error(p):
 
 def p_complex_statement(p):
     '''statement : func
+            | return
             | struct
             | condition_full
             | loop
             | comment
+            | return_error
     '''
     p[0] = p[1]
 

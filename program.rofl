@@ -1,13 +1,4 @@
-string a = "fafw";
-while(a>5){
-    a = "hello";
+function print(int ddd): int {
+    int a;
+    return a
 }
-struct awdw{
-    int sdaw;
-    function print(int ddd): int {
-        int a;
-        return a
-    }
-}
-int[] a = int[](3);
-awdw.print(a[1]);
