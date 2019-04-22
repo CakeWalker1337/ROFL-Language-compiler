@@ -1,20 +1,20 @@
 struct adad {
    int sss;
-} 
+}
 
 function print(int ddd): int {
     int adad = 1;
     return 1;
 }
-int a = 1 + print(1); 
-int num = a[1]; 
-int b = 0; 
+int a = 1 + print(1);
+int num = a[1];
+int b = 0;
 do {
 a = 1;
 }
 while (a < print(1));
 if (!("aDw"|true)){
-} else { 
-print(a); 
-} 
+} else {
+print(a);
+}
 a++;

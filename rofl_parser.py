@@ -29,6 +29,8 @@ class Node:
         st = []
         for part in self.childs:
             st.append(str(part))
+        if len(self.childs) == 0:
+            st.append(str(self.value))
         return "\n".join(st)
 
     def __repr__(self):
@@ -267,7 +269,8 @@ def p_scope(p):
 
 def p_return(p):
     '''return : RETURN expression SEMI
-              | RETURN SEMI'''
+              | RETURN SEMI
+    '''
     line = p.lexer.lineno
     if len(p) == 4:
         p[0] = Node('RETURN', childs=[p[2]], line=line)
@@ -318,11 +321,11 @@ def p_unary_operators(p):
     '''
     line = p.lexer.lineno
     if p[2] == '++':
-        p[0] = Node('PLUS', childs=[p[1], Node('CONSTANT', [Node('TYPE', ['int'], line=line),
-                                                            Node('VALUE', ["1"], line=line)], line=line)], line=line)
+        p[0] = Node('PLUS', childs=[p[1], Node('CONST', childs=[Node('TYPE', value='int', line=line),
+                                                             Node('VALUE', value="1", line=line)], line=line)], line=line)
     elif p[2] == '--':
-        p[0] = Node('MINUS', childs=[p[1], Node('CONSTANT', [Node('TYPE', ['int'], line=line),
-                                                             Node('VALUE', ["1"], line=line)], line=line)], line=line)
+        p[0] = Node('MINUS', childs=[p[1], Node('CONST', childs=[Node('TYPE', value='int', line=line),
+                                                             Node('VALUE', value="1", line=line)], line=line)], line=line)
 
 
 def p_binary_operators(p):
@@ -408,7 +411,6 @@ def p_full_condition(p):
     '''condition_full : condition_statement else_cond
             | condition_statement
     '''
-    line = p.lexer.lineno
     if len(p) == 3:
         p[1].add_childs([p[2]])
     p[0] = p[1]
