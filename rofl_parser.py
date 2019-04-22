@@ -206,11 +206,11 @@ def p_content_add_assign(p):
 # TODO: create production with empty structure content
 
 def p_assignment(p):
-    '''assignment : variable_decl ASSIGN expression SEMI
-                | id ASSIGN expression SEMI
-                | variable_decl ASSIGN array_alloc SEMI
-                | id ASSIGN array_alloc SEMI
-                | array_element ASSIGN expression SEMI
+    '''assignment : variable_decl ASSIGN expression
+                | id ASSIGN expression
+                | variable_decl ASSIGN array_alloc
+                | id ASSIGN array_alloc
+                | array_element ASSIGN expression
     '''
     line = p.lexer.lineno
     p[0] = Node('ASSIGN', childs=[p[1], p[3]], line=line)
@@ -257,6 +257,7 @@ def p_func(p):
 def p_scope(p):
     '''scope : scope statement
             | statement
+            | statement_error
             | empty
     '''
     line = p.lexer.lineno
@@ -268,8 +269,8 @@ def p_scope(p):
 
 
 def p_return(p):
-    '''return : RETURN expression SEMI
-              | RETURN SEMI
+    '''return : RETURN expression
+              | RETURN
     '''
     line = p.lexer.lineno
     if len(p) == 4:
@@ -278,13 +279,6 @@ def p_return(p):
         p[0] = Node('RETURN', childs=[], line=line)
 
 
-def p_return_error(p):
-    '''return_error : RETURN expression
-              | RETURN
-    '''
-    print("Expected \';\'")
-    
-
 def p_loop_keywords(p):
     '''loop_keyword : SKIP
                       | BREAK'''
@@ -292,23 +286,33 @@ def p_loop_keywords(p):
 
 
 def p_single_statement(p):
-    '''statement : expression SEMI
-              | variable_decl SEMI
-              | loop_keyword SEMI
-              | goto SEMI
+    '''statement : assignment SEMI
+            | return SEMI
+            | expression SEMI
+            | variable_decl SEMI
+            | loop_keyword SEMI
+            | goto SEMI
     '''
     p[0] = p[1]
 
 
-def p_complex_statement(p):
-    '''statement : assignment
+def p_statement_error(p):
+    '''statement_error : assignment
             | return
-            | func
+            | expression
+            | variable_decl
+            | loop_keyword
+            | goto
+    '''
+    print("Expected \';\' at line %s" % p.lexer.lineno)
+
+
+def p_complex_statement(p):
+    '''statement : func
             | struct
             | condition_full
             | loop
             | comment
-            | return_error
     '''
     p[0] = p[1]
 
