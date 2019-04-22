@@ -95,6 +95,7 @@ def p_const_value_null(p):
     p[0] = Node('CONST', childs=[Node('TYPE', 'null', line=line), Node('VALUE', value=p[1], line=line)], line=line)
 
 
+#TODO: check error inside brackets
 def p_array_idx(p):
     'array_idx : LBRACKET expression RBRACKET'
     p[0] = p[2]
@@ -117,7 +118,7 @@ def p_struct_variable(p):
     line = p.lexer.lineno
     p[0] = Node('VARIABLE', childs=[Node('TYPE', p[1], line=line), p[2]], line=line)
 
-
+#TODO: check parens to an expected symbols, and int > 0
 def p_array_alloc_size(p):
     'array_size : LPAREN CONST_INTEGER RPAREN'
     line = p.lexer.lineno
@@ -141,6 +142,7 @@ def p_primitives(p):
     p[0] = Node('TYPE', value=p[1], line=line)
 
 
+# TODO check brackets
 def p_array_type(p):
     '''array_type : primitive_type LBRACKET RBRACKET
             | id LBRACKET RBRACKET
@@ -156,13 +158,14 @@ def p_datatype(p):
     p[0] = p[1]
 
 
+# TODO check parens and braces closure
 def p_delimiters(p):
     '''expression : LPAREN expression RPAREN
             | LBRACE expression RBRACE
     '''
     p[0] = p[2]
 
-
+# Todo: check brace's expectations
 def p_struct_content(p):
     'braced_content : LBRACE content RBRACE'
     p[0] = p[2]
@@ -174,6 +177,7 @@ def p_struct(p):
     p[0] = Node('STRUCT', childs=[p[2], p[3]], line=line)
 
 
+#Todo check expectation of semi
 def p_content(p):
     '''content : func
               | variable_decl SEMI
@@ -182,6 +186,7 @@ def p_content(p):
     p[0] = Node('CONTENT', childs=[p[1]], line=line)
 
 
+#Todo check expectation of semi
 def p_content_add(p):
     '''content : content func
               | content variable_decl SEMI
@@ -190,12 +195,13 @@ def p_content_add(p):
     p[0] = p[1]
 
 
+#Todo check expectation of semi
 def p_content_assign(p):
     '''content : variable_decl ASSIGN expression SEMI'''
     line = p.lexer.lineno
     p[0] = Node('CONTENT', childs=[Node('ASSIGN', childs=[p[1], p[3]], line=line)], line=line)
 
-
+#Todo check expectation of semi
 def p_content_add_assign(p):
     '''content : content variable_decl ASSIGN expression SEMI'''
     line = p.lexer.lineno
@@ -220,7 +226,7 @@ def p_empty(p):
     '''empty : '''
     pass
 
-
+#Todo check expectation of parens
 def p_func_args_paren(p):
     'func_arg_paren : LPAREN func_arg RPAREN'
     p[0] = p[2]
@@ -242,12 +248,14 @@ def p_func_arg(p):
     p[0] = Node('FUNC_ARGS', childs=[p[1]] if p[1] else [], line=line)
 
 
+#Todo check comma expectation and name of var_decl expectation (empty)
 def p_func_arg_add(p):
     '''func_arg : func_arg COMMA variable_decl'''
     p[1].add_childs([p[3]])
     p[0] = p[1]
 
 
+#Todo: check colon expectations
 def p_func(p):
     ''' func : FUNCTION id func_arg_paren COLON func_type scope_brace'''
     line = p.lexer.lineno
@@ -474,6 +482,7 @@ def p_loop(p):
     p[0] = p[1]
 
 
+# Todo: semi expectation
 def p_do_while(p):
     'do_while_loop : DO scope_brace WHILE expression_paren SEMI'
     line = p.lexer.lineno
@@ -487,11 +496,13 @@ def p_while(p):
         'CONDITION', childs=[p[2]], line=line), p[3]], line=line)
 
 
+#Todo: check parens
 def p_expression_paren(p):
     'expression_paren : LPAREN expression RPAREN'
     p[0] = p[2]
 
 
+#Todo: check braces
 def p_scope_brace(p):
     'scope_brace : LBRACE scope RBRACE'
     p[0] = p[2]
@@ -514,6 +525,7 @@ def p_comments(p):
     p[0] = Node('COMMENT', childs=[p[1].replace('\n', '')], line=line)
 
 
+#Todo: check comma expectation and expression empty
 def p_call_args_add(p):
     '''call_args : call_args COMMA expression'''
     p[0] = p[1].add_childs([p[3]])
@@ -526,6 +538,7 @@ def p_call_args(p):
     p[0] = Node('CALL_ARGS', childs=[p[1]] if p[1] else [], line=line)
 
 
+#Todo: check parens
 def p_call_args_paren(p):
     'call_args_paren : LPAREN call_args RPAREN'
     p[0] = p[2]
