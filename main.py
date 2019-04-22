@@ -1,13 +1,12 @@
 import sys
 import ply.lex as lex
 from initialdata import *
-from yacc import *
+from rofl_parser import *
 import pandas
 import io
 import utils as utils
 import ply.yacc as yacc
-from tree_parser import *
-
+#from tree_parser import *
 
 errordata = []
 
@@ -63,14 +62,14 @@ if  __name__ == "__main__":
         if not result is None:
             print(result)
 
-            init_semantic(result)
-            parse_chain_call_errors()
-
-            check_var_definition(result)
-            check_expression_results(result, False)
-            check_forbidden_definitions(result)
-            check_inner_commands(result)
-            check_func_call(result)
-            check_funcs_have_returns()
+            # init_semantic(result)
+            # parse_chain_call_errors()
+            #
+            # check_var_definition(result)
+            # check_expression_results(result, False)
+            # check_forbidden_definitions(result)
+            # check_inner_commands(result)
+            # check_func_call(result)
+            # check_funcs_have_returns()
         else:
             print("There are some syntax errors detected in source code.")

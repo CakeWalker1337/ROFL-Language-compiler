@@ -14,15 +14,15 @@ def parse_chain_call_errors():
     global main_root
     calls = get_all_nodes_by_name(main_root, "CHAIN_CALL")
     for call in calls:
-        prim = call.parts[0]
-        second = call.parts[1]
-        if prim.type == "ID":
-            elem = find_element_by_id(prim.parts[0])
-            if elem.type == "VARIABLE":
-                type = elem.parts[0].parts[0]
+        prim = call.children[0]
+        second = call.children[1]
+        if prim.name == "ID":
+            elem = find_element_by_id(prim.children[0])
+            if elem.name == "VARIABLE":
+                type = elem.children[0].children[0]
                 if not (is_primitive_type(type) or is_primitive_type(type.replace("[]", ''))):
                     decl = find_element_by_id(type)
-                    if decl.type == "STRUCT":
+                    if decl.name == "STRUCT":
                         scope = decl.get_element_by_tag("CONTENT")
                         is_found = False
 
@@ -31,36 +31,36 @@ def parse_chain_call_errors():
 
                         funcs.extend(variables)
                         desired_id = None
-                        if second.type == "ID":
-                            desired_id = second.parts[0]
+                        if second.name == "ID":
+                            desired_id = second.children[0]
                         else:
                             desired_id = second.get_element_by_tag(
-                                "ID").parts[0]
+                                "ID").children[0]
                         for content_part in funcs:
-                            if content_part.get_element_by_tag("ID").parts[0] == desired_id:
+                            if content_part.get_element_by_tag("ID").children[0] == desired_id:
                                 is_found = True
                                 break
                         if not is_found:
                             print("Undefined member \"%s\" of struct \"%s\" on line: %s" % (
                                 desired_id,
-                                decl.get_element_by_tag("ID").parts[0],
+                                decl.get_element_by_tag("ID").children[0],
                                 call.line))
                     else:
                         raise Exception(
-                            "Incorrect type %s detected. Maybe you didnt check var errors." % decl.type)
+                            "Incorrect type %s detected. Maybe you didnt check var errors." % decl.name)
                 else:
                     print(
                         "Incorrect call exception. Primitive types and arrays haven\'t got members. Line: %s" % call.line)
             else:
                 print("Incorrect call \"%s\" on line: %s" %
-                      (second.get_element_by_tag("ID").parts[0], call.line))
-        elif prim.type == "ARRAY_ELEMENT":
-            elem = find_element_by_id(prim.parts[0].parts[0])
+                      (second.get_element_by_tag("ID").children[0], call.line))
+        elif prim.name == "ARRAY_ELEMENT":
+            elem = find_element_by_id(prim.children[0].children[0])
             if not elem is None:
-                type = elem.parts[0].parts[0][:-2]
+                type = elem.children[0].children[0][:-2]
                 if not is_primitive_type(type):
                     decl = find_element_by_id(type)
-                    if decl.type == "STRUCT":
+                    if decl.name == "STRUCT":
                         scope = decl.get_element_by_tag("CONTENT")
                         is_found = False
 
@@ -69,29 +69,29 @@ def parse_chain_call_errors():
 
                         funcs.extend(variables)
                         desired_id = None
-                        if second.type == "ID":
-                            desired_id = second.parts[0]
+                        if second.name == "ID":
+                            desired_id = second.children[0]
                         else:
                             desired_id = second.get_element_by_tag(
-                                "ID").parts[0]
+                                "ID").children[0]
                         for content_part in funcs:
-                            if content_part.get_element_by_tag("ID").parts[0] == desired_id:
+                            if content_part.get_element_by_tag("ID").children[0] == desired_id:
                                 is_found = True
                                 break
                         if not is_found:
                             print("Undefined member \"%s\" of struct \"%s\" on line: %s" % (
-                                second.get_element_by_tag("ID").parts[0],
-                                decl.get_element_by_tag("ID").parts[0],
+                                second.get_element_by_tag("ID").children[0],
+                                decl.get_element_by_tag("ID").children[0],
                                 call.line))
                     else:
                         raise Exception(
-                            "Incorrect type %s detected. Maybe you didnt check var errors." % decl.type)
+                            "Incorrect type %s detected. Maybe you didnt check var errors." % decl.name)
                 else:
                     print(
                         "Incorrect call exception. Primitive types and arrays haven\'t got members. Line: %s" % call.line)
             else:
                 raise Exception("Can't find element with id %s" %
-                                prim.parts[0].parts[0])
+                                prim.children[0].children[0])
         else:
             raise Exception("Bad chain call. Check yacc rules.")
 
@@ -100,14 +100,14 @@ def parse_chain_call_errors():
 def check_var_definition(node):
 
     def get_name(x):
-        if x.type == 'VARIABLE':
-            return x.parts[1].parts[0], x.type
-        elif x.type == 'FUNCTION':
-            return x.parts[0].parts[0], x.type
-        elif x.type == 'STRUCT':
-            return x.parts[0].parts[0], x.type
-        elif x.type == 'ID':
-            return x.parts[0], x.type
+        if x.name == 'VARIABLE':
+            return x.children[1].children[0], x.name
+        elif x.name == 'FUNCTION':
+            return x.children[0].children[0], x.name
+        elif x.name == 'STRUCT':
+            return x.children[0].children[0], x.name
+        elif x.name == 'ID':
+            return x.children[0], x.name
         else:
             raise Exception('Wrong type in check_var_definition function, please debug it')
 
@@ -117,11 +117,11 @@ def check_var_definition(node):
 
     # removing func arguments from definitions to avoid conflicts
     for func in funcs:
-        defs = get_all_nodes_by_name(func.parts[1], 'VARIABLE')
+        defs = get_all_nodes_by_name(func.children[1], 'VARIABLE')
         for d in defs:
             if d in ids:
                 ids.remove(d)
-                ids.remove(d.parts[1])
+                ids.remove(d.children[1])
 
     names = {}
     for i in ids:
@@ -137,11 +137,11 @@ def check_var_definition(node):
 # name - string name or list of names
 def get_all_nodes_by_name(root, name):
     nodes = []
-    for elem in root.parts:
+    for elem in root.children:
         if is_node(elem):
-            if isinstance(name, str) and elem.type == name:
+            if isinstance(name, str) and elem.name == name:
                 nodes.append(elem)
-            elif isinstance(name, list) and elem.type in name:
+            elif isinstance(name, list) and elem.name in name:
                 nodes.append(elem)
             nodes = nodes + get_all_nodes_by_name(elem, name)
     return nodes
@@ -157,9 +157,9 @@ def get_nodes_with_id(root):
     elements = []
 
     def recursive_find(root, elems):
-        for elem in root.parts:
+        for elem in root.children:
             if is_node(elem):
-                if elem.type == "VARIABLE" or elem.type == "FUNCTION" or elem.type == "STRUCT" or elem.type == "MARK":
+                if elem.name == "VARIABLE" or elem.name == "FUNCTION" or elem.name == "STRUCT" or elem.name == "MARK":
                     elems.append(elem)
                 recursive_find(elem, elems)
 
@@ -170,7 +170,7 @@ def get_nodes_with_id(root):
 def find_element_by_id(looked_id):
     global identified
     for el in identified:
-        if el.get_element_by_tag("ID").parts[0] == looked_id:
+        if el.get_element_by_tag("ID").children[0] == looked_id:
             return el
     return None
 
@@ -235,39 +235,39 @@ def is_expression(node):
                   'LOR', 'BOR', 'LAND', 'BAND', 'LNOT',
                   'LT', 'LE', 'GT', 'GE', 'EQ', 'NE',
                   'INCREMENT', 'DECREMENT', 'CHAIN_CALL']
-        return node.type in tnames
+        return node.name in tnames
     return False
 
 
 def get_atom_type(atom):
-    if atom.type == "CONSTANT" or atom.type == "VARIABLE" or atom.type == "ARRAY_ALLOC":
-        return atom.get_element_by_tag("DATATYPE").parts[0]
-    if atom.type == "ARRAY_ELEMENT":
-        id = atom.parts[0].parts[0]
+    if atom.name == "CONSTANT" or atom.name == "VARIABLE" or atom.name == "ARRAY_ALLOC":
+        return atom.get_element_by_tag("DATATYPE").children[0]
+    if atom.name == "ARRAY_ELEMENT":
+        id = atom.children[0].children[0]
         arr = find_element_by_id(id)
         if not arr is None:
-            if not is_primitive_type(arr.parts[0].parts[0]):
-                return arr.get_element_by_tag("DATATYPE").parts[0].replace("[]", "")
+            if not is_primitive_type(arr.children[0].children[0]):
+                return arr.get_element_by_tag("DATATYPE").children[0].replace("[]", "")
             else:
                 print("Array call error. Element can't be called as array element. Line: %s" % atom.line)
-                return arr.parts[0].parts[0]
+                return arr.children[0].children[0]
     looked_id = None
-    if atom.type == "FUNC_CALL":
-        looked_id = atom.get_element_by_tag("ID").parts[0]
-    elif atom.type == "ID":
-        looked_id = atom.parts[0]
+    if atom.name == "FUNC_CALL":
+        looked_id = atom.get_element_by_tag("ID").children[0]
+    elif atom.name == "ID":
+        looked_id = atom.children[0]
     found_elem = find_element_by_id(looked_id)
     if found_elem is None:
         return None
     else:
-        return found_elem.get_element_by_tag("DATATYPE").parts[0]
+        return found_elem.get_element_by_tag("DATATYPE").children[0]
 
 
 def is_node_atom(node):
     if is_node(node):
         tnames = ['CHAIN_CALL', 'ID', 'FUNC_CALL', 'CONSTANT',
                   'VARIABLE', 'ARRAY_ALLOC', 'ARRAY_ELEMENT']
-        return node.type in tnames
+        return node.name in tnames
     return False
 
 
@@ -277,27 +277,27 @@ def is_node(elem):
 
 def get_expression_result_type(root):
     if is_expression(root):
-        if len(root.parts) == 1:
-            first = get_expression_result_type(root.parts[0])
+        if len(root.children) == 1:
+            first = get_expression_result_type(root.children[0])
             if first == "end":
                 return "end"
-            comp_res = compare_expr(first, None, root.type)
+            comp_res = compare_expr(first, None, root.name)
             if comp_res == "error":
                 print("Expression error: operand has an unsuitable type (%s). Line: %s" % (
-                    first, root.parts[0].line))
+                    first, root.children[0].line))
                 return "end"
             return comp_res
         else:
 
-            first = get_expression_result_type(root.parts[0])
-            second = get_expression_result_type(root.parts[1])
+            first = get_expression_result_type(root.children[0])
+            second = get_expression_result_type(root.children[1])
             if first == "end" or second == "end":
                 return "end"
-            comp_res = compare_expr(first, second, root.type)
+            comp_res = compare_expr(first, second, root.name)
             if comp_res == "error":
                 print(
                     "Expression error: operands have unsuitable types (%s, %s). line: %s" % (
-                        first, second, root.parts[0].line))
+                        first, second, root.children[0].line))
                 return "end"
             return comp_res
     if is_node_atom(root):
@@ -306,11 +306,11 @@ def get_expression_result_type(root):
 
 def check_expression_results(root, has_errors):
     if is_node(root):
-        for part in root.parts:
+        for part in root.children:
             if is_node(part):
-                if part.type == "ASSIGN":
-                    expr1 = get_expression_result_type(part.parts[0])
-                    expr2 = get_expression_result_type(part.parts[1])
+                if part.name == "ASSIGN":
+                    expr1 = get_expression_result_type(part.children[0])
+                    expr2 = get_expression_result_type(part.children[1])
 
                     if not (expr1 == "end" or expr2 == "end"):
                         is_correct = False
@@ -327,9 +327,9 @@ def check_expression_results(root, has_errors):
                     if result == "end":
                         has_errors = True
                     next_node = None
-                    if part.type == "STRUCT":
+                    if part.name == "STRUCT":
                         next_node = part.get_element_by_tag("CONTENT")
-                    elif part.type == "FUNCTION":
+                    elif part.name == "FUNCTION":
                         next_node = part.get_element_by_tag("SCOPE")
                     else:
                         next_node = part
@@ -350,22 +350,22 @@ def check_forbidden_definitions(tree):
             definitions += struct_definitions
 
     for d in definitions:
-        print('Forbidden definition of', d.type, 'on line', d.line)
+        print('Forbidden definition of', d.name, 'on line', d.line)
 
 
 def check_inner_commands(tree):
     def check_return(tree, inside_func=False, func_datatype=None):
         if is_node(tree):
-            for child in tree.parts:
-                if is_node(child) and child.type == 'RETURN':
+            for child in tree.children:
+                if is_node(child) and child.name == 'RETURN':
                     if inside_func:
-                        if len(child.parts):
+                        if len(child.children):
                             if func_datatype == 'void':
                                 print(
                                     'You can\'t return value from void function, line', child.line)
                                 return
                             return_type = get_expression_result_type(
-                                child.parts[0])
+                                child.children[0])
                             if return_type != func_datatype:
                                 print('You can\'t return', return_type, 'from', func_datatype, 'function, line',
                                       child.line)
@@ -373,22 +373,22 @@ def check_inner_commands(tree):
                         print(
                             'You can\'t use operator "RETURN" outside of a function, line', child.line)
                 elif is_node(child):
-                    is_func = child.type == 'FUNCTION'
+                    is_func = child.name == 'FUNCTION'
                     datatype = None
                     if func_datatype:
                         datatype = func_datatype
                     elif is_func:
-                        datatype = child.parts[2].parts[0]
+                        datatype = child.children[2].children[0]
                     check_return(child, is_func or inside_func, datatype)
 
     def check_skip_break(tree, inside_cycle):
         if is_node(tree):
-            for child in tree.parts:
-                if (is_node(child) and (child.type == 'SKIP' or child.type == 'BREAK')) and not inside_cycle:
-                    print('You can\'t use operator "' + child.type +
+            for child in tree.children:
+                if (is_node(child) and (child.name == 'SKIP' or child.name == 'BREAK')) and not inside_cycle:
+                    print('You can\'t use operator "' + child.name +
                           '" outside of a cycle, line', child.line)
                 elif is_node(child):
-                    check_skip_break(child, child.type ==
+                    check_skip_break(child, child.name ==
                                      'WHILE' or inside_cycle)
 
     check_return(tree, False)
@@ -401,19 +401,19 @@ def check_func_call(tree):
     functions = get_all_nodes_by_name(tree, 'FUNCTION')
 
     for call in calls:
-        fun_id = call.parts[0].parts[0]
+        fun_id = call.children[0].children[0]
         fun_def = None
         for fun in functions:
-            if fun.parts[0].parts[0] == fun_id:
+            if fun.children[0].children[0] == fun_id:
                 fun_def = fun
                 break
 
         if (fun_def):
             types = []
-            for arg in fun_def.parts[1].parts:
-                types.append(arg.parts[0].parts[0])
+            for arg in fun_def.children[1].children:
+                types.append(arg.children[0].children[0])
 
-            call_args = call.parts[1].parts
+            call_args = call.children[1].children
 
             if (len(call_args) != len(types)):
                 print('Wrong number of arguments in the call of function "' +
@@ -421,8 +421,8 @@ def check_func_call(tree):
 
             for i in range(len(call_args)):
                 if get_expression_result_type(call_args[i]) != types[i]:
-                    print('Wrong type of an argument "'+call_args[i].parts[0].parts[0] +
-                          '" in the call of function "'+fun.parts[0].parts[0]+'", line', call_args[i].line)
+                    print('Wrong type of an argument "'+call_args[i].children[0].children[0] +
+                          '" in the call of function "'+fun.children[0].children[0]+'", line', call_args[i].line)
 
 
 def check_funcs_have_returns():
@@ -433,5 +433,5 @@ def check_funcs_have_returns():
             ftype = func.get_element_by_tag("DATATYPE")
             scope = func.get_element_by_tag("SCOPE")
             ret = scope.get_element_by_tag("RETURN")
-            if ret is None and ftype.parts[0] != "void":
-                print("Return error: function with type \"%s\" must return a value. Line: %s" % (ftype.parts[0], func.line))
+            if ret is None and ftype.children[0] != "void":
+                print("Return error: function with type \"%s\" must return a value. Line: %s" % (ftype.children[0], func.line))
