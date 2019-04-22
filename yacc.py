@@ -96,7 +96,7 @@ def p_const_value_null(p):
 
 def p_array_element(p):
     '''array_element : id LBRACKET expression RBRACKET'''
-    p[0] = Node('ARRAY_ELEMENT', [p[1], p[3]], p.lineno(1))
+    p[0] = Node('ARRAY_ELEMENT', [p[1], p[3]], p.lexer.lineno)
 
 
 def p_variable(p):

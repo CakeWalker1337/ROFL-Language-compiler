@@ -246,7 +246,11 @@ def get_atom_type(atom):
         id = atom.parts[0].parts[0]
         arr = find_element_by_id(id)
         if not arr is None:
-            return arr.get_element_by_tag("DATATYPE").parts[0].replace("[]", "")
+            if not is_primitive_type(arr.parts[0].parts[0]):
+                return arr.get_element_by_tag("DATATYPE").parts[0].replace("[]", "")
+            else:
+                print("Array call error. Element can't be called as array element. Line: %s" % atom.line)
+                return arr.parts[0].parts[0]
     looked_id = None
     if atom.type == "FUNC_CALL":
         looked_id = atom.get_element_by_tag("ID").parts[0]
@@ -307,6 +311,7 @@ def check_expression_results(root, has_errors):
                 if part.type == "ASSIGN":
                     expr1 = get_expression_result_type(part.parts[0])
                     expr2 = get_expression_result_type(part.parts[1])
+
                     if not (expr1 == "end" or expr2 == "end"):
                         is_correct = False
                         if is_type_arithmetic(expr1) and is_type_arithmetic(expr2):
@@ -329,21 +334,6 @@ def check_expression_results(root, has_errors):
                     else:
                         next_node = part
                     check_expression_results(next_node, has_errors)
-
-
-def check_return_types(nodes):
-    for node in nodes:
-        scope = node.parts[3]
-        return_value = node.parts[2].parts[0]
-        returns = get_all_nodes_by_name(scope, "RETURN")
-
-        if len(returns) == 0:
-            if return_value != "void":
-                print(
-                    "Return token expected. Function must return a value of type \"%s\"!" % return_value)
-        else:
-            for val in returns:
-                pass
 
 
 def check_forbidden_definitions(tree):

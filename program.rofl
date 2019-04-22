@@ -1,15 +1,9 @@
 struct adad {
+    int a;
 }
 
 function print(int num): void {
 } 
 int a = 1;
 int num = a[1];
-int b = 0; 
-do {
-} while (a < 10);
-if (!("aDw"|true)){
-} else { 
-    print(a); 
-}
-a++;
+
