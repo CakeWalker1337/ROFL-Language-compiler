@@ -464,7 +464,7 @@ def p_while(p):
     'while_loop : WHILE expression_paren scope_brace'
     line = p.lexer.lineno
     p[0] = Node('WHILE', childs=[Node(
-        'CONDITION', childs=[p[1]], line=line), p[2]], line=line)
+        'CONDITION', childs=[p[2]], line=line), p[3]], line=line)
 
 
 def p_expression_paren(p):

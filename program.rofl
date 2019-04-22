@@ -8,3 +8,6 @@ string a = "fafw";
 while(a>5){
     a = "hello";
 }
+struct awdw{
+    int sdaw;
+}
