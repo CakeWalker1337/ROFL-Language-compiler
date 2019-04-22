@@ -285,8 +285,7 @@ def p_loop_keywords(p):
 
 
 def p_single_statement(p):
-    '''statement : return SEMI
-              | expression SEMI
+    '''statement : expression SEMI
               | variable_decl SEMI
               | loop_keyword SEMI
               | goto SEMI
@@ -296,6 +295,7 @@ def p_single_statement(p):
 
 def p_complex_statement(p):
     '''statement : assignment
+            | return
             | func
             | struct
             | condition_full
