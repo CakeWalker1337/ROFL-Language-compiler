@@ -278,6 +278,13 @@ def p_return(p):
         p[0] = Node('RETURN', childs=[], line=line)
 
 
+def p_return_error(p):
+    '''return_error : RETURN expression
+              | RETURN
+    '''
+    print("Expected \';\'")
+    
+
 def p_loop_keywords(p):
     '''loop_keyword : SKIP
                       | BREAK'''
@@ -301,6 +308,7 @@ def p_complex_statement(p):
             | condition_full
             | loop
             | comment
+            | return_error
     '''
     p[0] = p[1]
 
