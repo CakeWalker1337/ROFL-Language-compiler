@@ -6,7 +6,7 @@ import pandas
 import io
 import utils as utils
 import ply.yacc as yacc
-#from tree_parser import *
+from semantic_analysis import *
 
 errordata = []
 
@@ -59,17 +59,13 @@ if  __name__ == "__main__":
 
         parser = yacc.yacc(debug=0)
         result = parser.parse(text)
-        if not result is None:
+        show_tree_with_errors = True
+        if not result is None and \
+            (len(result.get('ERROR', nest=True)) == 0 and show_tree_with_errors):
+
             print(result)
 
-            # init_semantic(result)
-            # parse_chain_call_errors()
-            #
-            # check_var_definition(result)
-            # check_expression_results(result, False)
-            # check_forbidden_definitions(result)
-            # check_inner_commands(result)
-            # check_func_call(result)
-            # check_funcs_have_returns()
+            errors = check_var_definition(result)
+            #print()
         else:
             print("There are some syntax errors detected in source code.")
