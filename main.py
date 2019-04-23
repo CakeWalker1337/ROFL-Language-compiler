@@ -59,7 +59,10 @@ if  __name__ == "__main__":
 
         parser = yacc.yacc(debug=0)
         result = parser.parse(text)
-        if not result is None:
+        show_tree_with_errors = True
+        if not result is None and \
+            (len(result.get('ERROR', nest=True)) == 0 and show_tree_with_errors):
+
             print(result)
 
             # init_semantic(result)

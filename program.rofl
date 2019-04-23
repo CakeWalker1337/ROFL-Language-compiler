@@ -1,7 +1,7 @@
 (int b);
-(a + c;
+(a + c);
 print(a);
-int[] ;
+int[] b;
 print(a);
 struct a {
 }
@@ -10,5 +10,5 @@ int [] a;
 a = 5+;;
 ;
 function a (int a) : int {
-    a
+    a;
 }

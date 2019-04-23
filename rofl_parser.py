@@ -14,9 +14,9 @@ class Node:
     def get(self, name, nest=False):
         nodes = []
         for elem in self.childs:
-            if isinstance(name, str) and elem.type == name:
+            if isinstance(name, str) and elem.name == name:
                 nodes.append(elem)
-            elif isinstance(name, list) and elem.type in name:
+            elif isinstance(name, list) and elem.name in name:
                 nodes.append(elem)
             nodes = nodes + self.get(name) if nest else []
         return nodes
@@ -382,7 +382,7 @@ def p_single_statement(p):
             | return
             | empty
     '''
-    p[0] = p[1]
+    p[0] = p[1] if p[1] else Node('EMPTY_STATEMENT')
 
 def p_single_statement_error(p):
     'statement : semi_needed_statement error'
