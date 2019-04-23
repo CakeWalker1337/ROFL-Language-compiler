@@ -18,7 +18,7 @@ class Node:
                 nodes.append(elem)
             elif isinstance(name, list) and elem.name in name:
                 nodes.append(elem)
-            nodes = nodes + self.get(name) if nest else []
+            nodes = nodes + (elem.get(name, nest) if nest else [])
         return nodes
 
     # adds new list of childs to existed
