@@ -39,6 +39,12 @@ class Node:
         else:
             return self.name + ":\n\t" + self.__parts_str().replace("\n", "\n\t")
 
+def wrap_error(err_str, line_num):
+    error_prefix = 'Syntax error at line '+ str(line_num) +': '
+    return error_prefix + err_str
+
+def err_node():
+    return Node('ERROR')
 
 precedence = (
     ('left', 'ASSIGN'),
@@ -59,76 +65,97 @@ precedence = (
 
 start = 'scope'
 
-
 def p_id(p):
     '''id : ID'''
     p[0] = Node('ID', p[1])
-
 
 def p_const_value_float(p):
     '''const_value : CONST_FLOAT'''
     line = p.lexer.lineno
     p[0] = Node('CONST', childs=[Node('TYPE', 'float', line=line), Node('VALUE', value=p[1], line=line)], line=line)
 
-
 def p_const_value_string(p):
     '''const_value : CONST_STRING'''
     line = p.lexer.lineno
     p[0] = Node('CONST', childs=[Node('TYPE', 'string', line=line), Node('VALUE', value=p[1], line=line)], line=line)
-
 
 def p_const_value_integer(p):
     'const_value : CONST_INTEGER'
     line = p.lexer.lineno
     p[0] = Node('CONST', childs=[Node('TYPE', 'int', line=line), Node('VALUE', value=p[1], line=line)], line=line)
 
-
 def p_const_value_boolean(p):
     'const_value : CONST_BOOLEAN'
     line = p.lexer.lineno
     p[0] = Node('CONST', childs=[Node('TYPE', 'boolean', line=line), Node('VALUE', value=p[1], line=line)], line=line)
-
 
 def p_const_value_null(p):
     'const_value : NULL'
     line = p.lexer.lineno
     p[0] = Node('CONST', childs=[Node('TYPE', 'null', line=line), Node('VALUE', value=p[1], line=line)], line=line)
 
-
 def p_array_idx(p):
     'array_idx : LBRACKET expression RBRACKET'
     p[0] = p[2]
 
+def p_array_idx_error(p):
+    'array_idx : LBRACKET error RBRACKET'
+    print(wrap_error('Error in calling an array element. Number of element expected.', p.lexer.lineno))
+    p[0] = err_node()
+
+def p_array_idx_unclosed(p):
+    'array_idx : LBRACKET error SEMI'
+    'array_idx : LBRACKET error STATEMENT'
+    print(wrap_error('Unclosed brackets. "]" expected.', p.lexer.lineno))
+    p[0] = err_node()
 
 def p_array_element(p):
     '''array_element : id array_idx'''
     line = p.lexer.lineno
     p[0] = Node('ARRAY_ELEMENT', childs=[p[1], p[2]], line=line)
 
-
 def p_primitive_variable(p):
     'variable_decl : datatype id'
     line = p.lexer.lineno
     p[0] = Node('VARIABLE', childs=[p[1], p[2]], line=line)
-
 
 def p_struct_variable(p):
     'variable_decl : ID id'
     line = p.lexer.lineno
     p[0] = Node('VARIABLE', childs=[Node('TYPE', p[1], line=line), p[2]], line=line)
 
+def p_var_error(p):
+    '''variable_decl : datatype error
+                    | ID error
+    '''
+    p[0] = err_node()
+    print(wrap_error('Variable name expected.', p.lexer.lineno))
 
 def p_array_alloc_size(p):
     'array_size : LPAREN CONST_INTEGER RPAREN'
     line = p.lexer.lineno
     p[0] = Node('CONST', childs=[Node('TYPE', 'int', line=line), Node('VALUE', p[2], line=line)], line=line)
 
+def p_array_alloc_size_error(p):
+    'array_size : LPAREN error RPAREN'
+    print(wrap_error('Error in allocation of array. Const integer expected.', p.lexer.lineno))
+    p[0] = err_node()
+
+def p_array_alloc_size_unclosed(p):
+    'array_size : LPAREN error SEMI'
+    'array_size : LPAREN error STATEMENT'
+    print(wrap_error('Unclosed parenthesis. ")" expected.', p.lexer.lineno))
+    p[0] = err_node()
 
 def p_array_alloc(p):
     'array_alloc : array_type array_size'
     line = p.lexer.lineno
     p[0] = Node("ARRAY_ALLOC", childs=[p[1], p[2]], line=line)
 
+def p_array_alloc_error(p):
+    'array_alloc : array_type error'
+    p[0] = err_node()
+    print(wrap_error('Array size expected.', p.lexer.lineno))
 
 def p_primitives(p):
     '''primitive_type : DECL_BOOLEAN
@@ -140,7 +167,6 @@ def p_primitives(p):
     line = p.lexer.lineno
     p[0] = Node('TYPE', value=p[1], line=line)
 
-
 def p_array_type(p):
     '''array_type : primitive_type LBRACKET RBRACKET
             | id LBRACKET RBRACKET
@@ -148,6 +174,12 @@ def p_array_type(p):
     line = p.lexer.lineno
     p[0] = Node("TYPE", value=p[1].value + "[]", line=line)
 
+def p_array_type_error(p):
+    '''array_type : primitive_type LBRACKET error
+                | id LBRACKET error
+    '''
+    p[0] = err_node()
+    print(wrap_error('Unclosed brackets at array type. "]" expected', p.lineno(1)))
 
 def p_datatype(p):
     '''datatype : primitive_type
@@ -155,24 +187,52 @@ def p_datatype(p):
     '''
     p[0] = p[1]
 
-
 def p_delimiters(p):
     '''expression : LPAREN expression RPAREN
             | LBRACE expression RBRACE
     '''
     p[0] = p[2]
 
+def p_delimeters_error(p):
+    'expression : LPAREN error RPAREN'
+    print(wrap_error('Not an expression.', p.lexer.lineno))
+    p[0] = err_node()
+
+def p_delimeters_unclosed(p):
+    'expression : LPAREN error SEMI'
+    'expression : LPAREN error STATEMENT'
+    print(wrap_error('Unclosed parenthesis. ")" expected.', p.lexer.lineno))
+    p[0] = err_node()
 
 def p_struct_content(p):
     'braced_content : LBRACE content RBRACE'
     p[0] = p[2]
 
+def p_struct_content_error(p):
+    'braced_content : LBRACE error RBRACE'
+    print(wrap_error('Error in struct content declaration. Only definitions of properties expected.', p.lexer.lineno))
+    p[0] = err_node()
+
+def p_struct_content_unclosed(p):
+    'braced_content : LBRACE error SEMI'
+    'braced_content : LBRACE error STATEMENT'
+    print(wrap_error('Unclosed braces. "}" expected.', p.lexer.lineno))
+    p[0] = err_node()
 
 def p_struct(p):
     '''struct : STRUCT id braced_content'''
     line = p.lexer.lineno
     p[0] = Node('STRUCT', childs=[p[2], p[3]], line=line)
 
+def p_struct_name_error(p):
+    'struct : STRUCT error'
+    p[0] = err_node()
+    print(wrap_error('Struct name expected.', p.lineno(1)))
+
+def p_struct_body_error(p):
+    'struct : STRUCT id error'
+    p[0] = err_node()
+    print(wrap_error('Struct body expected.', p.lineno(3)))
 
 def p_content(p):
     '''content : func
@@ -181,7 +241,6 @@ def p_content(p):
     line = p.lexer.lineno
     p[0] = Node('CONTENT', childs=[p[1]], line=line)
 
-
 def p_content_add(p):
     '''content : content func
               | content variable_decl SEMI
@@ -189,12 +248,10 @@ def p_content_add(p):
     p[1].add_childs([p[2]])
     p[0] = p[1]
 
-
 def p_content_assign(p):
     '''content : variable_decl ASSIGN expression SEMI'''
     line = p.lexer.lineno
     p[0] = Node('CONTENT', childs=[Node('ASSIGN', childs=[p[1], p[3]], line=line)], line=line)
-
 
 def p_content_add_assign(p):
     '''content : content variable_decl ASSIGN expression SEMI'''
@@ -202,8 +259,10 @@ def p_content_add_assign(p):
     p[1].add_childs(Node('ASSIGN', childs=[p[2], p[4]], line=line))
     p[0] = p[1]
 
-
-# TODO: create production with empty structure content
+def p_empty_content_error(p):
+    'content : empty'
+    p[0] = err_node()
+    print(wrap_error('Struct content can\'t be empty. Var or function definition expected.', p.lexer.lineno))
 
 def p_assignment(p):
     '''assignment : variable_decl ASSIGN expression
@@ -215,16 +274,19 @@ def p_assignment(p):
     line = p.lexer.lineno
     p[0] = Node('ASSIGN', childs=[p[1], p[3]], line=line)
 
-
 def p_empty(p):
     '''empty : '''
     pass
-
 
 def p_func_args_paren(p):
     'func_arg_paren : LPAREN func_arg RPAREN'
     p[0] = p[2]
 
+def p_func_args_unclosed(p):
+    '''func_arg_paren : LPAREN error
+                    | LPAREN func_arg error'''
+    print(wrap_error('")" or argument declaration expected.', p.lexer.lineno))
+    p[0] = err_node()
 
 def p_func_type(p):
     '''func_type : datatype
@@ -232,7 +294,6 @@ def p_func_type(p):
     '''
     line = p.lexer.lineno
     p[0] = Node("TYPE", value=p[1].value, line=line)
-
 
 def p_func_arg(p):
     '''func_arg : variable_decl
@@ -247,18 +308,45 @@ def p_func_arg_add(p):
     p[1].add_childs([p[3]])
     p[0] = p[1]
 
+def p_func_arg_add_error(p):
+    'func_arg : func_arg COMMA error'
+    print(wrap_error('Argument declaration expected.', p.lexer.lineno))
+    p[0] = err_node()
 
 def p_func(p):
     ''' func : FUNCTION id func_arg_paren COLON func_type scope_brace'''
     line = p.lexer.lineno
     p[0] = Node('FUNCTION', childs=[p[2], p[3], p[5], p[6]], line=line)
 
+def p_func_name_error(p):
+    ' func : FUNCTION error'
+    p[0] = err_node()
+    print(wrap_error('Function name expected.', p.lexer.lineno))
+
+def p_func_argparen_error(p):
+    'func : FUNCTION id error'
+    p[0] = err_node()
+    print(wrap_error('Function arguments expected.', p.lexer.lineno))
+
+def p_func_colon_error(p):
+    'func : FUNCTION id func_arg_paren error'
+    p[0] = err_node()
+    print(wrap_error('":" and function type expected.', p.lexer.lineno))
+
+def p_func_type_error(p):
+    'func : FUNCTION id func_arg_paren COLON error'
+    p[0] = err_node()
+    print(wrap_error('Function type expected.', p.lexer.lineno))
+
+def p_func_body_error(p):
+    'func : FUNCTION id func_arg_paren COLON func_type error'
+    p[0] = err_node()
+    print(wrap_error('Function body expected.', p.lexer.lineno))
 
 def p_scope(p):
     '''scope : scope statement
             | statement
             | statement_error
-            | empty
     '''
     line = p.lexer.lineno
     if len(p) == 2:
@@ -267,13 +355,17 @@ def p_scope(p):
         p[1].add_childs([p[2]])
         p[0] = p[1]
 
+def p_scope_empty_error(p):
+    'scope : empty'
+    p[0] = err_node()
+    print(wrap_error('Scope can\'t be empty.', p.lexer.lineno))
 
 def p_return(p):
     '''return : RETURN expression SEMI
               | RETURN SEMI
     '''
     line = p.lexer.lineno
-    if len(p) == 3:
+    if len(p) == 4:
         p[0] = Node('RETURN', childs=[p[2]], line=line)
     else:
         p[0] = Node('RETURN', childs=[], line=line)
@@ -538,6 +630,7 @@ def p_func_call(p):
 
 # Error rule for syntax errors
 def p_error(p):
+    # TODO: remove it and replace with error rules
     if p is not None:
         print('Line %s, illegal token "%s"' % (p.lineno, p.value))
     else:
