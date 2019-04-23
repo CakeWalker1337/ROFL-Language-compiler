@@ -300,7 +300,7 @@ def p_func_arg(p):
             | empty
     '''
     line = p.lexer.lineno
-    p[0] = Node('FUNC_ARGS', childs=[p[1]] if p[1] else [], line=line)
+    p[0] = Node('FUNC_ARGS', childs=[p[1]] if p[1] and err_node().name != p[1].name else [], line=line)
 
 
 def p_func_arg_add(p):
@@ -309,12 +309,13 @@ def p_func_arg_add(p):
     p[0] = p[1]
 
 def p_func_arg_add_error(p):
-    'func_arg : func_arg COMMA error'
+    '''func_arg : func_arg COMMA error
+            | func_arg COMMA empty'''
     print(wrap_error('Argument declaration expected.', p.lexer.lineno))
     p[0] = err_node()
 
 def p_func(p):
-    ''' func : FUNCTION id func_arg_paren COLON func_type scope_brace'''
+    ''' func : FUNCTION id func_arg_paren COLON func_type braced_scope'''
     line = p.lexer.lineno
     p[0] = Node('FUNCTION', childs=[p[2], p[3], p[5], p[6]], line=line)
 
@@ -346,37 +347,24 @@ def p_func_body_error(p):
 def p_scope(p):
     '''scope : scope statement
             | statement
-            | statement_error
     '''
     line = p.lexer.lineno
     if len(p) == 2:
-        p[0] = Node('SCOPE', childs=[p[1]] if p[1] else [], line=line)
+        p[0] = Node('SCOPE', childs=[p[1]] if p[1] and err_node().name != p[1].name else [], line=line)
     else:
         p[1].add_childs([p[2]])
         p[0] = p[1]
 
-def p_scope_empty_error(p):
-    'scope : empty'
-    p[0] = err_node()
-    print(wrap_error('Scope can\'t be empty.', p.lexer.lineno))
 
 def p_return(p):
-    '''return : RETURN expression SEMI
-              | RETURN SEMI
+    '''return : RETURN expression
+              | RETURN
     '''
     line = p.lexer.lineno
-    if len(p) == 4:
+    if len(p) == 3:
         p[0] = Node('RETURN', childs=[p[2]], line=line)
     else:
         p[0] = Node('RETURN', childs=[], line=line)
-
-
-def p_return_error(p):
-    '''return_error : RETURN expression
-              | RETURN
-    '''
-    print("Expected \';\' at line %s" % p.lexer.lineno)
-
 
 def p_loop_keywords(p):
     '''loop_keyword : SKIP
@@ -386,36 +374,30 @@ def p_loop_keywords(p):
 
 
 def p_single_statement(p):
-    '''statement : assignment SEMI
-            | expression SEMI
-            | variable_decl SEMI
-            | loop_keyword SEMI
-            | goto SEMI
-    '''
-    p[0] = p[1]
-
-
-def p_statement_error(p):
-    '''statement_error : assignment
+    '''semi_needed_statement : assignment
             | expression
             | variable_decl
             | loop_keyword
             | goto
-    '''
-    print("Expected \';\' at line %s" % p.lexer.lineno)
-
-
-def p_complex_statement(p):
-    '''statement : func
             | return
-            | struct
-            | condition_full
-            | loop
-            | comment
-            | return_error
+            | empty
     '''
     p[0] = p[1]
 
+def p_single_statement_error(p):
+    'statement : semi_needed_statement error'
+    p[0] = err_node()
+    print(wrap_error('There is a ";" expected after statement.', p.lexer.lineno))
+
+def p_complex_statement(p):
+    '''statement : func
+            | struct
+            | condition_full
+            | loop
+            | mark
+            | semi_needed_statement SEMI
+    '''
+    p[0] = p[1]
 
 def p_literal_expressions(p):
     '''expression : const_value
@@ -425,7 +407,6 @@ def p_literal_expressions(p):
             | chain_call
     '''
     p[0] = p[1]
-
 
 def p_unary_operators(p):
     '''expression : expression INCREMENT
@@ -472,6 +453,43 @@ def p_binary_operators(p):
     else:
         p[0] = p[1]
 
+def p_binary_operators_error(p):
+    '''expression : expression PLUS error
+            | expression MINUS error
+            | expression TIMES error
+            | expression DIVIDE error
+            | expression MODULO error
+            | expression IDIVIDE error
+            | expression BOR error
+            | expression BAND error
+            | error PLUS expression
+            | error MINUS expression
+            | error TIMES expression
+            | error DIVIDE expression
+            | error MODULO expression
+            | error IDIVIDE expression
+            | error BOR expression
+            | error BAND expression
+            | error LT expression
+            | error GT expression
+            | error GE expression
+            | error LE expression
+            | error EQ expression
+            | error NE expression
+            | error LOR expression
+            | error LAND expression
+            | LNOT error
+            | expression LT error
+            | expression GT error
+            | expression GE error
+            | expression LE error
+            | expression EQ error
+            | expression NE error
+            | expression LOR error
+            | expression LAND error
+    '''
+    p[0] = err_node()
+    print(wrap_error('Expression expected.', p.lexer.lineno))
 
 def p_logic_expressions(p):
     '''expression : expression LT expression
@@ -505,19 +523,25 @@ def p_logic_expressions(p):
     else:
         p[0] = Node('LNOT', childs=[p[2]], line=line)
 
-
 def p_call(p):
     '''call : id
         | function_call'''
     p[0] = p[1]
 
-
 def p_chain_call(p):
     '''chain_call : id DOT call
-            | array_element DOT call'''
+            | array_element DOT call
+            | expression DOT call'''
     line = p.lexer.lineno
     p[0] = Node("CHAIN_CALL", childs=[p[1], p[3]], line=line)
 
+def p_chain_call_error(p):
+    '''chain_call : call DOT error
+                | id DOT error
+                | array_element DOT error
+                | expression DOT error'''
+    p[0] = err_node()
+    print(wrap_error('Property name expected.', p.lexer.lineno))
 
 def p_full_condition(p):
     '''condition_full : condition_statement else_cond
@@ -527,6 +551,15 @@ def p_full_condition(p):
         p[1].add_childs([p[2]])
     p[0] = p[1]
 
+def p_else_error(p):
+    'condition_full : else_cond'
+    p[0] = err_node()
+    print(wrap_error('There must not be "else" without "if" before it.', p.lexer.lineno))
+
+def p_elif_error(p):
+    'condition_full : elif_cond'
+    p[0] = err_node()
+    print(wrap_error('There must not be "elif" without "if" or another "elif" before it.', p.lexer.lineno))
 
 def p_conditions(p):
     '''condition_statement : if_cond
@@ -539,99 +572,145 @@ def p_conditions(p):
         p[1].add_childs([p[2]])
         p[0] = p[1]
 
-
 def p_if_cond(p):
-    'if_cond : IF expression_paren scope_brace'
+    'if_cond : IF expression_paren braced_scope'
     line = p.lexer.lineno
     p[0] = Node(
         'IF', childs=[Node('CONDITION', childs=[p[2]], line=line), p[3]], line=line)
 
+def p_cond_error(p):
+    '''if_cond : IF error
+            | ELIF error '''
+    p[0] = err_node()
+    print(wrap_error('Expression in parentheses expected.', p.lexer.lineno))
+
+def p_cond_body_error(p):
+    '''if_cond : IF expression_paren error
+            | ELIF expression_paren error
+            | ELSE error'''
+    p[0] = err_node()
+    print(wrap_error('Condition body excepted.', p.lexer.lineno))
 
 def p_elif_cond(p):
-    '''elif_cond : ELIF expression_paren scope_brace'''
+    '''elif_cond : ELIF expression_paren braced_scope'''
     line = p.lexer.lineno
     p[0] = Node(
         'ELIF', childs=[Node('CONDITION', childs=[p[2]], line=line), p[3]], line=line)
 
-
 def p_else_cond(p):
-    '''else_cond : ELSE scope_brace'''
+    '''else_cond : ELSE braced_scope'''
     line = p.lexer.lineno
     p[0] = Node('ELSE', childs=[p[2]], line=line)
-
 
 def p_loop(p):
     '''loop : while_loop
             | do_while_loop'''
     p[0] = p[1]
 
-
 def p_do_while(p):
-    'do_while_loop : DO scope_brace WHILE expression_paren SEMI'
+    'do_while_loop : DO braced_scope WHILE expression_paren SEMI'
     line = p.lexer.lineno
     p[0] = Node('DO_WHILE', childs=[p[2], Node('CONDITION', childs=[p[4]], line=line)], line=line)
 
+def p_do_while_operator_error(p):
+    'do_while_loop : DO braced_scope error'
+    p[0] = err_node()
+    print(wrap_error('Operator "while" expected.', p.lexer.lineno))
+
+def p_while_body_error(p):
+    '''do_while_loop : DO error 
+        while_loop : WHILE expression_paren error
+    '''
+    p[0] = err_node()
+    print(wrap_error('Loop body expected.', p.lexer.lineno))
+
+def p_while_expression_error(p):
+    '''
+        while_loop : WHILE error
+        do_while_loop : DO braced_scope WHILE error
+    '''
+    p[0] = err_node()
+    print(wrap_error('Expression in parentheses expected.', p.lexer.lineno))
 
 def p_while(p):
-    'while_loop : WHILE expression_paren scope_brace'
+    'while_loop : WHILE expression_paren braced_scope'
     line = p.lexer.lineno
     p[0] = Node('WHILE', childs=[Node(
         'CONDITION', childs=[p[2]], line=line), p[3]], line=line)
-
 
 def p_expression_paren(p):
     'expression_paren : LPAREN expression RPAREN'
     p[0] = p[2]
 
+def p_expression_paren_error(p):
+    'expression_paren : LPAREN error RPAREN'
+    print(wrap_error('Not an expression.', p.lexer.lineno))
+    p[0] = err_node()
 
-def p_scope_brace(p):
-    'scope_brace : LBRACE scope RBRACE'
+def p_expression_paren_unclosed(p):
+    'expression_paren : LPAREN error '
+    print(wrap_error('Unclosed parenthesis. ")" expected.', p.lexer.lineno))
+    p[0] = err_node()
+
+
+def p_braced_scope(p):
+    'braced_scope : LBRACE scope RBRACE'
     p[0] = p[2]
 
+def p_empty_braced_scope_error(p):
+    'braced_scope : LBRACE empty RBRACE'
+    p[0] = err_node()
+    print(wrap_error('Scope can\'t be empty.', p.lexer.lineno))
 
 def p_mark(p):
-    'mark : ID COLON'
+    'mark : id COLON'
     line = p.lexer.lineno
     p[0] = Node('MARK', childs=[p[1]], line=line)
 
+def p_mark_id_error(p):
+    '''mark : statement COLON
+            | expression COLON'''
+    p[0] = err_node()
+    print(wrap_error('Mark name expected.', p.lexer.lineno))
 
 def p_goto(p):
-    'goto : GOTO mark'
-    p[0] = p[2]
-
-
-def p_comments(p):
-    'comment : COMMENT'
-    line = p.lexer.lineno
-    p[0] = Node('COMMENT', childs=[p[1].replace('\n', '')], line=line)
-
-
-def p_call_args_add(p):
-    '''call_args : call_args COMMA expression'''
-    p[0] = p[1].add_childs([p[3]])
+    'goto : GOTO id'
+    p[0] = Node('GOTO', p[2].value)
 
 
 def p_call_args(p):
     '''call_args : expression
         | empty'''
     line = p.lexer.lineno
-    p[0] = Node('CALL_ARGS', childs=[p[1]] if p[1] else [], line=line)
+    p[0] = Node('CALL_ARGS', childs=[p[1]] if p[1] and err_node().name != p[1].name else [], line=line)
 
+def p_call_args_add(p):
+    '''call_args : call_args COMMA expression'''
+    p[0] = p[1].add_childs([p[3]])
+
+def p_call_args_add_error(p):
+    '''call_args : call_args COMMA error
+                | call_args COMMA empty'''
+    print(wrap_error('Argument expected.', p.lexer.lineno))
+    p[0] = err_node()
 
 def p_call_args_paren(p):
     'call_args_paren : LPAREN call_args RPAREN'
     p[0] = p[2]
 
+def p_call_args_unclosed(p):
+    '''call_args_paren : LPAREN error
+                    | LPAREN call_args error'''
+    print(wrap_error('")" or argument expected.', p.lexer.lineno))
+    p[0] = err_node()
 
 def p_func_call(p):
     'function_call : id call_args_paren'
     p[0] = Node('FUNC_CALL', childs=[p[1], p[2]], line=p[1].line)
 
-
-# Error rule for syntax errors
 def p_error(p):
-    # TODO: remove it and replace with error rules
     if p is not None:
-        print('Line %s, illegal token "%s"' % (p.lineno, p.value))
+        # print('Illegal token "%s" at line %s' % (p.value, p.lexer.lineno))
+        pass
     else:
-        print('Unexpected end of input')
+        print('Unexpected end of input, probably some brace is lost')
