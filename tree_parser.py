@@ -425,13 +425,14 @@ def check_func_call(tree):
                           '" in the call of function "'+fun.children[0].children[0]+'", line', call_args[i].line)
 
 
-def check_funcs_have_returns():
+def check_funcs_returns():
     global main_root
     if main_root is not None:
         funcs = get_all_nodes_by_name(main_root, "FUNCTION")
         for func in funcs:
-            ftype = func.get_element_by_tag("DATATYPE")
+            ftype = func.get_element_by_tag("TYPE")
             scope = func.get_element_by_tag("SCOPE")
             ret = scope.get_element_by_tag("RETURN")
             if ret is None and ftype.children[0] != "void":
                 print("Return error: function with type \"%s\" must return a value. Line: %s" % (ftype.children[0], func.line))
+

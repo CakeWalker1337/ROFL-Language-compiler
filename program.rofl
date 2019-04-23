@@ -1,5 +1,2 @@
-int b = 5;
-struct myStruct {
-    int b;
-}
-b.b.b = 10;
+a.b.c.d = 1;
+int[] a = int[](5);

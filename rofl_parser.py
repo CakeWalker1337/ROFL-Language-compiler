@@ -526,23 +526,25 @@ def p_logic_expressions(p):
 
 def p_call(p):
     '''call : id
-        | function_call'''
+        | function_call
+        | array_element'''
     p[0] = p[1]
 
 def p_chain_call(p):
-    '''chain_call : id DOT call
-            | array_element DOT call
-            | expression DOT call'''
+    '''chain_call : call
+            | chain_call DOT call'''
     line = p.lexer.lineno
-    p[0] = Node("CHAIN_CALL", childs=[p[1], p[3]], line=line)
+    if len(p) == 2:
+        p[0] = Node("CHAIN_CALL", childs=[p[1]], line=line)
+    elif len(p) == 4:
+        p[0] = Node("CHAIN_CALL", childs=[p[1], p[3]], line=line)
 
-def p_chain_call_error(p):
-    '''chain_call : call DOT error
-                | id DOT error
-                | array_element DOT error
-                | expression DOT error'''
-    p[0] = err_node()
-    print(wrap_error('Property name expected.', p.lexer.lineno))
+
+# def p_chain_call_error(p):
+#     '''chain_call : chain_call DOT error
+#     '''
+#     p[0] = err_node()
+#     print(wrap_error('Property name expected.', p.lexer.lineno))
 
 def p_full_condition(p):
     '''condition_full : condition_statement else_cond

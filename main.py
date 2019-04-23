@@ -65,7 +65,9 @@ if  __name__ == "__main__":
 
             print(result)
 
-            errors = check_var_definition(result)
+            #errors = check_var_definition(result)
+            check_funcs_have_returns(result)
+            check_unexpected_keywords(result)
             #print()
         else:
             print("There are some syntax errors detected in source code.")
