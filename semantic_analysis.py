@@ -5,6 +5,7 @@ def wrap_error(err_str, line_num):
     error_prefix = 'Semantic error at line '+ str(line_num) +': '
     return (error_prefix + err_str, line_num)
 
+
 # returns (str ID, str TYPE) of node or just (str ID)
 def get_info(node):
     if node.name == 'ID': return node.value

@@ -270,6 +270,7 @@ def p_assignment(p):
                 | variable_decl ASSIGN array_alloc
                 | id ASSIGN array_alloc
                 | array_element ASSIGN expression
+                | chain_call ASSIGN expression
     '''
     line = p.lexer.lineno
     p[0] = Node('ASSIGN', childs=[p[1], p[3]], line=line)

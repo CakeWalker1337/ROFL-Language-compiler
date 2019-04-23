@@ -1,15 +1,5 @@
-(b);
-(a + c);
-print(a);
-int[] b;
-print(a);
-struct a {
+int b = 5;
+struct myStruct {
     int b;
 }
-return;
-int[] a;
-a = 5+5;
-;
-function a (int a) : int {
-    a;
-}
+b.b.b = 10;
