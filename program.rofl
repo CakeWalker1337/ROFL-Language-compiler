@@ -1,9 +1,22 @@
-int a2;
-boolean[] b3;
-struct A {
-    int b;
+
+if (1) {
+    if (1) {
+        int abs;
+        abs;
+        if (1) {
+            abs;
+        }
+    }
+    abs;
+}
+else {
+    abs;
+    int abs;
 }
 struct B {
+    boolean[] c = boolean[] (12);
+    int c;
+    int b;
     boolean[] c = boolean[](12);
 }
 function test(int tvar) : int {
