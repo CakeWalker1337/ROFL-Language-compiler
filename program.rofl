@@ -1,2 +1,16 @@
-a.b.c.d = 1;
-int[] a = int[](5);
+int a2;
+boolean[] b3;
+struct A {
+    int b;
+}
+struct B {
+    A b;
+    boolean[] c;
+    function f(): float[] {
+        123;
+    }
+}
+B a;
+a.b.b.d[1].b;
+//a().b[1].c.d = 1;
+//int[] a = int[](5);

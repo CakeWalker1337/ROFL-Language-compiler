@@ -115,9 +115,14 @@ def p_array_element(p):
     p[0] = Node('ARRAY_ELEMENT', childs=[p[1], p[2]], line=line)
 
 def p_primitive_variable(p):
-    'variable_decl : datatype id'
+    'variable_decl : primitive_type id'
     line = p.lexer.lineno
     p[0] = Node('VARIABLE', childs=[p[1], p[2]], line=line)
+
+def p_array_variable(p):
+    'variable_decl : array_type id'
+    line = p.lexer.lineno
+    p[0] = Node('VARIABLE_ARRAY', childs=[p[1], p[2]], line=line)
 
 def p_struct_variable(p):
     'variable_decl : ID id'
@@ -172,7 +177,7 @@ def p_array_type(p):
             | id LBRACKET RBRACKET
     '''
     line = p.lexer.lineno
-    p[0] = Node("TYPE", value=p[1].value + "[]", line=line)
+    p[0] = Node("TYPE", value=p[1].value, line=line)
 
 def p_array_type_error(p):
     '''array_type : primitive_type LBRACKET error
@@ -537,7 +542,8 @@ def p_chain_call(p):
     if len(p) == 2:
         p[0] = Node("CHAIN_CALL", childs=[p[1]], line=line)
     elif len(p) == 4:
-        p[0] = Node("CHAIN_CALL", childs=[p[1], p[3]], line=line)
+        p[1].add_childs([p[3]])
+        p[0] = p[1]# p[0] = Node("CHAIN_CALL", childs=[p[1], p[3]], line=line)
 
 
 # def p_chain_call_error(p):
