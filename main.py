@@ -74,5 +74,6 @@ if  __name__ == "__main__":
 
             check_funcs_have_returns(result)
             check_unexpected_keywords(result)
+
         else:
             print("There are some syntax errors detected in source code.")

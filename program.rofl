@@ -5,12 +5,21 @@ struct A {
 }
 struct B {
     boolean[] c = boolean[](12);
-    int c = 5+a;
-    int c;
 }
+function test(int tvar) : int {
+    int a = 1;
+    if(a > 1){
+        int s = 1;
+    }
+    elif (a<3) {
+        int sss = 2;
+    }
+    return 1;
+
+}
+int lll;
 B[] a = B[](2);
 a = 5;
-c = 5;
-a.c;
+int c = a[1];
 //a().b[1].c.d = 1;
 //int[] a = int[](5);

@@ -1,4 +1,4 @@
-
+import copy
 # Wraps the error message with error syntax
 # returns tuple of error message and line number
 def wrap_error(err_str, line_num):
@@ -139,31 +139,56 @@ def check_unexpected_keywords(root):
         check_keywords_recursive(root)
 
 
+def is_node(elem):
+    return type(elem).__name__ == 'Node'
+
+
+def is_node_has_id(node):
+    if is_node(node):
+        tnames = ['VARIABLE', 'VARIABLE_ARRAY', 'STRUCT', 'FUNCTION']
+        return node.name in tnames
+    return False
+
+
 # gets first defined function, struct or variable consider scopes
 def find_element_by_id(id, scope):
-    pass
+    if scope is None:
+        return None
+    for elem in scope.childs:
+        if elem.name == "ASSIGN":
+            current = elem.childs[0]
+        else:
+            current = elem
+        if is_node_has_id(current) and current.get("ID")[0].value == id:
+            return current
+    return find_element_by_id(id, get_nearest_scope(scope))
 
 
-#can be used when is needed to get closest scope from node
+# can be used when is needed to get closest scope from node
+# NOTE: if scope belongs to function, it's arguments are adding to the END of scope
+# it means that this function is not for checking the order of definitions.
+# Use it if you sure that the definitions are correct.
 def get_nearest_scope(node):
+    if node.parent is None:
+        return None
     if node.parent.name == "SCOPE" or node.parent.name == "CONTENT":
-        return node.parent
+        scope = node.parent
+        modified_scope = scope
+        if scope.parent.name == "FUNCTION":
+            func_args = scope.parent.get("FUNC_ARGS")[0].childs
+            modified_scope = copy.deepcopy(scope)
+            modified_scope.add_childs(func_args)
+        return modified_scope
     return get_nearest_scope(node.parent)
 
 
-#gets type of atom
 def get_atom_type(atom):
     if atom.name == "CONST" or atom.name == "VARIABLE" or atom.name == "ARRAY_ALLOC":
         return atom.get("TYPE").value
     if atom.name == "ARRAY_ELEMENT":
-        id = atom.children[0].children[0]
-        arr = find_element_by_id(id)
-        # if not arr is None:
-        #     if not is_primitive_type(arr.children[0].children[0]):
-        #         return arr.get_element_by_tag("DATATYPE").children[0].replace("[]", "")
-        #     else:
-        #         print("Array call error. Element can't be called as array element. Line: %s" % atom.line)
-        #         return arr.children[0].children[0]
+        id = atom.child[0].value
+        arr = find_element_by_id(id, get_nearest_scope(atom.child[0]))
+        return arr.get("TYPE")[0].value
     looked_id = None
     if atom.name == "FUNC_CALL":
         looked_id = atom.get_element_by_tag("ID").children[0]
@@ -175,18 +200,3 @@ def get_atom_type(atom):
     else:
         return found_elem.get_element_by_tag("DATATYPE").children[0]
 
-def check_chain_calls(root):
-
-    def find_chain_calls(node):
-        if node.name == "CHAIN_CALL":
-            check_chain_recursive(node)
-        else:
-            for child in node.childs:
-                find_chain_calls(child)
-
-    def check_chain_recursive(node):
-        if node.value is not None:
-            pass
-            #return get_atom_type(node)
-        else:
-            prev_type = check_chain_recursive(node.childs[0])
