@@ -18,9 +18,11 @@ def get_info(node):
     elif node.name == 'ASSIGN': 
         if node.childs[0].name == 'VARIABLE' or node.childs[0].name == 'VARIABLE_ARRAY':
             return node.childs[0].childs[1].value, (node.childs[0].name, node.childs[0].childs[0].value)
-        else: 
+        elif node.childs[0].name == 'ID': 
             return node.childs[0].value, ('VARIABLE', None)
-    elif node.name == 'CHAIN_CALL': return None, None
+        else:
+            return get_info(node.childs[0])
+    elif node.name == 'CHAIN_CALL': return get_info(node.childs[0])
     else: raise KeyError('Please add '+node.name+' to function get_info')
 
 default_types = {'int':[],
@@ -65,7 +67,7 @@ def check_var_definition(node, types=default_types, variables={}):
                     errors += check_var_definition(d.get('SCOPE')[0], types, func_scope_vars)
                 else: errors.append(wrap_error('Variable "'+name+'" already defined as "'+variables[name]+'".', d.line))
             else: errors.append(wrap_error('Undefined type "'+type+'" used.', d.line))
-        elif d.name == 'VARIABLE' or d.name == 'VARIABLE_ARRAY' or d.name == 'ASSIGN' and d.childs[0].name != 'ID':
+        elif d.name == 'VARIABLE' or d.name == 'VARIABLE_ARRAY' or d.name == 'ASSIGN' and d.childs[0].name != 'ID' and d.childs[0].name != 'CHAIN_CALL':
             # just check if there is a type and name in definitions
             if type[1] in types:
                 if not name in variables:
@@ -73,14 +75,15 @@ def check_var_definition(node, types=default_types, variables={}):
                     cur_scope_vars.append(name)
                 else: errors.append(wrap_error('Variable "'+name+'" already defined as "'+str(variables[name])+'".', d.line))
             else: errors.append(wrap_error('Undefined type "'+type[1]+'" used.', d.line))
-        elif d.name == 'ID' and (not d.parent or (d.parent and d.parent.name != 'CHAIN_CALL')) or d.name == 'ASSIGN' and d.childs[0].name == 'ID':
+        elif d.name == 'ID' and (not d.parent or (d.parent and d.parent.name != 'CHAIN_CALL')) or d.name == 'ASSIGN' and d.childs[0].name != 'CHAIN_CALL':
             # check if name defined in scope
             if name in types:
                 errors.append(wrap_error('Variable name expected.', d.line))
             elif not name in variables:
                 errors.append(wrap_error('Usage of undefined variable "'+name+'"', d.line))
-        elif d.name == 'CHAIN_CALL':
+        elif d.name == 'CHAIN_CALL' or d.name == 'ASSIGN':
             prev_name, prev_type = get_info(d.childs[0])
+            childs = d.childs if d.name == 'CHAIN_CALL' else d.childs[0].childs
             if prev_name in types:
                 errors.append(wrap_error('Variable name expected.', d.line))
             elif not prev_name in variables:
@@ -88,8 +91,8 @@ def check_var_definition(node, types=default_types, variables={}):
             elif variables[prev_name][0] != prev_type[0]:
                 errors.append(wrap_error('Wrong call of '+variables[prev_name][0].lower()+' "'+prev_name+'"; treated as '+prev_type[0].lower()+'.', d.line))
             else: 
-                for idx in range(1, len(d.childs)):
-                    call = d.childs[idx]
+                for idx in range(1, len(childs)):
+                    call = childs[idx]
                     name, type = get_info(call)
                     if name in types[variables[prev_name][1]]:
                         real_type = types[variables[prev_name][1]][name][0]
