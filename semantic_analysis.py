@@ -113,6 +113,7 @@ def check_var_definition(node, types=default_types, variables={}):
 #     return 1
 
 def check_funcs_have_returns(root):
+    errors = []
     if root is not None:
         funcs = root.get("FUNCTION", nest=True)
         for func in funcs:
@@ -121,12 +122,18 @@ def check_funcs_have_returns(root):
             rets = scope.get("RETURN")
             if len(rets) == 0:
                 if ftype.value != "void":
-                    print("Return error: expected return statement with type \'%s\'. Line: %s" % (ftype.value, func.line))
+                    errors.append(wrap_error("Expected return statement with type \'" + ftype.value + "\'", func.line))
             else:
                 for ret in rets:
                     if ret.value is None and len(ret.childs) == 0:
-                        print("Return error: function with type \"%s\" must return a value. Line: %s" % (
-                        ftype.value, ret.line))
+                        errors.append(wrap_error("Function with type \"" + ftype.value + "\" must return a value. Line: %s", ret.line))
+                    else:
+                        res_type = get_expression_result_type(ret.childs[0], errors)
+                        if res_type != "end" and res_type != ftype.value:
+                            errors.append(wrap_error(
+                                "Incorrect return type \"" + res_type + "\". Function must return a value of type \"" + ftype.value + "\".",
+                                ret.line))
+    return errors
 
 
 def check_unexpected_keywords(root):
@@ -147,30 +154,12 @@ def check_unexpected_keywords(root):
         check_keywords_recursive(root)
 
 
-def is_node(elem):
-    return type(elem).__name__ == 'Node'
-
-
-def is_node_has_id(node):
-    if is_node(node):
-        tnames = ['VARIABLE', 'VARIABLE_ARRAY', 'STRUCT', 'FUNCTION']
-        return node.name in tnames
-    return False
-
-
-def is_node_atom(node):
-    if is_node(node):
-        tnames = ['CHAIN_CALL', 'ID', 'FUNC_CALL', 'CONSTANT', 'VARIABLE_ARRAY',
-                  'VARIABLE', 'ARRAY_ALLOC', 'ARRAY_ELEMENT']
-        return node.name in tnames
-    return False
-
-
 # gets first defined function, struct or variable consider scopes
 def find_element_by_id(id, scope):
     if scope is None:
         return None
     for elem in scope.childs:
+        current = None
         if elem.name == "ASSIGN":
             current = elem.childs[0]
         else:
@@ -190,7 +179,7 @@ def get_nearest_scope(node):
     if node.parent.name == "SCOPE" or node.parent.name == "CONTENT":
         scope = node.parent
         modified_scope = scope
-        if scope.parent.name == "FUNCTION":
+        if scope.parent is not None and scope.parent.name == "FUNCTION":
             func_args = scope.parent.get("FUNC_ARGS")[0].childs
             modified_scope = copy.deepcopy(scope)
             modified_scope.add_childs(func_args)
@@ -200,7 +189,7 @@ def get_nearest_scope(node):
 
 def get_atom_type(atom):
     if atom.name == "CONST" or atom.name == "VARIABLE" or atom.name == "ARRAY_ALLOC" or atom.name == "VARIABLE_ARRAY":
-        return atom.get("TYPE").value
+        return atom.get("TYPE")[0].value
     if atom.name == "CHAIN_CALL":
         first = atom.childs[0]
         second = atom.childs[1]
@@ -229,57 +218,58 @@ def get_atom_type(atom):
         return found_elem.get("TYPE")[0].value
 
 
-def get_expression_result_type(root):
+def get_expression_result_type(root, errors):
     if is_expression(root):
         if len(root.childs) == 1:
-            first = get_expression_result_type(root.childs[0])
+            first = get_expression_result_type(root.childs[0], errors)
             if first == "end":
                 return "end"
             comp_res = compare_expr(first, None, root.name)
             if comp_res == "error":
-                print("Expression error: operand has an unsuitable type (%s). Line: %s" % (
-                    first, root.childs[0].line))
+                errors.append(wrap_error("Expression error: operand has an unsuitable type (" + first + ")", root.line))
                 return "end"
             return comp_res
         else:
-
-            first = get_expression_result_type(root.childs[0])
-            second = get_expression_result_type(root.childs[1])
+            first = get_expression_result_type(root.childs[0], errors)
+            second = get_expression_result_type(root.childs[1], errors)
             if first == "end" or second == "end":
                 return "end"
             comp_res = compare_expr(first, second, root.name)
             if comp_res == "error":
-                print(
-                    "Expression error: operands have unsuitable types (%s, %s). line: %s" % (
-                        first, second, root.childs[0].line))
+                errors.append(wrap_error(
+                    "Expression error: operands have unsuitable types (" + first + ", " + second + ")",
+                    root.childs[0].line))
                 return "end"
             return comp_res
     if is_node_atom(root):
         return get_atom_type(root)
 
 
-def check_expression_results(root, has_errors):
+def check_expression_results(root):
     if is_node(root):
+        errors = []
         for part in root.childs:
+            if part.parent is None:
+                print(part.name)
             if is_node(part):
-                if part.name == "ASSIGN":
-                    expr1 = get_expression_result_type(part.childs[0])
-                    expr2 = get_expression_result_type(part.childs[1])
 
-                    if not (expr1 == "end" or expr2 == "end"):
+                if part.name == "ASSIGN":
+
+                    expr1 = get_expression_result_type(part.childs[0], errors)
+                    expr2 = get_expression_result_type(part.childs[1], errors)
+
+                    if expr1 != "end" and expr2 != "end":
                         is_correct = False
                         if is_type_arithmetic(expr1) and is_type_arithmetic(expr2):
                             is_correct = True
                         if expr1 == expr2:
                             is_correct = True
                         if not is_correct:
-                            has_errors = True
-                            print("Type cast exception: cannot cast type \"%s\" to \"%s\" at line: %s" % (
-                                expr2, expr1, part.line))
+                            errors.append(wrap_error(
+                                "Type cast exception: cannot cast type \"" + expr2 + "\" to \"" + expr1 + "\"",
+                                part.line))
                 else:
-                    result = get_expression_result_type(part)
-                    if result == "end":
-                        has_errors = True
+                    get_expression_result_type(part, errors)
                     next_node = None
                     if part.name == "STRUCT":
                         next_node = part.get("CONTENT")[0]
@@ -287,7 +277,28 @@ def check_expression_results(root, has_errors):
                         next_node = part.get("SCOPE")[0]
                     else:
                         next_node = part
-                    check_expression_results(next_node, has_errors)
+                    if not is_node_atom(part):
+                        errors.extend(check_expression_results(next_node))
+        return errors
+
+
+def is_node(elem):
+    return type(elem).__name__ == 'Node'
+
+
+def is_node_has_id(node):
+    if is_node(node):
+        tnames = ['VARIABLE', 'VARIABLE_ARRAY', 'STRUCT', 'FUNCTION']
+        return node.name in tnames
+    return False
+
+
+def is_node_atom(node):
+    if is_node(node):
+        tnames = ['CHAIN_CALL', 'ID', 'FUNC_CALL', 'CONST', 'VARIABLE_ARRAY',
+                  'VARIABLE', 'ARRAY_ALLOC', 'ARRAY_ELEMENT']
+        return node.name in tnames
+    return False
 
 
 def is_expression(node):
@@ -295,7 +306,7 @@ def is_expression(node):
         tnames = ['PLUS', 'MINUS', 'TIMES', 'DIVIDE', 'MODULO', 'IDIVIDE',
                   'LOR', 'BOR', 'LAND', 'BAND', 'LNOT',
                   'LT', 'LE', 'GT', 'GE', 'EQ', 'NE',
-                  'INCREMENT', 'DECREMENT', 'CHAIN_CALL']
+                  'INCREMENT', 'DECREMENT']
         return node.name in tnames
     return False
 
@@ -356,3 +367,6 @@ def compare_expr(one, two, operation_type):
             return one
         return "error"
     return "error"
+
+
+#TODO: Add comments and check func params while calling
