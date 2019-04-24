@@ -617,28 +617,21 @@ def p_logic_expressions(p):
     else:
         p[0] = Node('LNOT', childs=[p[2]], line=line)
 
-def p_call(p):
-    '''call : id
-        | function_call
-        | array_element'''
-    p[0] = p[1]
-
 def p_chain_call(p):
-    '''chain_call : call
-            | chain_call DOT call'''
+    '''chain_call : id DOT id
+                | id DOT array_element
+                | array_element DOT id
+                | array_element DOT array_element
+                | function_call DOT id
+                | function_call DOT array_element
+    '''
     line = p.lexer.lineno
-    if len(p) == 2:
-        p[0] = Node("CHAIN_CALL", childs=[p[1]], line=line)
-    elif len(p) == 4:
-        p[1].add_childs([p[3]])
-        p[0] = p[1]# p[0] = Node("CHAIN_CALL", childs=[p[1], p[3]], line=line)
+    p[0] = Node("CHAIN_CALL", childs=[p[1], p[3]], line=line)
 
-
-# def p_chain_call_error(p):
-#     '''chain_call : chain_call DOT error
-#     '''
-#     p[0] = err_node()
-#     print(wrap_error('Property name expected.', p.lexer.lineno))
+def p_chain_call_long_error(p):
+    'chain_call : chain_call DOT'
+    p[0] = err_node()
+    print(wrap_error('Chain call can\'t be such long.', p.lexer.lineno))
 
 def p_full_condition(p):
     '''condition_full : condition_statement else_cond

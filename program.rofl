@@ -10,6 +10,6 @@ struct B {
 }
 B[] a = B[](2);
 b[2];
-a.b.b.d[a2].b;
+a.b = 5;
 //a().b[1].c.d = 1;
 //int[] a = int[](5);
