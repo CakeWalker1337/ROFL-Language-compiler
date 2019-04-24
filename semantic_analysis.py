@@ -32,6 +32,7 @@ default_types = {'int':[],
     
 def check_var_definition(node, types=default_types, variables={}):
     errors = []
+    cur_scope_vars = []
     def_names = ['FUNCTION', 'STRUCT', 'VARIABLE', 'VARIABLE_ARRAY', 'ID', 'CHAIN_CALL', 'ASSIGN']
     defs = node.get(def_names)
     for d in defs:
@@ -54,7 +55,7 @@ def check_var_definition(node, types=default_types, variables={}):
                 types[name+'[]'] = new_dict
             else: errors.append(wrap_error('Variable "'+name+'" already defined as "'+variables[name]+'".', d.line))
         elif d.name == 'FUNCTION': 
-            if type[1] in types:
+            if type[1] in types or type[1] == 'void':
                 if not name in variables:
                     variables[name] = type
                     func_scope_vars = {}
@@ -69,9 +70,10 @@ def check_var_definition(node, types=default_types, variables={}):
             if type[1] in types:
                 if not name in variables:
                     variables[name] = type
+                    cur_scope_vars.append(name)
                 else: errors.append(wrap_error('Variable "'+name+'" already defined as "'+str(variables[name])+'".', d.line))
-            else: errors.append(wrap_error('Undefined type of a variable.', d.line))
-        elif d.name == 'ID' and (d.parent and d.parent.name != 'CHAIN_CALL') or d.name == 'ASSIGN' and d.childs[0].name == 'ID':
+            else: errors.append(wrap_error('Undefined type "'+type[1]+'" used.', d.line))
+        elif d.name == 'ID' and (not d.parent or (d.parent and d.parent.name != 'CHAIN_CALL')) or d.name == 'ASSIGN' and d.childs[0].name == 'ID':
             # check if name defined in scope
             if name in types:
                 errors.append(wrap_error('Variable name expected.', d.line))
@@ -100,6 +102,9 @@ def check_var_definition(node, types=default_types, variables={}):
     for child in node.childs:
         if not child.name in def_names:
             errors += check_var_definition(child, types, variables) 
+    if node.name == 'SCOPE':
+        for var in cur_scope_vars:
+            del variables[var]
     return errors
 
 #     return 1
