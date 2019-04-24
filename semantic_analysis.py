@@ -155,6 +155,14 @@ def is_node_has_id(node):
     return False
 
 
+def is_node_atom(node):
+    if is_node(node):
+        tnames = ['CHAIN_CALL', 'ID', 'FUNC_CALL', 'CONSTANT', 'VARIABLE_ARRAY',
+                  'VARIABLE', 'ARRAY_ALLOC', 'ARRAY_ELEMENT']
+        return node.name in tnames
+    return False
+
+
 # gets first defined function, struct or variable consider scopes
 def find_element_by_id(id, scope):
     if scope is None:
@@ -188,20 +196,160 @@ def get_nearest_scope(node):
 
 
 def get_atom_type(atom):
-    if atom.name == "CONST" or atom.name == "VARIABLE" or atom.name == "ARRAY_ALLOC":
+    if atom.name == "CONST" or atom.name == "VARIABLE" or atom.name == "ARRAY_ALLOC" or atom.name == "VARIABLE_ARRAY":
         return atom.get("TYPE").value
-    if atom.name == "ARRAY_ELEMENT":
-        id = atom.child[0].value
-        arr = find_element_by_id(id, get_nearest_scope(atom.child[0]))
-        return arr.get("TYPE")[0].value
+    if atom.name == "CHAIN_CALL":
+        first = atom.childs[0]
+        second = atom.childs[1]
+        type = get_atom_type(first)
+        fst_struct = find_element_by_id(type, get_nearest_scope(first))
+        if fst_struct.name == "STRUCT":
+            desired_id = None
+            if second.name == "ID":
+                desired_id = second.value
+            else:
+                desired_id = second.get("ID")[0].value
+            return get_atom_type(find_element_by_id(desired_id, fst_struct.get("CONTENT")[0]))
+        else:
+            raise Exception("First element hasn\'t got return type of structure")
     looked_id = None
+    if atom.name == "ARRAY_ELEMENT":
+        looked_id = atom.childs[0].value
     if atom.name == "FUNC_CALL":
-        looked_id = atom.get_element_by_tag("ID").children[0]
+        looked_id = atom.get("ID")[0].value
     elif atom.name == "ID":
-        looked_id = atom.children[0]
-    found_elem = find_element_by_id(looked_id)
+        looked_id = atom.value
+    found_elem = find_element_by_id(looked_id, get_nearest_scope(atom))
     if found_elem is None:
         return None
     else:
-        return found_elem.get_element_by_tag("DATATYPE").children[0]
+        return found_elem.get("TYPE")[0].value
 
+
+def get_expression_result_type(root):
+    if is_expression(root):
+        if len(root.childs) == 1:
+            first = get_expression_result_type(root.childs[0])
+            if first == "end":
+                return "end"
+            comp_res = compare_expr(first, None, root.name)
+            if comp_res == "error":
+                print("Expression error: operand has an unsuitable type (%s). Line: %s" % (
+                    first, root.childs[0].line))
+                return "end"
+            return comp_res
+        else:
+
+            first = get_expression_result_type(root.childs[0])
+            second = get_expression_result_type(root.childs[1])
+            if first == "end" or second == "end":
+                return "end"
+            comp_res = compare_expr(first, second, root.name)
+            if comp_res == "error":
+                print(
+                    "Expression error: operands have unsuitable types (%s, %s). line: %s" % (
+                        first, second, root.childs[0].line))
+                return "end"
+            return comp_res
+    if is_node_atom(root):
+        return get_atom_type(root)
+
+
+def check_expression_results(root, has_errors):
+    if is_node(root):
+        for part in root.childs:
+            if is_node(part):
+                if part.name == "ASSIGN":
+                    expr1 = get_expression_result_type(part.childs[0])
+                    expr2 = get_expression_result_type(part.childs[1])
+
+                    if not (expr1 == "end" or expr2 == "end"):
+                        is_correct = False
+                        if is_type_arithmetic(expr1) and is_type_arithmetic(expr2):
+                            is_correct = True
+                        if expr1 == expr2:
+                            is_correct = True
+                        if not is_correct:
+                            has_errors = True
+                            print("Type cast exception: cannot cast type \"%s\" to \"%s\" at line: %s" % (
+                                expr2, expr1, part.line))
+                else:
+                    result = get_expression_result_type(part)
+                    if result == "end":
+                        has_errors = True
+                    next_node = None
+                    if part.name == "STRUCT":
+                        next_node = part.get("CONTENT")[0]
+                    elif part.name == "FUNCTION":
+                        next_node = part.get("SCOPE")[0]
+                    else:
+                        next_node = part
+                    check_expression_results(next_node, has_errors)
+
+
+def is_expression(node):
+    if is_node(node):
+        tnames = ['PLUS', 'MINUS', 'TIMES', 'DIVIDE', 'MODULO', 'IDIVIDE',
+                  'LOR', 'BOR', 'LAND', 'BAND', 'LNOT',
+                  'LT', 'LE', 'GT', 'GE', 'EQ', 'NE',
+                  'INCREMENT', 'DECREMENT', 'CHAIN_CALL']
+        return node.name in tnames
+    return False
+
+
+def is_primitive_type(typename):
+    tnames = ['int', 'string', 'boolean', 'void', 'float']
+    return typename in tnames
+
+
+def is_operation_arithmetic(oper):
+    tnames = ['PLUS', 'MINUS', 'TIMES', 'DIVIDE', 'MODULO', 'IDIVIDE']
+    return oper in tnames
+
+
+def is_operation_logic(oper):
+    tnames = ['LOR', 'LAND', 'LT', 'LE', 'GT', 'GE', 'EQ', 'NE']
+    return oper in tnames
+
+
+def is_operation_bit(oper):
+    tnames = ['BOR', 'BAND']
+    return oper in tnames
+
+
+def is_type_arithmetic(typename):
+    if typename == "int" or typename == "float":
+        return True
+    return False
+
+
+def compare_expr(one, two, operation_type):
+    if one == "null" or two == "null":
+        return "error"
+    if one == "array" or two == "array":
+        return "error"
+    if one == "void" or two == "void":
+        return "error"
+    if one is None:
+        if two == "boolean":
+            return two
+        return "error"
+    if two is None:
+        if one == "boolean":
+            return one
+        return "error"
+    if is_operation_logic(operation_type):
+        if one == two or (is_type_arithmetic(one) and is_type_arithmetic(two)):
+            return "boolean"
+        return "error"
+    if is_operation_arithmetic(operation_type):
+        if is_type_arithmetic(one) and is_type_arithmetic(two):
+            return "float"
+        if one == "string" and operation_type == "PLUS":
+            return "string"
+        return "error"
+    if is_operation_bit(operation_type):
+        if (one == "boolean" or one == "int") and one == two:
+            return one
+        return "error"
+    return "error"
