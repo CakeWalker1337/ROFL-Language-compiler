@@ -65,7 +65,11 @@ if  __name__ == "__main__":
 
             print(result)
 
+            # please add errors to that list of tuples
+            # type: [('message', lineno), ...]
             errors = check_var_definition(result)
-            #print()
+            
+            for error in sorted(errors, key=lambda tup: tup[1]): 
+                print (error[0])
         else:
             print("There are some syntax errors detected in source code.")

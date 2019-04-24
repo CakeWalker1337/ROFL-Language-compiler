@@ -67,7 +67,7 @@ start = 'scope'
 
 def p_id(p):
     '''id : ID'''
-    p[0] = Node('ID', p[1])
+    p[0] = Node('ID', p[1], line=p.lexer.lineno)
 
 def p_const_value_float(p):
     '''const_value : CONST_FLOAT'''
