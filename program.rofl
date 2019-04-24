@@ -4,13 +4,12 @@ struct A {
     int b;
 }
 struct B {
-    A b;
-    boolean[] c;
-    function f(): float[] {
-        123;
-    }
+    boolean[] c = boolean[](12);
+    int c = 5+a;
+    int b;
 }
-B a;
-a.b.b.d[1].b;
+B[] a = B[](2);
+b[2];
+a.b.b.d[a2].b;
 //a().b[1].c.d = 1;
 //int[] a = int[](5);

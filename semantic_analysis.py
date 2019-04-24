@@ -15,6 +15,7 @@ def get_info(node):
     elif node.name == 'VARIABLE_ARRAY': return node.childs[1].value, (node.name, node.childs[0].value)
     elif node.name == 'FUNC_CALL': return node.childs[0].value, ('FUNCTION', None)
     elif node.name == 'ARRAY_ELEMENT': return node.childs[0].value, ('VARIABLE_ARRAY', None)
+    elif node.name == 'ASSIGN': return node.childs[0].childs[1].value, (node.childs[0].name, node.childs[0].childs[0].value)
     elif node.name == 'CHAIN_CALL': return None, None
     else: raise KeyError('Please add '+node.name+' to function get_info')
 
@@ -69,12 +70,12 @@ def check_var_definition(node, types=default_types, variables={}):
             elif not name in variables:
                 errors.append(wrap_error('Usage of undefined variable "'+name+'"', d.line))
         elif d.name == 'CHAIN_CALL':
-            prev_name, prev_type = get_info(d.childs[0])
-            if prev_name in types:
-                errors.append(wrap_error('Variable name expected.', d.line))
-            elif not prev_name in variables:
-                errors.append(wrap_error('Usage of undefined variable "'+prev_name+'"', d.line))     
-            else: 
+            # prev_name, prev_type = get_info(d.childs[0])
+            # if prev_name in types:
+            #     errors.append(wrap_error('Variable name expected.', d.line))
+            # elif not prev_name in variables:
+            #     errors.append(wrap_error('Usage of undefined variable "'+prev_name+'"', d.line))     
+            # else: 
                 # for call in d.childs[1:]:
                 #     name, type = get_info(call)
                 #     if name in types[variables[prev_name][1]]:
@@ -84,7 +85,7 @@ def check_var_definition(node, types=default_types, variables={}):
                 #     else: print(wrap_error('Struct "'+variables[prev_name][1]+'" has no properties with name "'+name+'".', call.line))
                 #     prev_name = name
                 #     prev_type = type
-                pass
+            pass
     for child in node.childs:
         if not child.name in def_names:
             errors += check_var_definition(child, types, variables) 

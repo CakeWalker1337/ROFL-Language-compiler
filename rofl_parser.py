@@ -114,24 +114,34 @@ def p_array_element(p):
     line = p.lexer.lineno
     p[0] = Node('ARRAY_ELEMENT', childs=[p[1], p[2]], line=line)
 
+def p_variable(p):
+    '''variable_decl : variable_decl_primitive
+                    | variable_decl_struct
+                    | variable_decl_array_primitive
+                    | variable_decl_array_struct'''
+    p[0] = p[1]
+
 def p_primitive_variable(p):
-    'variable_decl : primitive_type id'
+    'variable_decl_primitive : primitive_type id'
     line = p.lexer.lineno
     p[0] = Node('VARIABLE', childs=[p[1], p[2]], line=line)
 
 def p_array_variable(p):
-    'variable_decl : array_type id'
+    '''variable_decl_array_primitive : array_type_primitive id
+        variable_decl_array_struct : array_type_struct id'''
     line = p.lexer.lineno
     p[0] = Node('VARIABLE_ARRAY', childs=[p[1], p[2]], line=line)
 
 def p_struct_variable(p):
-    'variable_decl : ID id'
+    'variable_decl_struct : ID id'
     line = p.lexer.lineno
     p[0] = Node('VARIABLE', childs=[Node('TYPE', p[1], line=line), p[2]], line=line)
 
 def p_var_error(p):
-    '''variable_decl : datatype error
-                    | ID error
+    '''variable_decl_primitive : primitive_type error
+        variable_decl_struct : ID error
+        variable_decl_array_primitive : array_type_primitive error
+        variable_decl_array_struct : array_type_struct error
     '''
     p[0] = err_node()
     print(wrap_error('Variable name expected.', p.lexer.lineno))
@@ -153,7 +163,13 @@ def p_array_alloc_size_unclosed(p):
     p[0] = err_node()
 
 def p_array_alloc(p):
-    'array_alloc : array_type array_size'
+    '''array_alloc : array_alloc_primitive
+                | array_alloc_struct'''
+    p[0] = p[1]
+
+def p_array_alloc_childs(p):
+    '''array_alloc_primitive : array_type_primitive array_size
+        array_alloc_struct : array_type_struct array_size'''
     line = p.lexer.lineno
     p[0] = Node("ARRAY_ALLOC", childs=[p[1], p[2]], line=line)
 
@@ -173,15 +189,21 @@ def p_primitives(p):
     p[0] = Node('TYPE', value=p[1], line=line)
 
 def p_array_type(p):
-    '''array_type : primitive_type LBRACKET RBRACKET
-            | id LBRACKET RBRACKET
+    '''array_type : array_type_primitive
+            | array_type_struct
     '''
     line = p.lexer.lineno
     p[0] = Node("TYPE", value=p[1].value, line=line)
 
+def p_array_type_primitive(p):
+    '''array_type_primitive : primitive_type LBRACKET RBRACKET
+        array_type_struct : id LBRACKET RBRACKET'''
+    line = p.lexer.lineno
+    p[0] = Node("TYPE", value=p[1].value, line=line)
+
 def p_array_type_error(p):
-    '''array_type : primitive_type LBRACKET error
-                | id LBRACKET error
+    '''array_type_primitive : primitive_type LBRACKET error
+        array_type_struct : id LBRACKET error
     '''
     p[0] = err_node()
     print(wrap_error('Unclosed brackets at array type. "]" expected', p.lineno(1)))
@@ -240,34 +262,100 @@ def p_struct_body_error(p):
     print(wrap_error('Struct body expected.', p.lineno(3)))
 
 def p_content(p):
-    '''content : func
-              | variable_decl SEMI
+    '''content : variable_decl_primitive SEMI
+            | variable_decl_array_primitive SEMI
     '''
     line = p.lexer.lineno
     p[0] = Node('CONTENT', childs=[p[1]], line=line)
 
+def p_content_semi_error(p):
+    '''
+    content : variable_decl_primitive error
+            | variable_decl_array_primitive error
+            | variable_decl_primitive ASSIGN expression error
+            | content variable_decl_primitive error
+            | content variable_decl_array_primitive error
+            | content variable_decl_primitive ASSIGN expression error
+    '''
+    p[0] = Node('SCOPE', childs=[err_node()])
+    print(wrap_error('There is a ";" expected after statement.', p.lexer.lineno))
+
+def p_content_statement_error(p):
+    '''
+    content : statement
+            | content statement
+            | content func
+            | func
+            | struct
+            | content struct
+            | variable_decl_struct
+            | content variable_decl_struct
+    '''
+    p[0] = Node('SCOPE', childs=[err_node()])
+    print(wrap_error('Only primitive type definitions expected inside struct.', p.lexer.lineno))
+
 def p_content_add(p):
-    '''content : content func
-              | content variable_decl SEMI
+    '''content : content variable_decl_primitive SEMI
+            | content variable_decl_array_primitive SEMI
     '''
     p[1].add_childs([p[2]])
     p[0] = p[1]
 
 def p_content_assign(p):
-    '''content : variable_decl ASSIGN expression SEMI'''
+    '''content : variable_decl_primitive ASSIGN expression SEMI
+            | variable_decl_array_primitive ASSIGN array_type_primitive array_size SEMI
+    '''
     line = p.lexer.lineno
-    p[0] = Node('CONTENT', childs=[Node('ASSIGN', childs=[p[1], p[3]], line=line)], line=line)
+    if (len(p) == 5):
+        p[0] = Node('CONTENT', childs=[Node('ASSIGN', childs=[p[1], p[3]], line=line)], line=line)
+    else:
+        p[0] = Node('CONTENT', childs=[
+            Node('ASSIGN', childs=[p[1], 
+                Node('ARRAY_ALLOC', childs=[p[3], p[4]])
+        ], line=line)], line=line)
+
+def p_content_assign_error(p):
+    '''
+    content : variable_decl_primitive ASSIGN error
+            | content variable_decl_primitive ASSIGN error
+    '''
+    p[0] = Node('SCOPE', childs=[err_node()])
+    print(wrap_error('Not an expression.', p.lexer.lineno))
+
+def p_content_assign_array_error(p):
+    '''
+    content : variable_decl_array_primitive ASSIGN error
+            | content variable_decl_array_primitive ASSIGN error
+    '''
+    p[0] = Node('SCOPE', childs=[err_node()])
+    print(wrap_error('Array allocation expected.', p.lexer.lineno))
+
+def p_content_assign_array_size_error(p):
+    '''
+    content : variable_decl_array_primitive ASSIGN array_type_primitive error
+            | content variable_decl_array_primitive ASSIGN array_type_primitive error
+    '''
+    p[0] = Node('SCOPE', childs=[err_node()])
+    print(wrap_error('Array size expected.', p.lexer.lineno))
 
 def p_content_add_assign(p):
-    '''content : content variable_decl ASSIGN expression SEMI'''
+    '''content : content variable_decl_primitive ASSIGN expression SEMI
+            | content variable_decl_array_primitive ASSIGN array_type_primitive array_size SEMI'''
     line = p.lexer.lineno
-    p[1].add_childs(Node('ASSIGN', childs=[p[2], p[4]], line=line))
-    p[0] = p[1]
+    if (len(p) == 6):
+        p[1].add_childs([Node('ASSIGN', childs=[p[2], p[4]], line=line)])
+        p[0] = p[1]
+    else:
+        p[1].add_childs([
+            Node('ASSIGN', childs=[p[2], 
+                Node('ARRAY_ALLOC', childs=[p[4], p[5]])
+        ], line=line)])
+        p[0] = p[1]
 
 def p_empty_content_error(p):
     'content : empty'
     p[0] = err_node()
-    print(wrap_error('Struct content can\'t be empty. Var or function definition expected.', p.lexer.lineno))
+    print(wrap_error('Struct content can\'t be empty. Property definitions expected.', p.lexer.lineno))
 
 def p_assignment(p):
     '''assignment : variable_decl ASSIGN expression
@@ -719,7 +807,7 @@ def p_func_call(p):
 
 def p_error(p):
     if p is not None:
-        # print('Illegal token "%s" at line %s' % (p.value, p.lexer.lineno))
+        print('Illegal token "%s" at line %s' % (p.value, p.lexer.lineno))
         pass
     else:
         print('Unexpected end of input, probably some brace is lost')

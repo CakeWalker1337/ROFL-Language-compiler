@@ -72,7 +72,6 @@ if  __name__ == "__main__":
             for error in sorted(errors, key=lambda tup: tup[1]): 
                 print (error[0])
 
-            
             check_funcs_have_returns(result)
             check_unexpected_keywords(result)
         else:
