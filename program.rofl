@@ -6,10 +6,11 @@ struct A {
 struct B {
     boolean[] c = boolean[](12);
     int c = 5+a;
-    int b;
+    int c;
 }
 B[] a = B[](2);
-b[2];
-a.b = 5;
+a = 5;
+c = 5;
+a.c;
 //a().b[1].c.d = 1;
 //int[] a = int[](5);

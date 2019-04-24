@@ -15,7 +15,11 @@ def get_info(node):
     elif node.name == 'VARIABLE_ARRAY': return node.childs[1].value, (node.name, node.childs[0].value)
     elif node.name == 'FUNC_CALL': return node.childs[0].value, ('FUNCTION', None)
     elif node.name == 'ARRAY_ELEMENT': return node.childs[0].value, ('VARIABLE_ARRAY', None)
-    elif node.name == 'ASSIGN': return node.childs[0].childs[1].value, (node.childs[0].name, node.childs[0].childs[0].value)
+    elif node.name == 'ASSIGN': 
+        if node.childs[0].name == 'VARIABLE' or node.childs[0].name == 'VARIABLE_ARRAY':
+            return node.childs[0].childs[1].value, (node.childs[0].name, node.childs[0].childs[0].value)
+        else: 
+            return node.childs[0].value, ('VARIABLE', None)
     elif node.name == 'CHAIN_CALL': return None, None
     else: raise KeyError('Please add '+node.name+' to function get_info')
 
@@ -28,7 +32,7 @@ default_types = {'int':[],
     
 def check_var_definition(node, types=default_types, variables={}):
     errors = []
-    def_names = ['FUNCTION', 'STRUCT', 'VARIABLE', 'VARIABLE_ARRAY', 'ID', 'CHAIN_CALL']
+    def_names = ['FUNCTION', 'STRUCT', 'VARIABLE', 'VARIABLE_ARRAY', 'ID', 'CHAIN_CALL', 'ASSIGN']
     defs = node.get(def_names)
     for d in defs:
         name, type = get_info(d)
@@ -39,9 +43,13 @@ def check_var_definition(node, types=default_types, variables={}):
                 for str_var in d.get('CONTENT')[0].childs:
                     str_var_name, str_var_type = get_info(str_var)
                     if not str_var_name in types:
-                        str_var_type = str_var_type
-                        new_dict[str_var_name] = str_var_type
-                    else: errors.append(wrap_error('Undefined type "'+type+'" used.', d.line))
+                        if not str_var_name in new_dict:
+                            str_var_type = str_var_type
+                            new_dict[str_var_name] = str_var_type
+                        else:
+                            errors.append(wrap_error('Repeat definition of "'+str_var_name+'" in struct "'+name+'"'+'. It\'s already defined above.', d.line))
+                    else: 
+                        errors.append(wrap_error('Undefined type "'+type+'" used.', d.line))
                 types[name] = new_dict
                 types[name+'[]'] = new_dict
             else: errors.append(wrap_error('Variable "'+name+'" already defined as "'+variables[name]+'".', d.line))
@@ -56,35 +64,38 @@ def check_var_definition(node, types=default_types, variables={}):
                     errors += check_var_definition(d.get('SCOPE')[0], types, func_scope_vars)
                 else: errors.append(wrap_error('Variable "'+name+'" already defined as "'+variables[name]+'".', d.line))
             else: errors.append(wrap_error('Undefined type "'+type+'" used.', d.line))
-        elif d.name == 'VARIABLE' or d.name == 'VARIABLE_ARRAY':
+        elif d.name == 'VARIABLE' or d.name == 'VARIABLE_ARRAY' or d.name == 'ASSIGN' and d.childs[0].name != 'ID':
             # just check if there is a type and name in definitions
             if type[1] in types:
                 if not name in variables:
                     variables[name] = type
                 else: errors.append(wrap_error('Variable "'+name+'" already defined as "'+str(variables[name])+'".', d.line))
             else: errors.append(wrap_error('Undefined type of a variable.', d.line))
-        elif d.name == 'ID' and (d.parent and d.parent.name != 'CHAIN_CALL'):
+        elif d.name == 'ID' and (d.parent and d.parent.name != 'CHAIN_CALL') or d.name == 'ASSIGN' and d.childs[0].name == 'ID':
             # check if name defined in scope
             if name in types:
                 errors.append(wrap_error('Variable name expected.', d.line))
             elif not name in variables:
                 errors.append(wrap_error('Usage of undefined variable "'+name+'"', d.line))
         elif d.name == 'CHAIN_CALL':
-            # prev_name, prev_type = get_info(d.childs[0])
-            # if prev_name in types:
-            #     errors.append(wrap_error('Variable name expected.', d.line))
-            # elif not prev_name in variables:
-            #     errors.append(wrap_error('Usage of undefined variable "'+prev_name+'"', d.line))     
-            # else: 
-                # for call in d.childs[1:]:
-                #     name, type = get_info(call)
-                #     if name in types[variables[prev_name][1]]:
-                #         real_type = types[variables[prev_name][1]][name][0]
-                #         if not type[0] == real_type:
-                #             print(wrap_error('Wrong call of '+real_type.lower()+' "'+name+'"; treated as '+type[0].lower()+'.', call.line))
-                #     else: print(wrap_error('Struct "'+variables[prev_name][1]+'" has no properties with name "'+name+'".', call.line))
-                #     prev_name = name
-                #     prev_type = type
+            prev_name, prev_type = get_info(d.childs[0])
+            if prev_name in types:
+                errors.append(wrap_error('Variable name expected.', d.line))
+            elif not prev_name in variables:
+                errors.append(wrap_error('Usage of undefined variable "'+prev_name+'"', d.line))
+            elif variables[prev_name][0] != prev_type[0]:
+                errors.append(wrap_error('Wrong call of '+variables[prev_name][0].lower()+' "'+prev_name+'"; treated as '+prev_type[0].lower()+'.', d.line))
+            else: 
+                for idx in range(1, len(d.childs)):
+                    call = d.childs[idx]
+                    name, type = get_info(call)
+                    if name in types[variables[prev_name][1]]:
+                        real_type = types[variables[prev_name][1]][name][0]
+                        if not type[0] == real_type and idx != len(d.childs) - 1:
+                            errors.append(wrap_error('Wrong call of '+real_type.lower()+' "'+name+'"; treated as '+type[0].lower()+'.', call.line))
+                    else: errors.append(wrap_error('Struct "'+variables[prev_name][1]+'" has no properties with name "'+name+'".', call.line))
+                    prev_name = name
+                    prev_type = type
             pass
     for child in node.childs:
         if not child.name in def_names:
