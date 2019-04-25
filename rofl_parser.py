@@ -23,6 +23,8 @@ class Node:
 
     # adds new list of childs to existed
     def add_childs(self, childs):
+        for child in childs:
+            child.parent = self
         self.childs += childs
 
     def __parts_str(self):

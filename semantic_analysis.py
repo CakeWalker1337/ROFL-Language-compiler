@@ -1,4 +1,4 @@
-
+import copy
 # Wraps the error message with error syntax
 # returns tuple of error message and line number
 def wrap_error(err_str, line_num):
@@ -113,6 +113,7 @@ def check_var_definition(node, types=default_types, variables={}):
 #     return 1
 
 def check_funcs_have_returns(root):
+    errors = []
     if root is not None:
         funcs = root.get("FUNCTION", nest=True)
         for func in funcs:
@@ -121,12 +122,18 @@ def check_funcs_have_returns(root):
             rets = scope.get("RETURN")
             if len(rets) == 0:
                 if ftype.value != "void":
-                    print("Return error: expected return statement with type \'%s\'. Line: %s" % (ftype.value, func.line))
+                    errors.append(wrap_error("Expected return statement with type \'" + ftype.value + "\'", func.line))
             else:
                 for ret in rets:
                     if ret.value is None and len(ret.childs) == 0:
-                        print("Return error: function with type \"%s\" must return a value. Line: %s" % (
-                        ftype.value, ret.line))
+                        errors.append(wrap_error("Function with type \"" + ftype.value + "\" must return a value. Line: %s", ret.line))
+                    else:
+                        res_type = get_expression_result_type(ret.childs[0], errors)
+                        if res_type != "end" and res_type != ftype.value:
+                            errors.append(wrap_error(
+                                "Incorrect return type \"" + res_type + "\". Function must return a value of type \"" + ftype.value + "\".",
+                                ret.line))
+    return errors
 
 
 def check_unexpected_keywords(root):
@@ -149,52 +156,217 @@ def check_unexpected_keywords(root):
 
 # gets first defined function, struct or variable consider scopes
 def find_element_by_id(id, scope):
-    pass
+    if scope is None:
+        return None
+    for elem in scope.childs:
+        current = None
+        if elem.name == "ASSIGN":
+            current = elem.childs[0]
+        else:
+            current = elem
+        if is_node_has_id(current) and current.get("ID")[0].value == id:
+            return current
+    return find_element_by_id(id, get_nearest_scope(scope))
 
 
-#can be used when is needed to get closest scope from node
+# can be used when is needed to get closest scope from node
+# NOTE: if scope belongs to function, it's arguments are adding to the END of scope
+# it means that this function is not for checking the order of definitions.
+# Use it if you sure that the definitions are correct.
 def get_nearest_scope(node):
+    if node.parent is None:
+        return None
     if node.parent.name == "SCOPE" or node.parent.name == "CONTENT":
-        return node.parent
+        scope = node.parent
+        modified_scope = scope
+        if scope.parent is not None and scope.parent.name == "FUNCTION":
+            func_args = scope.parent.get("FUNC_ARGS")[0].childs
+            modified_scope = copy.deepcopy(scope)
+            modified_scope.add_childs(func_args)
+        return modified_scope
     return get_nearest_scope(node.parent)
 
 
-#gets type of atom
 def get_atom_type(atom):
-    if atom.name == "CONST" or atom.name == "VARIABLE" or atom.name == "ARRAY_ALLOC":
-        return atom.get("TYPE").value
-    if atom.name == "ARRAY_ELEMENT":
-        id = atom.children[0].children[0]
-        arr = find_element_by_id(id)
-        # if not arr is None:
-        #     if not is_primitive_type(arr.children[0].children[0]):
-        #         return arr.get_element_by_tag("DATATYPE").children[0].replace("[]", "")
-        #     else:
-        #         print("Array call error. Element can't be called as array element. Line: %s" % atom.line)
-        #         return arr.children[0].children[0]
+    if atom.name == "CONST" or atom.name == "VARIABLE" or atom.name == "ARRAY_ALLOC" or atom.name == "VARIABLE_ARRAY":
+        return atom.get("TYPE")[0].value
+    if atom.name == "CHAIN_CALL":
+        first = atom.childs[0]
+        second = atom.childs[1]
+        type = get_atom_type(first)
+        fst_struct = find_element_by_id(type, get_nearest_scope(first))
+        if fst_struct.name == "STRUCT":
+            desired_id = None
+            if second.name == "ID":
+                desired_id = second.value
+            else:
+                desired_id = second.get("ID")[0].value
+            return get_atom_type(find_element_by_id(desired_id, fst_struct.get("CONTENT")[0]))
+        else:
+            raise Exception("First element hasn\'t got return type of structure")
     looked_id = None
+    if atom.name == "ARRAY_ELEMENT":
+        looked_id = atom.childs[0].value
     if atom.name == "FUNC_CALL":
-        looked_id = atom.get_element_by_tag("ID").children[0]
+        looked_id = atom.get("ID")[0].value
     elif atom.name == "ID":
-        looked_id = atom.children[0]
-    found_elem = find_element_by_id(looked_id)
+        looked_id = atom.value
+    found_elem = find_element_by_id(looked_id, get_nearest_scope(atom))
     if found_elem is None:
         return None
     else:
-        return found_elem.get_element_by_tag("DATATYPE").children[0]
+        return found_elem.get("TYPE")[0].value
 
-def check_chain_calls(root):
 
-    def find_chain_calls(node):
-        if node.name == "CHAIN_CALL":
-            check_chain_recursive(node)
+def get_expression_result_type(root, errors):
+    if is_expression(root):
+        if len(root.childs) == 1:
+            first = get_expression_result_type(root.childs[0], errors)
+            if first == "end":
+                return "end"
+            comp_res = compare_expr(first, None, root.name)
+            if comp_res == "error":
+                errors.append(wrap_error("Expression error: operand has an unsuitable type (" + first + ")", root.line))
+                return "end"
+            return comp_res
         else:
-            for child in node.childs:
-                find_chain_calls(child)
+            first = get_expression_result_type(root.childs[0], errors)
+            second = get_expression_result_type(root.childs[1], errors)
+            if first == "end" or second == "end":
+                return "end"
+            comp_res = compare_expr(first, second, root.name)
+            if comp_res == "error":
+                errors.append(wrap_error(
+                    "Expression error: operands have unsuitable types (" + first + ", " + second + ")",
+                    root.childs[0].line))
+                return "end"
+            return comp_res
+    if is_node_atom(root):
+        return get_atom_type(root)
 
-    def check_chain_recursive(node):
-        if node.value is not None:
-            pass
-            #return get_atom_type(node)
-        else:
-            prev_type = check_chain_recursive(node.childs[0])
+
+def check_expression_results(root):
+    if is_node(root):
+        errors = []
+        for part in root.childs:
+            if part.parent is None:
+                print(part.name)
+            if is_node(part):
+
+                if part.name == "ASSIGN":
+
+                    expr1 = get_expression_result_type(part.childs[0], errors)
+                    expr2 = get_expression_result_type(part.childs[1], errors)
+
+                    if expr1 != "end" and expr2 != "end":
+                        is_correct = False
+                        if is_type_arithmetic(expr1) and is_type_arithmetic(expr2):
+                            is_correct = True
+                        if expr1 == expr2:
+                            is_correct = True
+                        if not is_correct:
+                            errors.append(wrap_error(
+                                "Type cast exception: cannot cast type \"" + expr2 + "\" to \"" + expr1 + "\"",
+                                part.line))
+                else:
+                    get_expression_result_type(part, errors)
+                    next_node = None
+                    if part.name == "STRUCT":
+                        next_node = part.get("CONTENT")[0]
+                    elif part.name == "FUNCTION":
+                        next_node = part.get("SCOPE")[0]
+                    else:
+                        next_node = part
+                    if not is_node_atom(part):
+                        errors.extend(check_expression_results(next_node))
+        return errors
+
+
+def is_node(elem):
+    return type(elem).__name__ == 'Node'
+
+
+def is_node_has_id(node):
+    if is_node(node):
+        tnames = ['VARIABLE', 'VARIABLE_ARRAY', 'STRUCT', 'FUNCTION']
+        return node.name in tnames
+    return False
+
+
+def is_node_atom(node):
+    if is_node(node):
+        tnames = ['CHAIN_CALL', 'ID', 'FUNC_CALL', 'CONST', 'VARIABLE_ARRAY',
+                  'VARIABLE', 'ARRAY_ALLOC', 'ARRAY_ELEMENT']
+        return node.name in tnames
+    return False
+
+
+def is_expression(node):
+    if is_node(node):
+        tnames = ['PLUS', 'MINUS', 'TIMES', 'DIVIDE', 'MODULO', 'IDIVIDE',
+                  'LOR', 'BOR', 'LAND', 'BAND', 'LNOT',
+                  'LT', 'LE', 'GT', 'GE', 'EQ', 'NE',
+                  'INCREMENT', 'DECREMENT']
+        return node.name in tnames
+    return False
+
+
+def is_primitive_type(typename):
+    tnames = ['int', 'string', 'boolean', 'void', 'float']
+    return typename in tnames
+
+
+def is_operation_arithmetic(oper):
+    tnames = ['PLUS', 'MINUS', 'TIMES', 'DIVIDE', 'MODULO', 'IDIVIDE']
+    return oper in tnames
+
+
+def is_operation_logic(oper):
+    tnames = ['LOR', 'LAND', 'LT', 'LE', 'GT', 'GE', 'EQ', 'NE']
+    return oper in tnames
+
+
+def is_operation_bit(oper):
+    tnames = ['BOR', 'BAND']
+    return oper in tnames
+
+
+def is_type_arithmetic(typename):
+    if typename == "int" or typename == "float":
+        return True
+    return False
+
+
+def compare_expr(one, two, operation_type):
+    if one == "null" or two == "null":
+        return "error"
+    if one == "array" or two == "array":
+        return "error"
+    if one == "void" or two == "void":
+        return "error"
+    if one is None:
+        if two == "boolean":
+            return two
+        return "error"
+    if two is None:
+        if one == "boolean":
+            return one
+        return "error"
+    if is_operation_logic(operation_type):
+        if one == two or (is_type_arithmetic(one) and is_type_arithmetic(two)):
+            return "boolean"
+        return "error"
+    if is_operation_arithmetic(operation_type):
+        if is_type_arithmetic(one) and is_type_arithmetic(two):
+            return "float"
+        if one == "string" and operation_type == "PLUS":
+            return "string"
+        return "error"
+    if is_operation_bit(operation_type):
+        if (one == "boolean" or one == "int") and one == two:
+            return one
+        return "error"
+    return "error"
+
+
+#TODO: Add comments and check func params while calling

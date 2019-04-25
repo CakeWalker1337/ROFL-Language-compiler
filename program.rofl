@@ -1,26 +1,16 @@
 
-if (1) {
-    if (1) {
-        int abs;
-        abs;
-        if (1) {
-            abs;
-        }
-    }
-    abs;
-}
-else {
-    abs;
-    int abs;
-}
 struct B {
-    boolean[] c = boolean[] (12);
     int c;
-    int b;
+    string s;
 }
-B[] a = B[](2);
-a = 5;
-c = 5;
-a.c;
+function test(int tvar) : int {
+    B bbb;
+    return bbb.c;
+}
+B[] a = B[](1);
+B n;
+
+test("wad", "123");
+
 //a().b[1].c.d = 1;
 //int[] a = int[](5);
