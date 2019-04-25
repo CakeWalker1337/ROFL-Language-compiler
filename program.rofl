@@ -3,14 +3,15 @@ struct B {
     int c;
     string s;
 }
-function test(int tvar) : int {
+function test(int[] tvar) : int {
     B bbb;
     return bbb.c;
 }
 B[] a = B[](1);
 B n;
+int[] cc = int[](5);
 
-test("wad", "123");
+test(cc);
 
 //a().b[1].c.d = 1;
 //int[] a = int[](5);

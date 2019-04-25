@@ -67,7 +67,8 @@ if __name__ == "__main__":
 
             # please add errors to that list of tuples
             # type: [('message', lineno), ...]
-            errors = check_var_definition(result) + check_expression_results(result) + check_funcs_have_returns(result)
+            errors = check_var_definition(result) + check_expression_results(result) + check_funcs_have_returns(result) \
+                     + check_arguments_of_func_calls(result)
             for error in sorted(errors, key=lambda tup: tup[1]):
                 print(error[0])
 

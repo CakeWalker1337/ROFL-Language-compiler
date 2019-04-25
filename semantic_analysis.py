@@ -110,7 +110,6 @@ def check_var_definition(node, types=default_types, variables={}):
             del variables[var]
     return errors
 
-#     return 1
 
 def check_funcs_have_returns(root):
     errors = []
@@ -136,22 +135,44 @@ def check_funcs_have_returns(root):
     return errors
 
 
-def check_unexpected_keywords(root):
+def check_arguments_of_func_calls(root) :
+    errors = []
+    func_calls = root.get("FUNC_CALL", nest=True)
+    for call in func_calls:
+        func = find_element_by_id(call.get("ID")[0].value, get_nearest_scope(call))
+        func_args = func.get("FUNC_ARGS")[0].childs
+        call_args = call.get("CALL_ARGS")[0].childs
+        if len(func_args) != len(call_args):
+            errors.append(wrap_error("Incorrect number of arguments.", call.line))
+        call_arg_types = []
+        for arg in call_args:
+            call_arg_types.append(get_expression_result_type(arg, []))
+        if "error" in call_arg_types:
+            continue
+        for i in range(0, len(func_args)):
+            func_arg_type = func_args[i].get("TYPE")[0].value
+            if func_arg_type != call_arg_types[i]:
+                errors.append(wrap_error("Incorrect type of argument with type \'"+call_arg_types[i]+"\' (required \'" + func_arg_type + "\').", call.line))
+    return errors
 
-    def check_keywords_recursive(node, prev_anchor=None, is_in_func=False):
+
+def check_unexpected_keywords(root):
+    errors = []
+    def check_keywords_recursive(node, errors, prev_anchor=None, is_in_func=False):
         if node.name == "FUNCTION" or node.name == "WHILE" or node.name == "DO_WHILE":
             prev_anchor = node.name
             if node.name == "FUNCTION":
                 is_in_func = True
         elif node.name == "RETURN" and not is_in_func:
-            print("Unexpected return keyword outside of function. Line %s" % node.line)
+            errors.append(wrap_error("Unexpected return keyword outside of function.", node.line))
         elif (node.name == "BREAK" or node.name == "SKIP") and (prev_anchor != "WHILE" and prev_anchor != "DO_WHILE"):
-            print("Unexpected \'%s\' keyword outside of function. Line %s" % (node.name.lower(), node.line))
+            errors.append(wrap_error("Unexpected \'" + node.name.lower + "\' keyword outside of function.", node.line))
         for child in node.childs:
-            check_keywords_recursive(child, prev_anchor, is_in_func)
+            check_keywords_recursive(child, errors, prev_anchor, is_in_func)
 
     if root is not None:
-        check_keywords_recursive(root)
+        check_keywords_recursive(root, errors)
+    return errors
 
 
 # gets first defined function, struct or variable consider scopes
@@ -249,8 +270,6 @@ def check_expression_results(root):
     if is_node(root):
         errors = []
         for part in root.childs:
-            if part.parent is None:
-                print(part.name)
             if is_node(part):
 
                 if part.name == "ASSIGN":
