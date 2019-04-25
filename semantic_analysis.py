@@ -31,7 +31,8 @@ default_types = {'int':[],
                 'boolean':[],
                 'null':[]}
 
-    
+# checks if there is errors with repeat definitions, usage of undefined variables, incorrect calls of properties of struct
+# returns array of wrap_error() objects
 def check_var_definition(node, types=default_types, variables={}):
     errors = []
     cur_scope_vars = []
@@ -56,7 +57,7 @@ def check_var_definition(node, types=default_types, variables={}):
                 types[name] = new_dict
                 types[name+'[]'] = new_dict
             else: errors.append(wrap_error('Variable "'+name+'" already defined as "'+variables[name]+'".', d.line))
-        elif d.name == 'FUNCTION': 
+        elif d.name == 'FUNCTION': # add functions to variables dictionary
             if type[1] in types or type[1] == 'void':
                 if not name in variables:
                     variables[name] = type
@@ -69,6 +70,7 @@ def check_var_definition(node, types=default_types, variables={}):
             else: errors.append(wrap_error('Undefined type "'+type+'" used.', d.line))
         elif d.name == 'VARIABLE' or d.name == 'VARIABLE_ARRAY' or d.name == 'ASSIGN' and d.childs[0].name != 'ID' and d.childs[0].name != 'CHAIN_CALL':
             # just check if there is a type and name in definitions
+            # and add it to the variable dictionary if it isn't defined already
             if type[1] in types:
                 if not name in variables:
                     variables[name] = type
@@ -77,11 +79,15 @@ def check_var_definition(node, types=default_types, variables={}):
             else: errors.append(wrap_error('Undefined type "'+type[1]+'" used.', d.line))
         elif d.name == 'ID' and (not d.parent or (d.parent and d.parent.name != 'CHAIN_CALL')) or d.name == 'ASSIGN' and d.childs[0].name != 'CHAIN_CALL':
             # check if name defined in scope
+            # also check if there is a usage of struct name as a variable
             if name in types:
                 errors.append(wrap_error('Variable name expected.', d.line))
             elif not name in variables:
                 errors.append(wrap_error('Usage of undefined variable "'+name+'"', d.line))
         elif d.name == 'CHAIN_CALL' or d.name == 'ASSIGN':
+            # check if call of properties are ok
+            # and name defined in scope
+            # also check if there is a usage of struct name as a variable
             prev_name, prev_type = get_info(d.childs[0])
             childs = d.childs if d.name == 'CHAIN_CALL' else d.childs[0].childs
             if prev_name in types:
@@ -102,9 +108,12 @@ def check_var_definition(node, types=default_types, variables={}):
                     prev_name = name
                     prev_type = type
             pass
+    # start recursion for inner scopes
     for child in node.childs:
         if not child.name in def_names:
             errors += check_var_definition(child, types, variables) 
+
+    # clear current variables if we exit current scope
     if node.name == 'SCOPE':
         for var in cur_scope_vars:
             del variables[var]
