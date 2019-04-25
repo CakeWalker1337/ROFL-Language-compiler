@@ -120,7 +120,7 @@ def check_var_definition(node, types=default_types, variables={}):
     return errors
 
 
-def check_funcs_have_returns(root):
+def check_funcs_returns(root):
     errors = []
     if root is not None:
         funcs = root.get("FUNCTION", nest=True)
@@ -159,7 +159,7 @@ def check_arguments_of_func_calls(root) :
         if "error" in call_arg_types:
             continue
         for i in range(0, len(func_args)):
-            func_arg_type = func_args[i].get("TYPE")[0].value
+            func_arg_type = get_atom_type(func_args[i])
             if func_arg_type != call_arg_types[i]:
                 errors.append(wrap_error("Incorrect type of argument with type \'"+call_arg_types[i]+"\' (required \'" + func_arg_type + "\').", call.line))
     return errors
@@ -218,12 +218,15 @@ def get_nearest_scope(node):
 
 
 def get_atom_type(atom):
-    if atom.name == "CONST" or atom.name == "VARIABLE" or atom.name == "ARRAY_ALLOC" or atom.name == "VARIABLE_ARRAY":
+    if atom.name == "CONST" or atom.name == "VARIABLE":
         return atom.get("TYPE")[0].value
+    if atom.name == "VARIABLE_ARRAY" or atom.name == "ARRAY_ALLOC":
+        return atom.get("TYPE")[0].value+"[]"
     if atom.name == "CHAIN_CALL":
         first = atom.childs[0]
         second = atom.childs[1]
         type = get_atom_type(first)
+        type = type.replace("[]", '')
         fst_struct = find_element_by_id(type, get_nearest_scope(first))
         if fst_struct.name == "STRUCT":
             desired_id = None
@@ -245,6 +248,8 @@ def get_atom_type(atom):
     if found_elem is None:
         return None
     else:
+        if is_node_atom(found_elem):
+            return get_atom_type(found_elem)
         return found_elem.get("TYPE")[0].value
 
 
@@ -368,7 +373,7 @@ def is_type_arithmetic(typename):
 def compare_expr(one, two, operation_type):
     if one == "null" or two == "null":
         return "error"
-    if one == "array" or two == "array":
+    if one.find("[]") != -1 or one.find("[]") != -1:
         return "error"
     if one == "void" or two == "void":
         return "error"

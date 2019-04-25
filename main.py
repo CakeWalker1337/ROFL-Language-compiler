@@ -4,9 +4,9 @@ from initialdata import *
 from rofl_parser import *
 import pandas
 import io
-import utils as utils
 import ply.yacc as yacc
 from semantic_analysis import *
+from syntax_analysis import *
 
 def findErrors(data):
     errordata = []
@@ -40,21 +40,27 @@ if __name__ == "__main__":
 
         parser = yacc.yacc(debug=0)
         result = parser.parse(text)
-        show_tree_with_errors = True
+        show_tree_with_errors = False
         if not result is None and \
-                (len(result.get('ERROR', nest=True)) == 0 and show_tree_with_errors):
+                (len(result.get('ERROR', nest=True)) == 0):
+            if show_tree_with_errors:
+                print(result)
+            s_errors = check_func_and_struct_decl_place(result)
+            if len(s_errors) == 0:
+                # please add errors to that list of tuples
+                # type: [('message', lineno), ...]
+                errors = check_var_definition(result)
+                if len(errors) == 0:
+                    errors = errors + check_expression_results(result)
+                if len(errors) == 0:
+                    errors = errors + check_arguments_of_func_calls(result) + check_funcs_returns(result) + \
+                             check_unexpected_keywords(result)
+                for error in sorted(errors, key=lambda tup: tup[1]):
+                    print(error[0])
+            else:
+                for error in s_errors:
+                    print(error)
+                print("There are some syntax errors detected in source code.")
 
-            print(result)
-
-            # please add errors to that list of tuples
-            # type: [('message', lineno), ...]
-            errors = check_var_definition(
-                result) + check_expression_results(result) + check_funcs_have_returns(result)
-            errors = check_var_definition(result) + check_expression_results(result) + check_funcs_have_returns(result) \
-                     + check_arguments_of_func_calls(result)
-            for error in sorted(errors, key=lambda tup: tup[1]):
-                print(error[0])
-
-            check_unexpected_keywords(result)
         else:
             print("There are some syntax errors detected in source code.")
