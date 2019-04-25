@@ -778,7 +778,8 @@ def p_call_args(p):
 
 def p_call_args_add(p):
     '''call_args : call_args COMMA expression'''
-    p[0] = p[1].add_childs([p[3]])
+    p[1].add_childs([p[3]])
+    p[0] = p[1]
 
 def p_call_args_add_error(p):
     '''call_args : call_args COMMA error
