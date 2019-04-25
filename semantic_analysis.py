@@ -402,4 +402,13 @@ def compare_expr(one, two, operation_type):
     return "error"
 
 
+# checks all the indexes in array_element callings for being 'int'
+def check_array_calling(tree):
+    arr_calls = tree.get('ARRAY_ELEMENT', True)
+    errors = []
+    for call in arr_calls:
+        if get_expression_result_type(call.childs[1], errors) != 'int':
+            errors.append(wrap_error('Array index can only be an integer.', call.line))
+    return errors
+
 #TODO: Add comments and check func params while calling

@@ -920,7 +920,7 @@ def p_func_call(p):
 
 def p_error(p):
     if p is not None:
-        print('Illegal token "%s" at line %s' % (p.value, p.lexer.lineno))
+        # print('Illegal token "%s" at line %s' % (p.value, p.lexer.lineno))
         pass
     else:
         print('Unexpected end of input, probably some brace is lost')
