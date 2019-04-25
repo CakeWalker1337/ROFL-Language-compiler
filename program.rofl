@@ -11,7 +11,7 @@ function test(int[] tvar) : int {
 }
 B[] a = B[](1);
 B n;
-if (a['123'].s > 3) {
+if (a[1].s > 3) {
     int d = 1;
 }
 //a().b[1].c.d = 1;
