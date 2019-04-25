@@ -70,7 +70,6 @@ t_EQ               = r'=='
 t_NE               = r'!='
 
 # Assignment operator
-
 t_ASSIGN           = r'='
 
 # Increment/decrement
@@ -102,38 +101,31 @@ def t_ID(t):
 # Integer literal
 t_CONST_INTEGER = r'([-]?[0-9]+)'
 
-
-
 # Floating literal
 t_CONST_FLOAT = r'((\d+)(\.\d+)(e(\+|-)?(\d+))? | (\d+)e(\+|-)?(\d+))([lL]|[fF])?'
-
 
 def t_COMMENT(t):
     r'//.*\n?'
     t.lexer.lineno += 1
     return None
 
-
 def t_CONST_STRING(t):
     r'((\")([^\\\n]|(\\.))*?(\"))|((\')([^\\\n]|(\\.))*?(\'))'
     t.value = t.value[1:len(t.value) - 1]
     return t
-
 
 def t_NEWLINE(t):
     r'\n'
     t.lexer.lineno += 1
     return None
 
-
 # A string containing ignored characters (spaces and tabs)
 t_ignore  = ' \t'
-
 
 # Error handling rule
 def t_error(t):
     if re.match(r'(\"|\')', t.value[0]):
-        print("Unclosed string literal", t.value, "at line", t.lineno, "pos", t.lexpos - letterCount)
+        print("Unclosed string literal", t.value, "at line", t.lineno)
     else:
-        print("Illegal character '%s'" % t.value[0], "at line", t.lineno, "pos", t.lexpos)
+        print("Illegal character '%s'" % t.value[0], "at line", t.lineno)
     t.lexer.skip(1)
