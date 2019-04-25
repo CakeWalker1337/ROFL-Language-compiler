@@ -2,3 +2,4 @@ __pycache__/
 ply/__pycache__
 parsetab.py
 parser.out
+.vscode
