@@ -1,22 +1,18 @@
 
+5 + 5; 5 + 5;
+3 + 2 - 1; 
 struct B {
-    int c;
-    string s;
+    int s;
 }
+
 function test(int[] tvar) : int {
     B bbb;
-    function test2(int[] tvar) : int {
-        B bbb;
-    }
+    return 1;
 }
 B[] a = B[](1);
 B n;
-string cc = a[1].s;
-if (a[1].c > "awd") {
+if (a['123'].s > 3) {
     int d = 1;
-    function test3(int[] tvar) : int {
-        B bbb;
-    }
 }
 //a().b[1].c.d = 1;
 //int[] a = int[](5);

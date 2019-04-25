@@ -54,7 +54,7 @@ if __name__ == "__main__":
                     errors = errors + check_expression_results(result)
                 if len(errors) == 0:
                     errors = errors + check_arguments_of_func_calls(result) + check_funcs_returns(result) + \
-                             check_unexpected_keywords(result)
+                             check_unexpected_keywords(result) + check_array_calling(result)
                 for error in sorted(errors, key=lambda tup: tup[1]):
                     print(error[0])
             else:
