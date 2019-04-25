@@ -5,18 +5,14 @@ struct B {
 }
 function test(int[] tvar) : int {
     B bbb;
-    function test2(int[] tvar) : int {
-        B bbb;
-    }
+    return 1;
 }
 B[] a = B[](1);
 B n;
-string cc = a[1].s;
-if (a[1].c > "awd") {
+int[] val = int[](5);
+string cc = a["awdawd"].s;
+if (a[1].c > 1) {
     int d = 1;
-    function test3(int[] tvar) : int {
-        B bbb;
-    }
 }
 //a().b[1].c.d = 1;
-//int[] a = int[](5);
+//
