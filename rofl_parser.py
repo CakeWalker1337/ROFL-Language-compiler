@@ -124,8 +124,7 @@ def p_array_idx_error(p):
 
 
 def p_array_idx_unclosed(p):
-    'array_idx : LBRACKET error SEMI'
-    'array_idx : LBRACKET error STATEMENT'
+    'array_idx : LBRACKET expression error'
     print(wrap_error('Unclosed brackets. "]" expected.', p.lexer.lineno))
     p[0] = err_node()
 
