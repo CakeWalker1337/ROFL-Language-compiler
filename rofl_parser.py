@@ -797,7 +797,7 @@ def p_loop(p):
 
 
 def p_do_while(p):
-    'do_while_loop : DO braced_scope WHILE expression_paren SEMI'
+    'do_while_loop : DO braced_scope WHILE expression_paren'
     line = p.lexer.lineno
     p[0] = Node('DO_WHILE', childs=[p[2], Node(
         'CONDITION', childs=[p[4]], line=line)], line=line)

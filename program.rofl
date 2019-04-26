@@ -1,24 +1,10 @@
-struct A {
-    int a;
-    boolean a;
-    string c = "string";
-
-}
-
-function test(int[] tvar) : int {
-    int[] smh = tvar;
-    A str = smh;
-    print(str);
-    5+5;
-    return;
-}
-    B bbb;
+function print(int a): void {
     return 1;
 }
-B[] a = B[](1);
-B n;
-if (a[1].s > 3) {
-    int d = 1;
-}
-//a().b[1].c.d = 1;
-//int[] a = int[](5);
+do{
+    while () {
+        skip;
+        print (1);
+    }
+} while(1 
+print(1);

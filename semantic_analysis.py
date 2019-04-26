@@ -110,7 +110,7 @@ def check_var_definition(node, types=default_types, variables={}):
             pass
     # start recursion for inner scopes
     for child in node.childs:
-        if not child.name in def_names:
+        if not child.name in def_names or child.name == 'ASSIGN':
             errors += check_var_definition(child, types, variables) 
 
     # clear current variables if we exit current scope
@@ -175,7 +175,7 @@ def check_unexpected_keywords(root):
         elif node.name == "RETURN" and not is_in_func:
             errors.append(wrap_error("Unexpected return keyword outside of function.", node.line))
         elif (node.name == "BREAK" or node.name == "SKIP") and (prev_anchor != "WHILE" and prev_anchor != "DO_WHILE"):
-            errors.append(wrap_error("Unexpected \'" + node.name.lower + "\' keyword outside of function.", node.line))
+            errors.append(wrap_error("Unexpected \'" + node.name.lower() + "\' keyword outside of function.", node.line))
         for child in node.childs:
             check_keywords_recursive(child, errors, prev_anchor, is_in_func)
 
