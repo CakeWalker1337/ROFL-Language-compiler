@@ -144,7 +144,7 @@ def check_funcs_returns(root):
             else:
                 for ret in rets:
                     if ret.value is None and len(ret.childs) == 0:
-                        errors.append(wrap_error("Function with type \"" + ftype.value + "\" must return a value. Line: %s", ret.line))
+                        errors.append(wrap_error("Function with type \"" + ftype.value + "\" must return a value.", ret.line))
                     else:
                         res_type = get_expression_result_type(ret.childs[0], errors)
                         if res_type != "end" and res_type != ftype.value:
@@ -233,6 +233,11 @@ def get_atom_type(atom):
         return atom.get("TYPE")[0].value
     if atom.name == "VARIABLE_ARRAY" or atom.name == "ARRAY_ALLOC":
         return atom.get("TYPE")[0].value+"[]"
+    if atom.name == "ARRAY_ELEMENT":
+        elem_id = atom.childs[0].value
+        arr = find_element_by_id(elem_id, get_nearest_scope(atom))
+        if arr is not None:
+            return arr.get("TYPE")[0].value
     if atom.name == "CHAIN_CALL":
         first = atom.childs[0]
         second = atom.childs[1]
@@ -249,8 +254,6 @@ def get_atom_type(atom):
         else:
             raise Exception("First element hasn\'t got return type of structure")
     looked_id = None
-    if atom.name == "ARRAY_ELEMENT":
-        looked_id = atom.childs[0].value
     if atom.name == "FUNC_CALL":
         looked_id = atom.get("ID")[0].value
     elif atom.name == "ID":

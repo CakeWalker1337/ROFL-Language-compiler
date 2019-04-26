@@ -1,6 +1,5 @@
 from semantic_analysis import *
 
-
 def check_func_and_struct_decl_place(root):
     errors = []
     elems = root.get(["FUNCTION", "STRUCT"], nest=True)
