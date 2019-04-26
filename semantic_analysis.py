@@ -62,13 +62,23 @@ def check_var_definition(node, types=default_types, variables={}):
                 if not name in variables:
                     variables[name] = type
                     func_scope_vars = {}
+                    # adding the function arguments into the scope 
                     for arg in d.get('FUNC_ARGS')[0].childs:
                         arg_name, arg_type = get_info(arg)
                         func_scope_vars[arg_name] = arg_type
+                    # adding the declared functions to scope of the function
+                    for name, type in variables.items():
+                        if type[0] == 'FUNCTION':
+                            func_scope_vars[name] = type
                     errors += check_var_definition(d.get('SCOPE')[0], types, func_scope_vars)
                 else: errors.append(wrap_error('Variable "'+name+'" already defined as "'+variables[name]+'".', d.line))
-            else: errors.append(wrap_error('Undefined type "'+type+'" used.', d.line))
-        elif d.name == 'VARIABLE' or d.name == 'VARIABLE_ARRAY' or d.name == 'ASSIGN' and d.childs[0].name != 'ID' and d.childs[0].name != 'CHAIN_CALL':
+            else: 
+                if type[0] == 'FUNCTION':
+                    errors.append(wrap_error('Function can\'t return function.', d.line))
+                else:
+                    errors.append(wrap_error('Undefined type "'+type[1]+'" used.', d.line))
+        elif ((d.name == 'VARIABLE' or d.name == 'VARIABLE_ARRAY') and d.parent.name != 'ASSIGN') \
+                 or d.name == 'ASSIGN' and d.childs[0].name != 'ID' and d.childs[0].name != 'CHAIN_CALL':
             # just check if there is a type and name in definitions
             # and add it to the variable dictionary if it isn't defined already
             if type[1] in types:
@@ -77,14 +87,14 @@ def check_var_definition(node, types=default_types, variables={}):
                     cur_scope_vars.append(name)
                 else: errors.append(wrap_error('Variable "'+name+'" already defined as "'+str(variables[name])+'".', d.line))
             else: errors.append(wrap_error('Undefined type "'+type[1]+'" used.', d.line))
-        elif d.name == 'ID' and (not d.parent or (d.parent and d.parent.name != 'CHAIN_CALL')) or d.name == 'ASSIGN' and d.childs[0].name != 'CHAIN_CALL':
+        elif (d.name == 'ID' and d.parent.name != 'ASSIGN') and (not d.parent or (d.parent and d.parent.name != 'CHAIN_CALL')) or d.name == 'ASSIGN' and d.childs[0].name != 'CHAIN_CALL':
             # check if name defined in scope
             # also check if there is a usage of struct name as a variable
             if name in types:
                 errors.append(wrap_error('Variable name expected.', d.line))
             elif not name in variables:
                 errors.append(wrap_error('Usage of undefined variable "'+name+'"', d.line))
-        elif d.name == 'CHAIN_CALL' or d.name == 'ASSIGN':
+        elif (d.name == 'CHAIN_CALL' and d.parent.name != 'ASSIGN') or d.name == 'ASSIGN':
             # check if call of properties are ok
             # and name defined in scope
             # also check if there is a usage of struct name as a variable
@@ -152,7 +162,8 @@ def check_arguments_of_func_calls(root) :
         func_args = func.get("FUNC_ARGS")[0].childs
         call_args = call.get("CALL_ARGS")[0].childs
         if len(func_args) != len(call_args):
-            errors.append(wrap_error("Incorrect number of arguments.", call.line))
+            errors.append(wrap_error("Incorrect number of arguments in the call of function '"+func.childs[0].value+"'.", call.line))
+            continue
         call_arg_types = []
         for arg in call_args:
             call_arg_types.append(get_expression_result_type(arg, []))
@@ -403,12 +414,17 @@ def compare_expr(one, two, operation_type):
 
 
 # checks all the indexes in array_element callings for being 'int'
-def check_array_calling(tree):
+# also checks if there is array allocation with size = 0
+def check_array_things(tree):
     arr_calls = tree.get('ARRAY_ELEMENT', True)
     errors = []
     for call in arr_calls:
         if get_expression_result_type(call.childs[1], errors) != 'int':
             errors.append(wrap_error('Array index can only be an integer.', call.line))
+    arr_allocs = tree.get('ARRAY_ALLOC', True)
+    for alloc in arr_allocs:
+        if alloc.childs[1].childs[1].value == '0':
+            errors.append(wrap_error('You can\'t create an array with zero size.', alloc.line))
     return errors
 
 #TODO: Add comments and check func params while calling
