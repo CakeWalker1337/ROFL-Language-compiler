@@ -8,6 +8,12 @@ import ply.yacc as yacc
 from semantic_analysis import *
 from syntax_analysis import *
 
+import xml.etree.ElementTree as etree
+from xml.dom import minidom
+
+from os import listdir, path, getcwd
+from os.path import isfile, join, abspath, dirname, splitext
+
 def findErrors(data):
     errordata = []
 
@@ -18,6 +24,34 @@ def findErrors(data):
                              str(data[i][2]) + " pos " + str(data[i][3]))
             # addError("Integer type overflow", data[i])
     return errordata
+
+
+def convert_to_xml(root):
+    main_scope = etree.Element('SCOPE')
+
+    def convert_node(node, prev):
+        node_xml = etree.SubElement(prev, node.name)
+        if len(node.childs) == 0:
+            node_xml.text = node.value
+        else:
+            for child in node.childs:
+                convert_node(child, node_xml)
+
+    if len(root.childs) == 0:
+        main_scope.text = root.value
+    else:
+        for elem in root.childs:
+            convert_node(elem, main_scope)
+    return main_scope
+
+
+def prettify(elem):
+    """Return a pretty-printed XML string for the Element.
+    """
+    rough_string = etree.tostring(elem, 'utf-8')
+    reparsed = minidom.parseString(rough_string)
+    return reparsed.toprettyxml(indent="\t")
+
 
 if __name__ == "__main__":
     filename = 'program.rofl'
@@ -41,6 +75,9 @@ if __name__ == "__main__":
         parser = yacc.yacc(debug=0)
         result = parser.parse(text)
         show_tree_with_errors = False
+        print_xml_to_file = True
+        print_xml_to_console = True
+
         if not result is None and \
                 (len(result.get('ERROR', nest=True)) == 0):
             if show_tree_with_errors:
@@ -57,6 +94,15 @@ if __name__ == "__main__":
                              check_unexpected_keywords(result) + check_array_calling(result)
                 for error in sorted(errors, key=lambda tup: tup[1]):
                     print(error[0])
+
+                if len(errors) == 0:
+                    xml_result = convert_to_xml(result)
+                    if print_xml_to_console:
+                        print(prettify(xml_result))
+                    if print_xml_to_file:
+                        xmlfile = open(join(getcwd(), "program.xml"), "w+")
+                        xmlfile.write(prettify(xml_result))
+
             else:
                 for error in s_errors:
                     print(error)
@@ -64,3 +110,8 @@ if __name__ == "__main__":
 
         else:
             print("There are some syntax errors detected in source code.")
+
+
+
+
+
