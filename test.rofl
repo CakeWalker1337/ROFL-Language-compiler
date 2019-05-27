@@ -1,6 +1,9 @@
 int a = 5; 
-
-function sdsd() : Int { 
-a = a+1; 
-return a; 
+struct str {
+  int a = 5;
+}
+function sdsd() : int { 
+int b = 12+1+2;
+b;
+return b; 
 }
