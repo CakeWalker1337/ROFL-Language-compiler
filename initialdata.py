@@ -18,8 +18,7 @@ reserved = {
     'float': "DECL_FLOAT",
     'int': "DECL_INTEGER",
     'string': "DECL_STRING",
-    'void': "DECL_VOID",
-    'null': "NULL"
+    'void': "DECL_VOID"
 }
 
 tokens = [

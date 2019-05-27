@@ -28,8 +28,7 @@ def get_info(node):
 default_types = {'int':[],
                 'string':[],
                 'float':[],
-                'boolean':[],
-                'null':[]}
+                'boolean':[]}
 
 # checks if there is errors with repeat definitions, usage of undefined variables, incorrect calls of properties of struct
 # returns array of wrap_error() objects
@@ -388,8 +387,6 @@ def is_type_arithmetic(typename):
 
 
 def compare_expr(one, two, operation_type):
-    if one == "null" or two == "null":
-        return "error"
     if one.find("[]") != -1 or one.find("[]") != -1:
         return "error"
     if one == "void" or two == "void":

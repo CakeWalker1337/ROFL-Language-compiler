@@ -196,8 +196,6 @@ def is_operation_bit(oper):
 
 
 def compare_expr(one, two, operation_type):
-    if one == "null" or two == "null":
-        return "error"
     if one == "array" or two == "array":
         return "error"
     if one == "void" or two == "void":

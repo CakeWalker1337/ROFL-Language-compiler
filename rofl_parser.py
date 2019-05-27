@@ -104,11 +104,6 @@ def p_const_value_boolean(p):
                                  Node('VALUE', value=p[1], line=line)], line=line)
 
 
-def p_const_value_null(p):
-    'const_value : NULL'
-    line = p.lexer.lineno
-    p[0] = Node('CONST', childs=[Node('TYPE', 'null', line=line),
-                                 Node('VALUE', value=p[1], line=line)], line=line)
 
 
 def p_array_idx(p):
