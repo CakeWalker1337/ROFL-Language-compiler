@@ -1,21 +1,6 @@
+int a = 5; 
 
-
-struct kuku { int[] a = int[](1);};
-int a = 5;
-
-a = a;
-kuku mymy;
-//mymy.c = 1;
-
-function ff():int
-{
-  return -1;
+function sdsd() : Int { 
+a = a+1; 
+return a; 
 }
-
-function zz(int k): int
-{
-    int[] a;
-    return a[0];
-}
-ff(); //ToDo: Maksim!!!
-zz(ff());

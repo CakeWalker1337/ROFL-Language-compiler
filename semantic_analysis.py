@@ -33,7 +33,8 @@ default_types = {'int':[],
 
 # checks if there is errors with repeat definitions, usage of undefined variables, incorrect calls of properties of struct
 # returns array of wrap_error() objects
-def check_var_definition(node, types=default_types, variables={}):
+def check_var_definition(node, types=default_types, 
+            variables={'print' : ('FUNCTION', 'void')}):
     errors = []
     cur_scope_vars = []
     def_names = ['FUNCTION', 'STRUCT', 'VARIABLE', 'VARIABLE_ARRAY', 'ID', 'CHAIN_CALL', 'ASSIGN']
@@ -156,8 +157,10 @@ def check_funcs_returns(root):
 
 def check_arguments_of_func_calls(root) :
     errors = []
+    exceptions = ['print']
     func_calls = root.get("FUNC_CALL", nest=True)
     for call in func_calls:
+        if call.get("ID")[0].value in exceptions: continue
         func = find_element_by_id(call.get("ID")[0].value, get_nearest_scope(call))
         func_args = func.get("FUNC_ARGS")[0].childs
         call_args = call.get("CALL_ARGS")[0].childs
