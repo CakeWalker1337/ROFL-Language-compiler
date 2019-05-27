@@ -391,6 +391,8 @@ def compare_expr(one, two, operation_type):
         return "error"
     if one == "void" or two == "void":
         return "error"
+    if one == "string" or two == "string":
+        return "error"
     if one is None:
         if two == "boolean":
             return two
@@ -399,20 +401,21 @@ def compare_expr(one, two, operation_type):
         if one == "boolean":
             return one
         return "error"
-    if is_operation_logic(operation_type):
-        if one == two or (is_type_arithmetic(one) and is_type_arithmetic(two)):
-            return "boolean"
-        return "error"
-    if is_operation_arithmetic(operation_type):
-        if is_type_arithmetic(one) and is_type_arithmetic(two):
-            return "float"
-        if one == "string" and operation_type == "PLUS":
-            return "string"
-        return "error"
-    if is_operation_bit(operation_type):
-        if (one == "boolean" or one == "int") and one == two:
-            return one
-        return "error"
+    # if is_operation_logic(operation_type):
+    #     if one == two or (is_type_arithmetic(one) and is_type_arithmetic(two)):
+    #         return "boolean"
+    #     return "error"
+    # if is_operation_arithmetic(operation_type):
+    #     if is_type_arithmetic(one) and is_type_arithmetic(two):
+    #         return "float"
+    #     if one == "string" and operation_type == "PLUS":
+    #         return "string"
+    #     return "error"
+    # if is_operation_bit(operation_type):
+    #     if (one == "boolean" or one == "int") and one == two:
+    #         return one
+    if one == two:
+        return one
     return "error"
 
 
