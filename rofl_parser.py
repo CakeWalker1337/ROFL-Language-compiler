@@ -329,9 +329,7 @@ def p_content_semi_error(p):
 
 def p_content_statement_error(p):
     '''
-    content : statement
-            | content statement
-            | content func
+    content : content func
             | func
             | struct
             | content struct
@@ -342,6 +340,14 @@ def p_content_statement_error(p):
     print(wrap_error(
         'Only primitive type definitions expected inside struct.', p.lexer.lineno))
 
+def p_content_statement_error_1(p):
+    '''
+    content : statement
+            | content statement
+    '''
+    p[0] = Node('SCOPE', childs=[err_node()])
+    print(wrap_error(
+        'You can\'t do statements inside struct definition.', p.lexer.lineno))
 
 def p_content_add(p):
     '''content : content variable_decl_primitive SEMI
