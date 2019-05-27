@@ -318,10 +318,10 @@ def p_content_semi_error(p):
     '''
     content : variable_decl_primitive error
             | variable_decl_array_primitive error
-            | variable_decl_primitive ASSIGN expression error
+            | variable_decl_primitive ASSIGN
             | content variable_decl_primitive error
             | content variable_decl_array_primitive error
-            | content variable_decl_primitive ASSIGN expression error
+            | content variable_decl_primitive ASSIGN 
     '''
     p[0] = Node('SCOPE', childs=[err_node()])
     print(wrap_error('There is a ";" expected after statement.', p.lexer.lineno))
@@ -349,63 +349,6 @@ def p_content_add(p):
     '''
     p[1].add_childs([p[2]])
     p[0] = p[1]
-
-
-def p_content_assign(p):
-    '''content : variable_decl_primitive ASSIGN expression SEMI
-            | variable_decl_array_primitive ASSIGN array_type_primitive array_size SEMI
-    '''
-    line = p.lexer.lineno
-    if (len(p) == 5):
-        p[0] = Node('CONTENT', childs=[
-                    Node('ASSIGN', childs=[p[1], p[3]], line=line)], line=line)
-    else:
-        p[0] = Node('CONTENT', childs=[
-            Node('ASSIGN', childs=[p[1],
-                                   Node('ARRAY_ALLOC', childs=[p[3], p[4]])
-                                   ], line=line)], line=line)
-
-
-def p_content_assign_error(p):
-    '''
-    content : variable_decl_primitive ASSIGN error
-            | content variable_decl_primitive ASSIGN error
-    '''
-    p[0] = Node('SCOPE', childs=[err_node()])
-    print(wrap_error('Not an expression.', p.lexer.lineno))
-
-
-def p_content_assign_array_error(p):
-    '''
-    content : variable_decl_array_primitive ASSIGN error
-            | content variable_decl_array_primitive ASSIGN error
-    '''
-    p[0] = Node('SCOPE', childs=[err_node()])
-    print(wrap_error('Array allocation expected.', p.lexer.lineno))
-
-
-def p_content_assign_array_size_error(p):
-    '''
-    content : variable_decl_array_primitive ASSIGN array_type_primitive error
-            | content variable_decl_array_primitive ASSIGN array_type_primitive error
-    '''
-    p[0] = Node('SCOPE', childs=[err_node()])
-    print(wrap_error('Array size expected.', p.lexer.lineno))
-
-
-def p_content_add_assign(p):
-    '''content : content variable_decl_primitive ASSIGN expression SEMI
-            | content variable_decl_array_primitive ASSIGN array_type_primitive array_size SEMI'''
-    line = p.lexer.lineno
-    if (len(p) == 6):
-        p[1].add_childs([Node('ASSIGN', childs=[p[2], p[4]], line=line)])
-        p[0] = p[1]
-    else:
-        p[1].add_childs([
-            Node('ASSIGN', childs=[p[2],
-                                   Node('ARRAY_ALLOC', childs=[p[4], p[5]])
-                                   ], line=line)])
-        p[0] = p[1]
 
 
 def p_empty_content_error(p):
