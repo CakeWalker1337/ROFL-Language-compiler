@@ -7,6 +7,7 @@ class Node:
         for child in self.childs:
             child.parent = self
         self.line = line
+        self.checked = False
 
     # returns all children of current node
     # name might be string or list of strings

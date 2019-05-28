@@ -6,6 +6,7 @@ import io
 import ply.yacc as yacc
 from semantic_analysis import *
 from syntax_analysis import *
+from codegen import start_codegen
 import argparse 
 
 import xml.etree.ElementTree as etree
@@ -88,8 +89,10 @@ if __name__ == "__main__":
                         xmlfile.write(prettify(xml_result))
                 elif len(errors) == 0 and show_tree_with_errors:
                     print(result)
-
-
+                
+                #
+                print(start_codegen(result))
+                
             else:
                 for error in s_errors:
                     print(error)
@@ -97,8 +100,7 @@ if __name__ == "__main__":
 
         else:
             print("There are some syntax errors detected in source code.")
-
-
+        
 
 
 
