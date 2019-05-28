@@ -1,4 +1,4 @@
-## TODO: генерация struct
+## генерация struct
 ## генерация function
 ## транслировать дефолтные типы переменных (int -> i32, ...) кроме string
 ## генерация объявления внутренних переменных (после типов)
@@ -16,6 +16,8 @@ from node_utils import *
 type_dict = {'int': 'i32', 'float': 'double', 'boolean': 'i8'}
 NL = '\n'
 TAB = '    '
+struct_types = []
+struct_nodes = []
 
 def raiseError(x): raise Exception(x)
 def skip(x, y): return []
@@ -28,8 +30,10 @@ def TODO(x, y): return [f'TODO {x.name}']
 def llvm_type(ast, context=None):
     ast.checked = True
     if ast.value == 'string': return ['string'] # TODO: придумать как поступать с этим кейсом
+    elif ast.value in struct_types:
+        return f"struct.{ast.value}"
     else:
-        return [f'{type_dict[ast.value]}']
+        return [f'%{type_dict[ast.value]}']
 
 def llvm_value(ast, context=None):
     ast.checked = True
@@ -65,10 +69,14 @@ def llvm_variable(ast, context=None):
     ast.childs[1].checked = True
     name = get_info(ast)[0]
     type = llvm_type(ast.childs[0])
-    return [
-        f'%{name}.ptr = alloca {type}',
-        f'%{name} = load {type}, {type}* %{name}.ptr'
-    ]
+    if "struct" in type:
+        return [f'%{name}.ptr = alloca %{type}']
+    else:
+        return [
+            f'%{name}.ptr = alloca {type}',
+            f'%{name} = load {type}, {type}* %{name}.ptr'
+        ]
+
 
 def llvm_array_alloc(ast, context=None):
     ast.checked = True
@@ -77,6 +85,7 @@ def llvm_array_alloc(ast, context=None):
     return [
         f'alloca [{size} x {type}]'
     ]
+
 
 def llvm_assign(ast, context=None):
     ast.checked = True
@@ -92,6 +101,25 @@ def llvm_assign(ast, context=None):
         return []
 
 
+# TODO: Максиму доделать! Искать объявление переменной со структурой, вытаскивать тип, а уже потом искать члена структуры
+def llvm_chain_call(ast, context=None):
+    struct_name = ast.childs[0].value
+    struct_member_id = ast.childs[1].value
+    print(struct_name)
+    for i in range(0, len(struct_types)):
+        if struct_name == struct_types[i]:
+            struct = struct_nodes[i]
+            content = struct.childs[1]
+            for member_id in range(0, len(content.childs)):
+                if content.childs[member_id].get("ID", nest=True)[0].value == struct_member_id:
+                    return [
+                        f"%struct.{struct_name}.{struct_member_id} = getelementprt inbounds " +
+                        f"%struct.{struct_name}, %struct.{struct_name}* %struct.{struct_name}.ptr, i32 0, i32 {member_id}"
+                    ]
+    return None
+
+
+
 def llvm_add_func(type, ast_right, ast_left=None):
     # if there is no left part then it's just a creating of new variable like (int a = 5)
     name_right = get_info(ast_right)[0]
@@ -103,12 +131,42 @@ def llvm_add_func(type, ast_right, ast_left=None):
     else:
         operator = 'fadd double 0.0' if type == 'double' else 'add '+type+' 0'
         return f'{operator} , {fdict[ast_right.name](ast_right)[0]}'
-            
+
+
+def llvm_struct(node, context=None):
+    if node.name != "STRUCT":
+        raise Exception("This function can't process the node which hasn't got a type STRUCT")
+    name = node.childs[0].value
+    childs = node.childs[1].childs
+    struct_nodes.append(node)
+    struct_types.append(name)
+
+    struct_decl = f"%struct.{name} = type " + "{"
+    for child in childs:
+        child.checked = True
+        if child.name == "VARIABLE":
+            var_type = type_dict[child.get("TYPE")[0].value]
+            struct_decl += f"{var_type}, "
+        elif child.name == "ASSIGN":
+            variable = child.childs[0]
+            if variable.name != "VARIABLE_ARRAY":
+                raise Exception("The variable is not VARIABLE_ARRAY")
+            array_alloc = child.childs[1]
+            array_type = array_alloc.get("TYPE")[0].value
+            array_size = array_alloc.get("CONST")[0].get("VALUE")[0].value
+            struct_decl += f"[{array_size} x {type_dict[array_type]}], "
+        else:
+            raise Exception("Unexpected value in structure translate function")
+    struct_decl = struct_decl[:-2] + "}"
+    return [struct_decl]
+
+
+
 
 fdict = {
     'ERROR': lambda x,y: raiseError('error in ast'),
     'FUNCTION': skip,
-    'STRUCT': skip, 'CONTENT': TODO, # ?
+    'STRUCT': llvm_struct, 'CONTENT': TODO,  # ?
     'VALUE': skip,
     'TYPE': skip,
     'CONST': llvm_const,
@@ -139,7 +197,7 @@ fdict = {
     'LOR': TODO,
     'LAND': TODO,
     'LNOT': TODO,
-    'CHAIN_CALL': TODO,
+    'CHAIN_CALL': llvm_chain_call,
     'IF_CONDITION': TODO,
     'CONDITION': TODO,
     'ELIF': TODO,
@@ -153,8 +211,6 @@ fdict = {
 }
 
 
-
-
 def start_codegen(ast, context = {}):
     if ast is None: raise Exception('ast is None')
 
@@ -163,7 +219,6 @@ def start_codegen(ast, context = {}):
         context[name] = type
 
     result = fdict[ast.name](ast, context)
-
 
     for child in ast.childs:
         if not child.checked:
