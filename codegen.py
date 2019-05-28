@@ -42,13 +42,13 @@ def llvm_const(ast, context=None):
     type = llvm_type(ast.childs[0])[0]
     if type == 'string': return []
     elif type == 'i8': value = '1' if value == 'true' else '0'
-    return [type + ' ' + value]
+    return [value]
 
 def llvm_id(ast, context=None):
     ast.checked = True
     if ast.parent.name == 'SCOPE': return []
     name = get_info(ast)[0]
-    return [f'{type_dict[context[name][1]]} %{ast.value}']
+    return [f'%{ast.value}']
 
 def llvm_array_el(ast, context):
     ast.checked = True
@@ -56,7 +56,7 @@ def llvm_array_el(ast, context):
     name = get_info(ast)[0]
     type = type_dict[context[name][1]]
     return [
-        f'%arr.ptr = getelementptr inbounds {type}, {type}* %{name}, i32 0 {fdict[ast.childs[1].name](ast.childs[1])[0]}',
+        f'%arr.ptr = getelementptr inbounds {type}, {type}* %{name}, i32 0 {llvm_type(ast.childs[1].childs[0])} {fdict[ast.childs[1].name](ast.childs[1])[0]}',
         f'%elem = load {type}, {type}* %arr.ptr',
         f'%elem'] # TODO: придумать именование для выбранного элемента массива
 
@@ -84,12 +84,26 @@ def llvm_assign(ast, context=None):
     left.checked = True
     right = ast.childs[1]
     
-    if (left.name == 'VARIABLE_ARRAY'):
+    if left.name == 'VARIABLE_ARRAY':
         name = get_info(left)[0]
         return [f'%{name} = {llvm_array_alloc(right)[0]}']
-    else:
-        return [''] # TODO: доделать для остальных присваиваний
+    elif left.name == 'VARIABLE':
+        # TODO: скорее всего будет куча задроченных кейсов
+        return []
 
+
+def llvm_add_func(type, ast_right, ast_left=None):
+    # if there is no left part then it's just a creating of new variable like (int a = 5)
+    name_right = get_info(ast_right)[0]
+
+    if not ast_left is None:
+        name_left = get_info(ast_left)[0]
+        operator = 'fadd' if type == 'double' else 'add'
+        return f'{operator} {type} %{name_left}, {fdict[ast_right.name](ast_right)[0]}'
+    else:
+        operator = 'fadd double 0.0' if type == 'double' else 'add '+type+' 0'
+        return f'{operator} , {fdict[ast_right.name](ast_right)[0]}'
+            
 
 fdict = {
     'ERROR': lambda x,y: raiseError('error in ast'),
@@ -107,7 +121,7 @@ fdict = {
     'SCOPE': TODO,
     'FUNC_ARGS': TODO,
     'RETURN': TODO,
-    'EMPTY_STATEMENT': TODO,
+    'EMPTY_STATEMENT': skip,
     'PLUS': TODO,
     'MINUS':TODO,
     'TIMES': TODO,
@@ -143,11 +157,13 @@ fdict = {
 
 def start_codegen(ast, context = {}):
     if ast is None: raise Exception('ast is None')
-    result = fdict[ast.name](ast, context)
 
     if is_definition(ast):
         name, type = get_info(ast)
         context[name] = type
+
+    result = fdict[ast.name](ast, context)
+
 
     for child in ast.childs:
         if not child.checked:

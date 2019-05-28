@@ -2,6 +2,7 @@
 def get_info(node):
     if node.name == 'ID': return node.value, ('VARIABLE', None)
     elif node.name == 'FUNCTION': return node.childs[0].value, (node.name, node.childs[2].value)
+    elif node.name == 'CONST': return node.childs[1].value, (node.name, node.childs[0].value)
     elif node.name == 'STRUCT': return node.childs[0].value, (node.name, None)
     elif node.name == 'VARIABLE': return node.childs[1].value, (node.name, node.childs[0].value)
     elif node.name == 'VARIABLE_ARRAY': return node.childs[1].value, (node.name, node.childs[0].value)
@@ -19,6 +20,6 @@ def get_info(node):
 
 
 def is_definition(ast):
-    def_names = ['VARIABLE', 'VARIABLE_ARRAY']
+    def_names = ['VARIABLE', 'VARIABLE_ARRAY', 'FUNCTION']
     if ast.name in def_names: return True
     else: return False
