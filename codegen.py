@@ -104,15 +104,35 @@ def llvm_assign(ast, context=None):
         return []
 
 
-# TODO: Максиму доделать! Искать объявление переменной со структурой, вытаскивать тип, а уже потом искать члена структуры
 def llvm_chain_call(ast, context=None):
     struct_var_name = ast.childs[0].value
     struct_member_name = ast.childs[1].value
-    struct_var = find_node_by_id(variables, struct_var_name)
+    struct_var = find_node_by_id(variables + functions, struct_var_name)
     struct_id = struct_var.get("TYPE")[0].value
     struct = find_node_by_id(structs, struct_id)
     struct_members = struct.childs[1].childs
+    member_index = -1
+    struct_member = None
+    for ind, member in enumerate(struct_members):
+        if member.get("ID", nest=True)[0].value == struct_member_name:
+            member_index = ind
+            struct_member = member
+            break
+    if member_index > -1:
+        final_register = ""
+        result = [f"%struct.{struct_id}.{struct_member_name}.ptr = getelementptr inbounds %struct.{struct_id}, " +
+                  f"%struct.{struct_id}* %struct.{struct_id}.ptr, i32 0, i32 {member_index}"]
+        if struct_member.name == "ASSIGN":
+            array_register = f"%struct.{struct_id}.{struct_member_name}.ptr"
+            result.append(f"%struct.{struct_id}.{struct_member_name}_{struct_member_name} = ")
+        elif struct_member.name == "VARIABLE":
+            final_register = f"%struct.{struct_id}.{struct_member_name}.ptr"
+        else:
+            print(f"Incorrect member of struct {struct_id}")
 
+
+    else:
+        print(f"Member of struct {struct_id} with id {struct_member_name} not found")
 
     return None
 
