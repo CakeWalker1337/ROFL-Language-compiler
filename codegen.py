@@ -17,7 +17,10 @@ type_dict = {'int': 'i32', 'float': 'double', 'boolean': 'i8'}
 NL = '\n'
 TAB = '    '
 struct_types = []
-struct_nodes = []
+
+variables = []
+functions = []
+structs = []
 
 def raiseError(x): raise Exception(x)
 def skip(x, y): return []
@@ -106,16 +109,6 @@ def llvm_chain_call(ast, context=None):
     struct_name = ast.childs[0].value
     struct_member_id = ast.childs[1].value
     print(struct_name)
-    for i in range(0, len(struct_types)):
-        if struct_name == struct_types[i]:
-            struct = struct_nodes[i]
-            content = struct.childs[1]
-            for member_id in range(0, len(content.childs)):
-                if content.childs[member_id].get("ID", nest=True)[0].value == struct_member_id:
-                    return [
-                        f"%struct.{struct_name}.{struct_member_id} = getelementprt inbounds " +
-                        f"%struct.{struct_name}, %struct.{struct_name}* %struct.{struct_name}.ptr, i32 0, i32 {member_id}"
-                    ]
     return None
 
 
@@ -138,7 +131,7 @@ def llvm_struct(node, context=None):
         raise Exception("This function can't process the node which hasn't got a type STRUCT")
     name = node.childs[0].value
     childs = node.childs[1].childs
-    struct_nodes.append(node)
+    structs.append(node)
     struct_types.append(name)
 
     struct_decl = f"%struct.{name} = type " + "{"
@@ -209,6 +202,19 @@ fdict = {
     'CALL_ARGS': TODO,
     'FUNC_CALL': TODO
 }
+
+
+def spread_nodes(root):
+    if is_node(root):
+        if root.name == "FUNCTION":
+            functions.append(root)
+        elif root.name == "VARIABLE" or root.name == "VARIABLE_ARRAY":
+            variables.append(root)
+        elif root.name == "STRUCT":
+            structs.append(root)
+
+        for child in root.childs:
+            spread_nodes(child)
 
 
 def start_codegen(ast, context = {}):
