@@ -21,6 +21,7 @@ struct_types = []
 variables = []
 functions = []
 structs = []
+buffer_num = 1
 
 def raiseError(x): raise Exception(x)
 def skip(x, y): return []
@@ -105,9 +106,8 @@ def llvm_assign(ast, context=None):
 
 
 def llvm_chain_call(ast, context=None):
-    struct_var_name = ast.childs[0].value
-    struct_member_name = ast.childs[1].value
-    struct_var = find_node_by_id(variables + functions, struct_var_name)
+    struct_member_name = ast.childs[1].value if (ast.childs[1].name == "ID") else ast.childs[1].get("ID")[0].value
+    struct_var = find_node_by_id(variables + functions, ast.childs[0].value)
     struct_id = struct_var.get("TYPE")[0].value
     struct = find_node_by_id(structs, struct_id)
     struct_members = struct.childs[1].childs
@@ -119,23 +119,40 @@ def llvm_chain_call(ast, context=None):
             struct_member = member
             break
     if member_index > -1:
-        final_register = ""
         result = [f"%struct.{struct_id}.{struct_member_name}.ptr = getelementptr inbounds %struct.{struct_id}, " +
                   f"%struct.{struct_id}* %struct.{struct_id}.ptr, i32 0, i32 {member_index}"]
         if struct_member.name == "ASSIGN":
             array_register = f"%struct.{struct_id}.{struct_member_name}.ptr"
-            result.append(f"%struct.{struct_id}.{struct_member_name}_{struct_member_name} = ")
+            array_alloc = struct_member.childs[1]
+            array_size = array_alloc.get("VALUE")[0].value
+            array_type = type_dict[array_alloc.childs[0].value]
+            ll_type = f"[{array_size} x {array_type}]"
+            ll_element_index = llvm_expression(ast.childs[1])
+
+            global buffer_num
+
+            result.append(
+                f"%buffer{buffer_num}.ptr = getelementptr inbounds ll_type, ll_type* {array_register}, i64 0, i64 {ll_element_index}")
+            result.append(f"%buffer{buffer_num}.ptr")
+            buffer_num += 1
+            return result
         elif struct_member.name == "VARIABLE":
-            final_register = f"%struct.{struct_id}.{struct_member_name}.ptr"
+            result.append(f"%struct.{struct_id}.{struct_member_name}.ptr")
+            return result
         else:
             print(f"Incorrect member of struct {struct_id}")
-
 
     else:
         print(f"Member of struct {struct_id} with id {struct_member_name} not found")
 
     return None
 
+
+# TODO: Доделать обработку выражений
+def llvm_expression(ast, context=None):
+    pass
+    # def recursive_run(node):
+    #     pass
 
 
 def llvm_add_func(type, ast_right, ast_left=None):
