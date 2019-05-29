@@ -106,9 +106,14 @@ def llvm_assign(ast, context=None):
 
 # TODO: Максиму доделать! Искать объявление переменной со структурой, вытаскивать тип, а уже потом искать члена структуры
 def llvm_chain_call(ast, context=None):
-    struct_name = ast.childs[0].value
-    struct_member_id = ast.childs[1].value
-    print(struct_name)
+    struct_var_name = ast.childs[0].value
+    struct_member_name = ast.childs[1].value
+    struct_var = find_node_by_id(variables, struct_var_name)
+    struct_id = struct_var.get("TYPE")[0].value
+    struct = find_node_by_id(structs, struct_id)
+    struct_members = struct.childs[1].childs
+
+
     return None
 
 

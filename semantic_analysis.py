@@ -125,7 +125,9 @@ def check_funcs_returns(root):
             else:
                 for ret in rets:
                     if ret.value is None and len(ret.childs) == 0:
-                        errors.append(wrap_error("Function with type \"" + ftype.value + "\" must return a value.", ret.line))
+                        if ftype.value != "void":
+                            errors.append(
+                                wrap_error("Function with type \"" + ftype.value + "\" must return a value.", ret.line))
                     else:
                         res_type = get_expression_result_type(ret.childs[0], errors)
                         if res_type != "end" and res_type != ftype.value:
