@@ -1,3 +1,0 @@
-function func(int x): void {
-return;
-}
