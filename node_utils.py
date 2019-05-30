@@ -59,3 +59,10 @@ def find_node_by_id(nodes, id):
         if is_node_has_id(node) and node.get("ID")[0].value == id:
             return node
     return None
+
+
+def find_array_by_id(list, id):
+    for dict in list:
+        if dict["id"] == id:
+            return dict
+    return None
