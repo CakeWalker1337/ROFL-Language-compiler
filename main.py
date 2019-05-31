@@ -41,6 +41,24 @@ def prettify(elem):
     reparsed = minidom.parseString(rough_string)
     return reparsed.toprettyxml(indent="\t")
 
+
+def llvm_prettify(code):
+    additive = ""
+    for line in code:
+        if "define" in line:
+            print(additive + line)
+            additive = additive + "    "
+        elif "label" in line:
+            additive = additive[:-4]
+            print(additive + line)
+            additive += "    "
+        elif "}" in line:
+            additive = additive[:-4]
+            print(additive + line)
+        else:
+            print(additive + line)
+
+
 default_file = 'test.rofl'
 
 if __name__ == "__main__":
@@ -91,7 +109,7 @@ if __name__ == "__main__":
                     print(result)
                 
                 #
-                print(start_codegen(result))
+                llvm_prettify(start_codegen(result))
                 
             else:
                 for error in s_errors:
