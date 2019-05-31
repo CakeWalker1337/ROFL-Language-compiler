@@ -1,6 +1,7 @@
-struct asd{
-int bb;
+function func(int c, float max): int {
+    int a = 2;
+    int b = a+1;
+    return 1;
 }
-
-asd a;
-a.bb = 10;
+int a = 5;
+int b = a;

@@ -66,3 +66,48 @@ def find_array_by_id(list, id):
         if dict["id"] == id:
             return dict
     return None
+
+
+class Node:
+    def __init__(self, name, value=None, parent=None, childs=[], line=0):
+        self.name = name
+        self.value = value
+        self.childs = childs
+        self.parent = parent
+        for child in self.childs:
+            child.parent = self
+        self.line = line
+        self.checked = False
+
+    # returns all children of current node
+    # name might be string or list of strings
+    # if nest == True returns all nested elements
+    def get(self, name, nest=False):
+        nodes = []
+        for elem in self.childs:
+            if isinstance(name, str) and elem.name == name:
+                nodes.append(elem)
+            elif isinstance(name, list) and elem.name in name:
+                nodes.append(elem)
+            nodes = nodes + (elem.get(name, nest) if nest else [])
+        return nodes
+
+    # adds new list of childs to existed
+    def add_childs(self, childs):
+        for child in childs:
+            child.parent = self
+        self.childs += childs
+
+    def __parts_str(self):
+        st = []
+        for part in self.childs:
+            st.append(str(part))
+        if len(self.childs) == 0:
+            st.append(str(self.value))
+        return "\n".join(st)
+
+    def __repr__(self):
+        if self.name == '':
+            return self.__parts_str().replace("\n", "\n")
+        else:
+            return self.name + ":\n\t" + self.__parts_str().replace("\n", "\n\t")
