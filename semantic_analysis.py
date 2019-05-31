@@ -416,4 +416,15 @@ def check_array_things(tree):
             errors.append(wrap_error('You can\'t create an array with zero size.', alloc.line))
     return errors
 
+# check if there are not allocated array variables
+def check_array_allocation(tree):
+    arr_defs = tree.get('VARIABLE_ARRAY', True)
+    errors = []
+
+    for d in arr_defs:
+        if d.parent.name != 'ASSIGN':
+            errors.append(wrap_error('Array must be allocated.', d.line))
+    
+    return errors
+
 #TODO: Add comments and check func params while calling
