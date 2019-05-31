@@ -30,7 +30,7 @@ tokens = [
 
     # Operators (+, -, *, /, %, %%, ||, |, &&, &, !, <, <=, >, >=, ==, !=)
     'PLUS', 'MINUS', 'TIMES', 'DIVIDE', 'MODULO', 'IDIVIDE',
-    'LOR', 'BOR', 'LAND', 'BAND', 'LNOT',
+    'LOR', 'BOR', 'LAND', 'BAND',
     'LT', 'LE', 'GT', 'GE', 'EQ', 'NE',
 
     # Assignment (=)
@@ -60,7 +60,6 @@ t_BOR               = r'\|'
 t_LOR              = r'\|\|'
 t_BAND              = r'&'
 t_LAND              = r'&&'
-t_LNOT             = r'!'
 t_LT               = r'<'
 t_GT               = r'>'
 t_LE               = r'<='

@@ -230,7 +230,7 @@ def compare_expr(one, two, operation_type):
 def is_expression(node):
     if is_node(node):
         tnames = ['PLUS', 'MINUS', 'TIMES', 'DIVIDE', 'MODULO', 'IDIVIDE',
-                  'LOR', 'BOR', 'LAND', 'BAND', 'LNOT',
+                  'LOR', 'BOR', 'LAND', 'BAND',
                   'LT', 'LE', 'GT', 'GE', 'EQ', 'NE',
                   'INCREMENT', 'DECREMENT', 'CHAIN_CALL']
         return node.name in tnames

@@ -56,7 +56,6 @@ precedence = (
     ('left', 'ASSIGN'),
     ('left', 'LOR'),
     ('left', 'LAND'),
-    ('right', 'LNOT'),
     ('nonassoc', 'LT', 'GT', 'GE', 'LE', 'EQ', 'NE'),  # Nonassociative operators
     ('left', 'BOR'),
     ('left', 'BAND'),
@@ -601,7 +600,6 @@ def p_binary_operators_error(p):
             | error NE expression
             | error LOR expression
             | error LAND expression
-            | LNOT error
             | expression LT error
             | expression GT error
             | expression GE error
@@ -624,7 +622,6 @@ def p_logic_expressions(p):
                 | expression NE expression
                 | expression LOR expression
                 | expression LAND expression
-                | LNOT expression
     '''
     line = p.lexer.lineno
     if len(p) == 4:
@@ -644,8 +641,6 @@ def p_logic_expressions(p):
             p[0] = Node('LOR', childs=[p[1], p[3]], line=line)
         elif p[2] == '&&':
             p[0] = Node('LAND', childs=[p[1], p[3]], line=line)
-    else:
-        p[0] = Node('LNOT', childs=[p[2]], line=line)
 
 
 def p_chain_call(p):

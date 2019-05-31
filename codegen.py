@@ -456,7 +456,6 @@ fdict = {
     'EQ': TODO,
     'LOR': TODO,
     'LAND': TODO,
-    'LNOT': TODO,
     'CHAIN_CALL': llvm_chain_call,
     'IF_CONDITION': TODO,
     'CONDITION': TODO,
