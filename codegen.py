@@ -29,7 +29,12 @@ buffer_num = 1
 def raiseError(x): raise Exception(x)
 
 
-def skip(x, y): return None, []
+def skip(x, y): 
+    x.checked = True
+    if not x is None and len(x.childs):
+        for child in x.childs:
+            child.checked = True
+    return None, []
 
 
 def TODO(x, y): return None, [f'TODO {x.name}']
@@ -53,10 +58,8 @@ def llvm_type(ast, context=None):
     ast.checked = True
     if ast.value == 'string':
         return ['string']  # TODO: придумать как поступать с этим кейсом
-    elif ast.value in struct_types:
-        return f"struct.{ast.value}"
     else:
-        return [f'%{type_dict[ast.value]}']
+        return [type_dict[ast.value]]
 
 
 def llvm_value(ast, context=None):
@@ -222,44 +225,56 @@ def spread_nodes(root):
             spread_nodes(child)
 
 
-def start_codegen(ast, context={}):
+def llvm_func_def(node, context=None):
+    f_name, f_type = get_info(node)
+    node.checked = True
+    for child in node.childs:
+        child.checked = True
+
+    args = []
+    for arg in node.childs[1].childs:
+        args += [f'{llvm_type(arg.childs[0])[0]} %{arg.childs[1].value}']
+
+    commands = recursive_run(node.childs[3], [])
+
+    return type_dict[f_type[1]], ([f'define {type_dict[f_type[1]]} @{f_name}({", ".join(args)}) {"{"}'] + commands + ['}', f'@{f_name}'])
+
+
+def recursive_run(node, res):
+    res_type, res_strs = fdict[node.name](node, None)
+    res = res + res_strs[:-1]
+
+    for child in node.childs:
+        if not child.checked:
+            res = recursive_run(child, res)
+    return res
+
+def create_main_node():
+    return Node('FUNCTION', childs=[
+            Node('ID', value='main'),
+            Node('FUNC_ARGS'),
+            Node('TYPE', value='int'),
+            Node('SCOPE')], line=0)
+
+
+def start_codegen(ast):
     init = []
-    main_init = ["define i32 @main() {"]
     body = []
 
     spread_nodes(ast)
 
-    def recursive_run(node, res):
-        res_type, res_strs = fdict[node.name](node, None)
-        res = res + res_strs[:-1]
+    llvm_result = []
+    for function in functions:
+        llvm_result += recursive_run(function, [])
 
-        for child in node.childs:
-            if not child.checked:
-                res = recursive_run(child, res)
-        return res
+    main_func_node = create_main_node()
+    ast.parent = main_func_node
+    main_func_node.childs[3] = ast
+    ast = main_func_node
 
-    llvm_result = recursive_run(ast, [])
+    llvm_result += recursive_run(ast, [])
 
-    return main_init + llvm_result + ["}"]
-
-    # if ast is None:
-    #     raise Exception('ast is None')
-    #
-    # if is_definition(ast):
-    #     name, type = get_info(ast)
-    #     context[name] = type
-    #
-    # result = fdict[ast.name](ast, context)
-    #
-    # for child in ast.childs:
-    #     if not child.checked:
-    #         result += start_codegen(child, context)
-    #     else:
-    #         start_codegen(child, context)
-    #         recursive_run()
-    # return result
-
-
+    return llvm_result
 
 
 # ############## BINARY FUNCS ################# #
@@ -425,7 +440,7 @@ atom_funcs = {'ID': llvm_id,
 
 fdict = {
     'ERROR': lambda x, y: raiseError('error in ast'),
-    'FUNCTION': skip,
+    'FUNCTION': llvm_func_def,
     'STRUCT': llvm_struct, 'CONTENT': TODO,  # ?
     'VALUE': skip,
     'TYPE': skip,
