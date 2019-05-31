@@ -1,3 +1,7 @@
+struct aaa {
+int bbb;
+}
+
 function func(int c, float max): int {
     int a = 2;
     int b = a+1;

@@ -239,7 +239,8 @@ def llvm_func_def(node, context=None):
 
     commands = recursive_run(node.childs[3], [])
 
-    return type_dict[f_type[1]], ([f'define {type_dict[f_type[1]]} @{f_name}({", ".join(args)}) {"{"}'] + commands + ['}', f'@{f_name}'])
+    return type_dict[f_type[1]], (
+            [f'define {type_dict[f_type[1]]} @{f_name}({", ".join(args)}) {"{"}'] + commands + ['}', f'@{f_name}'])
 
 
 def recursive_run(node, res):
@@ -251,12 +252,13 @@ def recursive_run(node, res):
             res = recursive_run(child, res)
     return res
 
+
 def create_main_node():
     return Node('FUNCTION', childs=[
-            Node('ID', value='main'),
-            Node('FUNC_ARGS'),
-            Node('TYPE', value='int'),
-            Node('SCOPE')], line=0)
+        Node('ID', value='main'),
+        Node('FUNC_ARGS'),
+        Node('TYPE', value='int'),
+        Node('SCOPE')], line=0)
 
 
 def start_codegen(ast):
@@ -268,6 +270,9 @@ def start_codegen(ast):
     llvm_result = []
     for function in functions:
         llvm_result += recursive_run(function, [])
+
+    for struct in structs:
+        llvm_result += recursive_run(struct, [])
 
     main_func_node = create_main_node()
     ast.parent = main_func_node
