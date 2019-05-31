@@ -5,8 +5,7 @@
 ## TODO: генерация dowhile, while
 ## TODO: генерация if, else, elif
 ## TODO: придумать что делать со string
-## TODO: приведение типов (int-float, float-int, ... дописать)
-## TODO: генерация инициализации масива
+## генерация инициализации масива
 ## TODO: транслировать булевы операции (<=,>=, ==, <, >, !, !=, |, &)
 ## TODO: транслировать математические операции 
 ## TODO: объявления функций и структур вне main
@@ -67,36 +66,6 @@ def llvm_value(ast, context=None):
     return [ast.value]
 
 
-# def llvm_const(ast, context=None):
-#     ast.checked = True
-#     if ast.parent.name == 'SCOPE': return []
-#     value = llvm_value(ast.childs[1])[0]
-#     type = llvm_type(ast.childs[0])[0]
-#     if type == 'string':
-#         return []
-#     elif type == 'i8':
-#         value = '1' if value == 'true' else '0'
-#     return [value]
-#
-#
-# def llvm_id(ast, context=None):
-#     ast.checked = True
-#     if ast.parent.name == 'SCOPE': return []
-#     name = get_info(ast)[0]
-#     return [f'%{ast.value}']
-#
-#
-# def llvm_array_el(ast, context):
-#     ast.checked = True
-#     ast.childs[0].checked = True
-#     name = get_info(ast)[0]
-#     type = type_dict[context[name][1]]
-#     return [
-#         f'%arr.ptr = getelementptr inbounds {type}, {type}* %{name}, i32 0 {llvm_type(ast.childs[1].childs[0])} {fdict[ast.childs[1].name](ast.childs[1])[0]}',
-#         f'%elem = load {type}, {type}* %arr.ptr',
-#         f'%elem']  # TODO: придумать именование для выбранного элемента массива
-
-
 def llvm_variable(ast, context=None):
     ast.checked = True
     ast.childs[1].checked = True
@@ -141,7 +110,7 @@ def llvm_assign(ast, context=None):
     elif left.name == 'VARIABLE':
         left_type, left_strs = llvm_variable(left)
     elif left.name == 'ID':
-        left_type, left_strs = llvm_id(left)
+        left_type, left_strs = llvm_id(left, "ptr")
 
     right_type, right_strs = llvm_expression(right)
     left_ptr = left_strs[-1]
@@ -177,7 +146,6 @@ def llvm_struct(node, context=None):
         raise Exception("This function can't process the node which hasn't got a type STRUCT")
     name = node.childs[0].value
     childs = node.childs[1].childs
-    structs.append(node)
     struct_types.append(name)
     node.checked = True
     for memb in node.childs:
@@ -342,10 +310,14 @@ def llvm_mod_func(expr_type, left, right):
 # Atoms are the nodes with types: ID, CHAIN_CALL, FUNC_CALL, CONST, ARRAY_ELEMENT
 
 def llvm_id(ast, context=None):
+    # if context is None variable is needed to load (returns value, not ptr), else returns ptr of variable
     if is_node(ast) and ast.name == "ID":
         var = find_node_by_id(variables, ast.value)
         var_type = var.get("TYPE")[0].value
-        var_type, buffer_strs = llvm_load_value(f'%{ast.value}.ptr', var_type)
+        if context is None:
+            var_type, buffer_strs = llvm_load_value(f'%{ast.value}.ptr', var_type)
+        else:
+            buffer_strs = [f"%{ast.value}.ptr"]
         return var_type, buffer_strs
     else:
         raise Exception("llvm_id cannot process node with different type from ID.")
@@ -410,6 +382,7 @@ def llvm_array_el(ast, context=None):
         var_id = context["id"]
     ll_type = f"[{array_var['size']} x {type_dict[array_var['type']]}]"
     buff_type, strs = llvm_expression(ast.childs[1])
+    # TODO: рассмотреть кейс, когда индекс массива - константа 
     loaded_type, loaded_strs = llvm_load_value(strs[-1], buff_type)
     global buffer_num
     result = strs[:-1] + loaded_strs[:-1] + [
@@ -432,7 +405,7 @@ def llvm_func_call(ast, context=None):
         ll_call_args += f"{type_dict[arg_type]} {arg_strs[-1]}, "
     if len(call_args) != 0:
         ll_call_args = ll_call_args[:-2]
-    call_result = [f"%{func_id}.{buffer_num} = call {func_type} @{func_id}({ll_call_args})"]
+    call_result = [f"%{func_id}.{buffer_num} = call {type_dict[func_type]} @{func_id}({ll_call_args})"]
     result_strs = result_strs + call_result + [f"%{func_id}.{buffer_num}"]
     return func_type, result_strs
 
