@@ -29,7 +29,10 @@ buffer_num = 1
 def raiseError(x): raise Exception(x)
 
 
-def skip(x, y): return None, []
+def skip(x, y):
+    for ch in x.childs:
+        ch.checked = True
+    return None, []
 
 
 def TODO(x, y): return None, [f'TODO {x.name}']
@@ -43,8 +46,8 @@ def llvm_load_value(register_ptr, register_type):
     res_register = register_ptr[:-4]
     global buffer_num
     result = [
-        f"{res_register}.{buffer_num} = load {type_dict[register_type]}, {type_dict[register_type]}* {res_register}",
-            f"{res_register}"]
+        f"{res_register}.{buffer_num} = load {type_dict[register_type]}, {type_dict[register_type]}* {res_register}.ptr",
+        f"{res_register}.{buffer_num}"]
     buffer_num += 1
     return register_type, result
 
@@ -176,7 +179,9 @@ def llvm_struct(node, context=None):
     childs = node.childs[1].childs
     structs.append(node)
     struct_types.append(name)
-
+    node.checked = True
+    for memb in node.childs:
+        memb.checked = True
     struct_decl = f"%struct.{name} = type " + "{"
     for child in childs:
         child.checked = True
@@ -196,7 +201,7 @@ def llvm_struct(node, context=None):
     if len(childs) != 0:
         struct_decl = struct_decl[:-2]
     struct_decl = struct_decl + "}"
-    return [struct_decl]
+    return None, [struct_decl, ""]
 
 
 def spread_nodes(root):
@@ -337,8 +342,9 @@ def llvm_const(ast, context=None):
 
 
 def llvm_chain_call(ast, context=None):
+    var_id = ast.childs[0].value
     struct_member_name = ast.childs[1].value if (ast.childs[1].name == "ID") else ast.childs[1].get("ID")[0].value
-    struct_var = find_node_by_id(variables + functions, ast.childs[0].value)
+    struct_var = find_node_by_id(variables + functions, var_id)
     struct_id = struct_var.get("TYPE")[0].value
     struct = find_node_by_id(structs, struct_id)
     struct_members = struct.childs[1].childs
@@ -350,10 +356,11 @@ def llvm_chain_call(ast, context=None):
             struct_member = member
             break
     if member_index > -1:
-        result = [f"%struct.{struct_id}.{struct_member_name}.ptr = getelementptr inbounds %struct.{struct_id}, " +
-                  f"%struct.{struct_id}* %struct.{struct_id}.ptr, i32 0, i32 {member_index}"]
+        global buffer_num
+        result = [f"%{var_id}.{struct_member_name}.{buffer_num}.ptr = getelementptr inbounds %struct.{struct_id}, " +
+                  f"%struct.{struct_id}* %{var_id}.ptr, i32 0, i32 {member_index}"]
         if struct_member.name == "ASSIGN":
-            array_register = f"%struct.{struct_id}.{struct_member_name}"
+            array_register = f"%{var_id}.{struct_member_name}.{buffer_num}"
             array_alloc = struct_member.childs[1]
             array_size = array_alloc.get("VALUE")[0].value
             array_type = array_alloc.childs[0].value
@@ -362,9 +369,11 @@ def llvm_chain_call(ast, context=None):
                                "size": array_size}
             element_type, strs = llvm_array_el(struct_member, element_context)
             result = result + strs
+            buffer_num += 1
             return element_type, result
         elif struct_member.name == "VARIABLE":
-            result.append(f"%struct.{struct_id}.{struct_member_name}.ptr")
+            result.append(f"%{var_id}.{struct_member_name}.{buffer_num}.ptr")
+            buffer_num += 1
             return struct_member.get("TYPE")[0].value, result
         else:
             print(f"Incorrect member of struct {struct_id}")
@@ -376,7 +385,6 @@ def llvm_chain_call(ast, context=None):
 
 
 def llvm_array_el(ast, context=None):
-
     if context is None:
         var_id = ast.get("ID")[0].value
         array_var = find_array_by_id(arrays, var_id)
