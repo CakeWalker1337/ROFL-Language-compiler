@@ -1,2 +1,6 @@
-int a = 2;
-int b = a+1;
+struct asd{
+int bb;
+}
+
+asd a;
+a.bb = 10;
