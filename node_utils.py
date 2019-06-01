@@ -21,7 +21,10 @@ def get_info(node):
 
 def is_definition(ast):
     def_names = ['VARIABLE', 'VARIABLE_ARRAY', 'FUNCTION']
-    if ast.name in def_names: return True
+    if ast.name in def_names: 
+        return True
+    elif ast.name == 'ASSIGN' and is_definition(ast.childs[0]):
+        return True
     else: return False
 
 

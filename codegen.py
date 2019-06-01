@@ -226,8 +226,12 @@ def llvm_func_def(node, context=None):
 
 def recursive_run(node, res, context={}):
     if is_definition(node):
-        name, type = get_info(node)
-        context[name] = type
+        if node.name == 'ASSIGN':
+            name, type = get_info(node.childs[0])
+            context[name] = type
+        else:
+            name, type = get_info(node)
+            context[name] = type
 
     res_type, res_strs = fdict[node.name](node, context)
     res = res + res_strs[:-1]
