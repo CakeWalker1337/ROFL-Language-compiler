@@ -107,9 +107,10 @@ if __name__ == "__main__":
                         xmlfile = open(join(getcwd(), "program.xml"), "w+")
                         xmlfile.write(prettify(xml_result))
 
-                    llvm_prettify(start_codegen(result))
                 elif len(errors) == 0 and show_tree_with_errors:
                     print(result)
+                
+                llvm_prettify(start_codegen(result))
                 
                 #
                 

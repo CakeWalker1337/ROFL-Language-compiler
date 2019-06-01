@@ -264,7 +264,7 @@ def llvm_cond_if(node, context=None):
     inner_commands = recursive_run(node.childs[1], [])
 
     return 'label', [
-        f'br {expr_result} label %{LABEL}{condition_counter}, label %{LABEL}{condition_counter+1}', 
+        f'br {type_dict[res_type]} {expr_result} label %{LABEL}{condition_counter}, label %{LABEL}{condition_counter+1}', 
         f'{LABEL}{condition_counter}:'
     ] + inner_commands + [
         f'br label %{LABEL}{condition_counter+2}',

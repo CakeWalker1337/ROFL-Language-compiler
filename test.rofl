@@ -1,7 +1,8 @@
 int a;
 int b;
+a[1];
 if (false) {
-a = 5;
+a = 5; 
 } else {
 b = 3;
 }
