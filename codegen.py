@@ -195,6 +195,16 @@ def spread_nodes(root):
             spread_nodes(child)
 
 
+def llvm_return(node, context):
+    node.checked = True
+    node.childs[0].checked = True
+    name, type = get_info(node.childs[0])
+    if node.childs[0] != 'CONST':
+        type = context[name]
+        name = '%' + name
+
+    return type[0], [f'ret {type_dict[type[1]]} {name}', name]
+
 def llvm_func_def(node, context=None):
     f_name, f_type = get_info(node)
     node.checked = True
@@ -203,21 +213,27 @@ def llvm_func_def(node, context=None):
 
     args = []
     for arg in node.childs[1].childs:
+        name, type = get_info(arg)
+        context[name] = type
         args += [f'{llvm_type(arg.childs[0])[0]} %{arg.childs[1].value}']
 
-    commands = recursive_run(node.childs[3], [])
+    commands = recursive_run(node.childs[3], [], context)
 
     return type_dict[f_type[1]], (
             [f'define {type_dict[f_type[1]]} @{f_name}({", ".join(args)}) {"{"}'] + commands + ['}', f'@{f_name}'])
 
 
-def recursive_run(node, res):
-    res_type, res_strs = fdict[node.name](node, None)
+def recursive_run(node, res, context={}):
+    if is_definition(node):
+        name, type = get_info(node)
+        context[name] = type
+
+    res_type, res_strs = fdict[node.name](node, context)
     res = res + res_strs[:-1]
 
     for child in node.childs:
         if not child.checked:
-            res = recursive_run(child, res)
+            res = recursive_run(child, res, context)
     return res
 
 
@@ -436,7 +452,7 @@ fdict = {
     'ASSIGN': llvm_assign,
     'SCOPE': TODO,
     'FUNC_ARGS': TODO,
-    'RETURN': TODO,
+    'RETURN': llvm_return,
     'EMPTY_STATEMENT': skip,
     'PLUS': llvm_expression,
     'MINUS': llvm_expression,
@@ -456,6 +472,7 @@ fdict = {
     'LAND': TODO,
     'CHAIN_CALL': llvm_chain_call,
     'IF_CONDITION': TODO,
+    'IF': TODO,
     'CONDITION': TODO,
     'ELIF': TODO,
     'ELSE': TODO,
