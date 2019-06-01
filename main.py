@@ -101,19 +101,20 @@ if __name__ == "__main__":
 
                 if len(errors) == 0 and not show_tree_with_errors:
                     xml_result = convert_to_xml(result)
+
                     if print_xml_to_console:
                         print(prettify(xml_result))
                     if print_xml_to_file:
                         xmlfile = open(join(getcwd(), "program.xml"), "w+")
                         xmlfile.write(prettify(xml_result))
-
+                    llvm_prettify(start_codegen(result))
                 elif len(errors) == 0 and show_tree_with_errors:
                     print(result)
-                
-                llvm_prettify(start_codegen(result))
-                
-                #
-                
+                    print("\n")
+                    llvm_prettify(start_codegen(result))
+
+
+
             else:
                 for error in s_errors:
                     print(error)

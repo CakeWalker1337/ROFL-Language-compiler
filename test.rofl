@@ -1,6 +1,7 @@
+int[] c = int[](123);
 int a;
 int b;
-a[1];
+c[1];
 if (false) {
 a = 5; 
 } else {
