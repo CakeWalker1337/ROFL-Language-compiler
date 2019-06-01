@@ -507,7 +507,7 @@ def llvm_const(ast, context=None):
         type = ast.get("TYPE")[0].value
         value = ast.get('VALUE')[0].value
         if type == "boolean":
-            value = 1 if value else 0
+            value = 1 if value == "true" else 0
         return type, [f"{value}"]
     else:
         raise Exception("llvm_const cannot process node with different type from CONST.")
