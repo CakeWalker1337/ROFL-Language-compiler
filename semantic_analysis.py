@@ -445,4 +445,15 @@ def check_conditions(root):
 
     return res_errors
 
+#
+# def check_array_element_types(root):
+#     elems = root.get("ARRAY_ELEMENT", nest=True)
+#     for elem in elems:
+#         if elem.parent.name == "CHAIN_CALL":
+#             structs = root.get("STRUCT")
+#             for struct in structs:
+#                 if struct.get("ID")[0].value == elem.parent.childs[0].get("ID")[0]
+#         scope = get_nearest_scope(elem)
+
+
 #TODO: Add comments and check func params while calling

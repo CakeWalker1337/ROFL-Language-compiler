@@ -12,13 +12,13 @@
 
 from node_utils import *
 
-type_dict = {'int': 'i32', 'float': 'double', 'boolean': 'i8'}
+type_dict = {'int': 'i32', 'float': 'double', 'boolean': 'i1'}
 cmp_dict = {'LT': "slt", 'LE': "sle", 'GT': "sgt", 'GE': "sge", 'EQ': "eq", 'NE': "ne"}
-# 'LT', 'LE', 'GT', 'GE', 'EQ', 'NE',
 NL = '\n'
 TAB = '    '
 struct_types = []
 
+strings = []
 arrays = []
 variables = []
 functions = []
@@ -194,6 +194,8 @@ def spread_nodes(root):
                 "type": array_type,
                 "size": array_size
             })
+        elif root.name == "CONST" and root.get("TYPE")[0].value == "string":
+            strings.append("awdawd")
         for child in root.childs:
             spread_nodes(child)
 
@@ -352,8 +354,9 @@ def llvm_or_func(expr_type, left, right):
 
 def llvm_gt_func(expr_type, left, right):
     ll_type = type_dict[expr_type]
+    operator = 'fcmp' if ll_type == 'double' else 'icmp'
     global buffer_num
-    result = [f'%buffer{buffer_num} = icmp sgt {ll_type} {left}, {right}',
+    result = [f'%buffer{buffer_num} = {operator} sgt {ll_type} {left}, {right}',
               f'%buffer{buffer_num}']
     buffer_num += 1
     return expr_type, result
@@ -361,8 +364,9 @@ def llvm_gt_func(expr_type, left, right):
 
 def llvm_ge_func(expr_type, left, right):
     ll_type = type_dict[expr_type]
+    operator = 'fcmp' if ll_type == 'double' else 'icmp'
     global buffer_num
-    result = [f'%buffer{buffer_num} = icmp sge {ll_type} {left}, {right}',
+    result = [f'%buffer{buffer_num} = {operator} sge {ll_type} {left}, {right}',
               f'%buffer{buffer_num}']
     buffer_num += 1
     return expr_type, result
@@ -370,8 +374,9 @@ def llvm_ge_func(expr_type, left, right):
 
 def llvm_lt_func(expr_type, left, right):
     ll_type = type_dict[expr_type]
+    operator = 'fcmp' if ll_type == 'double' else 'icmp'
     global buffer_num
-    result = [f'%buffer{buffer_num} = icmp slt {ll_type} {left}, {right}',
+    result = [f'%buffer{buffer_num} = {operator} slt {ll_type} {left}, {right}',
               f'%buffer{buffer_num}']
     buffer_num += 1
     return expr_type, result
@@ -379,8 +384,9 @@ def llvm_lt_func(expr_type, left, right):
 
 def llvm_le_func(expr_type, left, right):
     ll_type = type_dict[expr_type]
+    operator = 'fcmp' if ll_type == 'double' else 'icmp'
     global buffer_num
-    result = [f'%buffer{buffer_num} = icmp sle {ll_type} {left}, {right}',
+    result = [f'%buffer{buffer_num} = {operator} sle {ll_type} {left}, {right}',
               f'%buffer{buffer_num}']
     buffer_num += 1
     return expr_type, result
@@ -388,8 +394,9 @@ def llvm_le_func(expr_type, left, right):
 
 def llvm_eq_func(expr_type, left, right):
     ll_type = type_dict[expr_type]
+    operator = 'fcmp' if ll_type == 'double' else 'icmp'
     global buffer_num
-    result = [f'%buffer{buffer_num} = icmp eq {ll_type} {left}, {right}',
+    result = [f'%buffer{buffer_num} = {operator} eq {ll_type} {left}, {right}',
               f'%buffer{buffer_num}']
     buffer_num += 1
     return expr_type, result
@@ -397,8 +404,9 @@ def llvm_eq_func(expr_type, left, right):
 
 def llvm_ne_func(expr_type, left, right):
     ll_type = type_dict[expr_type]
+    operator = 'fcmp' if ll_type == 'double' else 'icmp'
     global buffer_num
-    result = [f'%buffer{buffer_num} = icmp ne {ll_type} {left}, {right}',
+    result = [f'%buffer{buffer_num} = {operator} ne {ll_type} {left}, {right}',
               f'%buffer{buffer_num}']
     buffer_num += 1
     return expr_type, result
@@ -422,7 +430,11 @@ def llvm_id(ast, context=None):
 
 def llvm_const(ast, context=None):
     if is_node(ast) and ast.name == "CONST":
-        return ast.get("TYPE")[0].value, [f"{ast.get('VALUE')[0].value}"]
+        type = ast.get("TYPE")[0].value
+        value = ast.get('VALUE')[0].value
+        if type == "boolean":
+            value = 1 if value else 0
+        return type, [f"{value}"]
     else:
         raise Exception("llvm_const cannot process node with different type from CONST.")
 
@@ -518,7 +530,7 @@ binary_op_funcs = {'PLUS': llvm_add_func,
                    'MODULO': llvm_mod_func,
                    'BOR': llvm_or_func,
                    'BAND': llvm_and_func,
-                   'LT': llvm_div_func,
+                   'LT': llvm_lt_func,
                    'GT': llvm_gt_func,
                    'GE': llvm_ge_func,
                    'LE': llvm_le_func,

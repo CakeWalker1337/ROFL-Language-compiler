@@ -1,4 +1,7 @@
-int a = 1;
-if(a > 1){
-int baaa = 10;
+int c = 1;
+boolean a = (c>1);
+a = true;
+function aaaa() : int {
+int c = 2;
+return c;
 }
