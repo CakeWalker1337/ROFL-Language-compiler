@@ -23,7 +23,8 @@ variables = []
 functions = []
 structs = []
 buffer_num = 1
-
+condition_counter = 0
+LABEL = 'lab.'
 
 def raiseError(x): raise Exception(x)
 
@@ -224,6 +225,79 @@ def llvm_func_def(node, context=None):
 
     return type_dict[f_type[1]], (
             [f'define {type_dict[f_type[1]]} @{f_name}({", ".join(args)}) {"{"}'] + commands + ['}', f'@{f_name}'])
+
+
+def set_checked(node):
+    if not node is None:
+        node.checked = True
+        for child in node.childs:
+            set_checked(child)
+
+
+def llvm_condition(node, context=None):
+    global condition_counter    
+    result = []
+
+    type, cond_results = llvm_cond_if(node.childs[0], None)
+    condition_counter += 3
+    result += cond_results[:-1]
+    cond_close_label = cond_results[-1]
+
+    if len(node.childs) > 1:
+        for i in range(1, len(node.childs)):
+            child = node.childs[i]
+            type, cond_results = fdict[child.name](child, cond_close_label)
+            condition_counter += 2
+            result += cond_results[:-1]
+
+    set_checked(node)
+
+    return None, result + [f'br label %{cond_close_label}', f'{cond_close_label}:', None]
+
+
+def llvm_cond_if(node, context=None):
+    res_type, result = llvm_expression(node.childs[0].childs[0])
+    expr_result = result[-1]
+    inner_commands = recursive_run(node.childs[1], [])
+
+    return 'label', [
+        f'br {expr_result} label %{LABEL}{condition_counter}, label %{LABEL}{condition_counter+1}', 
+        f'{LABEL}{condition_counter}:'
+    ] + inner_commands + [
+        f'br label %{LABEL}{condition_counter+2}',
+        f'{LABEL}{condition_counter+1}:',
+        f'{LABEL}{condition_counter+2}'
+    ]
+
+
+def llvm_cond_elif(node, context=None):
+    # context is the last label in condition
+    res_type, result = llvm_expression(node.childs[0].childs[0])
+    expr_result = result[-1]
+    inner_commands = recursive_run(node.childs[1], [])
+
+    return 'label', [
+        f'br {expr_result} label %{LABEL}{condition_counter}, label %{LABEL}{condition_counter+1}', 
+        f'{LABEL}{condition_counter}:'
+    ] + inner_commands + [
+        f'br label %{context}',
+        f'{LABEL}{condition_counter+1}:',
+        None
+    ]
+
+
+def llvm_cond_else(node, context=None):
+    # context is the last label in condition
+    inner_commands = recursive_run(node.childs[0], [])
+
+    return 'label', [
+        f'br label %{LABEL}{condition_counter}', 
+        f'{LABEL}{condition_counter}:'
+    ] + inner_commands + [
+        f'br label %{context}',
+        f'{LABEL}{condition_counter+1}:',
+        None
+    ]
 
 
 def recursive_run(node, res, context={}):
@@ -482,11 +556,11 @@ fdict = {
     'LOR': TODO,
     'LAND': TODO,
     'CHAIN_CALL': llvm_chain_call,
-    'IF_CONDITION': TODO,
-    'IF': TODO,
-    'CONDITION': TODO,
-    'ELIF': TODO,
-    'ELSE': TODO,
+    'IF_CONDITION': llvm_condition,
+    'IF': skip,
+    'CONDITION': skip,
+    'ELIF': llvm_cond_elif,
+    'ELSE': llvm_cond_else,
     'DO_WHILE': TODO,
     'WHILE': TODO,
     'MARK': TODO,
