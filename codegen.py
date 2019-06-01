@@ -6,14 +6,15 @@
 ## TODO: генерация if, else, elif
 ## TODO: придумать что делать со string
 ## генерация инициализации масива
-## TODO: транслировать булевы операции (<=,>=, ==, <, >, !, !=, |, &)
-## TODO: транслировать математические операции 
-## TODO: объявления функций и структур вне main
-## TODO: все строки-константы обьявить в начале
+## TODO: транслировать булевы операции (<=,>=, ==, <, >, !=, |, &)
+## транслировать математические операции
+## объявления функций и структур вне main
+
 from node_utils import *
 
 type_dict = {'int': 'i32', 'float': 'double', 'boolean': 'i8'}
-
+cmp_dict = {'LT': "slt", 'LE': "sle", 'GT': "sgt", 'GE': "sge", 'EQ': "eq", 'NE': "ne"}
+# 'LT', 'LE', 'GT', 'GE', 'EQ', 'NE',
 NL = '\n'
 TAB = '    '
 struct_types = []
@@ -402,6 +403,79 @@ def llvm_mod_func(expr_type, left, right):
     return expr_type, result
 
 
+# ############### LOGIC OPERATIONS ################ #
+
+
+def llvm_and_func(expr_type, left, right):
+    ll_type = type_dict[expr_type]
+    global buffer_num
+    result = [f'%buffer{buffer_num} = and {ll_type} {left}, {right}',
+              f'%buffer{buffer_num}']
+    buffer_num += 1
+    return expr_type, result
+
+
+def llvm_or_func(expr_type, left, right):
+    ll_type = type_dict[expr_type]
+    global buffer_num
+    result = [f'%buffer{buffer_num} = or {ll_type} {left}, {right}',
+              f'%buffer{buffer_num}']
+    buffer_num += 1
+    return expr_type, result
+
+
+def llvm_gt_func(expr_type, left, right):
+    ll_type = type_dict[expr_type]
+    global buffer_num
+    result = [f'%buffer{buffer_num} = icmp sgt {ll_type} {left}, {right}',
+              f'%buffer{buffer_num}']
+    buffer_num += 1
+    return expr_type, result
+
+
+def llvm_ge_func(expr_type, left, right):
+    ll_type = type_dict[expr_type]
+    global buffer_num
+    result = [f'%buffer{buffer_num} = icmp sge {ll_type} {left}, {right}',
+              f'%buffer{buffer_num}']
+    buffer_num += 1
+    return expr_type, result
+
+
+def llvm_lt_func(expr_type, left, right):
+    ll_type = type_dict[expr_type]
+    global buffer_num
+    result = [f'%buffer{buffer_num} = icmp slt {ll_type} {left}, {right}',
+              f'%buffer{buffer_num}']
+    buffer_num += 1
+    return expr_type, result
+
+
+def llvm_le_func(expr_type, left, right):
+    ll_type = type_dict[expr_type]
+    global buffer_num
+    result = [f'%buffer{buffer_num} = icmp sle {ll_type} {left}, {right}',
+              f'%buffer{buffer_num}']
+    buffer_num += 1
+    return expr_type, result
+
+
+def llvm_eq_func(expr_type, left, right):
+    ll_type = type_dict[expr_type]
+    global buffer_num
+    result = [f'%buffer{buffer_num} = icmp eq {ll_type} {left}, {right}',
+              f'%buffer{buffer_num}']
+    buffer_num += 1
+    return expr_type, result
+
+
+def llvm_ne_func(expr_type, left, right):
+    ll_type = type_dict[expr_type]
+    global buffer_num
+    result = [f'%buffer{buffer_num} = icmp ne {ll_type} {left}, {right}',
+              f'%buffer{buffer_num}']
+    buffer_num += 1
+    return expr_type, result
 # ########################  ATOM FUNCS ########################## #
 
 # Atoms are the nodes with types: ID, CHAIN_CALL, FUNC_CALL, CONST, ARRAY_ELEMENT
@@ -473,7 +547,7 @@ def llvm_chain_call(ast, context=None):
 def llvm_array_el(ast, context=None):
     # context != None means that the function has been called from chain call.
     # in this case context has a structure {"id": array_register, "type": array_type, "size": array_size}
-    if context is None:
+    if context is None or type(context).__name__ is not "dict" or not "size" in context:
         var_id = ast.get("ID")[0].value
         array_var = find_array_by_id(arrays, var_id)
     else:
@@ -514,7 +588,19 @@ def llvm_func_call(ast, context=None):
 binary_op_funcs = {'PLUS': llvm_add_func,
                    'MINUS': llvm_sub_func,
                    'TIMES': llvm_mul_func,
-                   'DIVIDE': llvm_div_func}
+                   'DIVIDE': llvm_div_func,
+                   'MODULO': llvm_mod_func,
+                   'BOR': llvm_or_func,
+                   'BAND': llvm_and_func,
+                   'LT': llvm_div_func,
+                   'GT': llvm_gt_func,
+                   'GE': llvm_ge_func,
+                   'LE': llvm_le_func,
+                   'NE': llvm_ne_func,
+                   'EQ': llvm_eq_func,
+                   'LOR': llvm_or_func,
+                   'LAND': llvm_and_func
+                   }
 
 atom_funcs = {'ID': llvm_id,
               'CHAIN_CALL': llvm_chain_call,
@@ -545,16 +631,16 @@ fdict = {
     'DIVIDE': llvm_expression,
     'MODULO': llvm_expression,
     'IDIVIDE': llvm_expression,
-    'BOR': TODO,
-    'BAND': TODO,
-    'LT': TODO,
-    'GT': TODO,
-    'GE': TODO,
-    'LE': TODO,
-    'NE': TODO,
-    'EQ': TODO,
-    'LOR': TODO,
-    'LAND': TODO,
+    'BOR': llvm_expression,
+    'BAND': llvm_expression,
+    'LT': llvm_expression,
+    'GT': llvm_expression,
+    'GE': llvm_expression,
+    'LE': llvm_expression,
+    'NE': llvm_expression,
+    'EQ': llvm_expression,
+    'LOR': llvm_expression,
+    'LAND': llvm_expression,
     'CHAIN_CALL': llvm_chain_call,
     'IF_CONDITION': llvm_condition,
     'IF': skip,
@@ -566,5 +652,5 @@ fdict = {
     'MARK': TODO,
     'GOTO': TODO,
     'CALL_ARGS': TODO,
-    'FUNC_CALL': TODO
+    'FUNC_CALL': llvm_expression
 }

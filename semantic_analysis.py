@@ -129,7 +129,7 @@ def check_funcs_returns(root):
                             errors.append(
                                 wrap_error("Function with type \"" + ftype.value + "\" must return a value.", ret.line))
                     else:
-                        res_type = get_expression_result_type(ret.childs[0], errors)
+                        res_type = get_expression_result_type(ret.childs[0], errors, collect_errors=False)
                         if res_type != "end" and res_type != ftype.value:
                             errors.append(wrap_error(
                                 "Incorrect return type \"" + res_type + "\". Function must return a value of type \"" + ftype.value + "\".",
@@ -252,7 +252,7 @@ def get_atom_type(atom):
         return found_elem.get("TYPE")[0].value
 
 
-def get_expression_result_type(root, errors):
+def get_expression_result_type(root, errors, collect_errors=True):
     if is_expression(root):
         if len(root.childs) == 1:
             first = get_expression_result_type(root.childs[0], errors)
@@ -260,7 +260,9 @@ def get_expression_result_type(root, errors):
                 return "end"
             comp_res = compare_expr(first, None, root.name)
             if comp_res == "error":
-                errors.append(wrap_error("Expression error: operand has an unsuitable type (" + first + ")", root.line))
+                if collect_errors:
+                    errors.append(
+                        wrap_error("Expression error: operand has an unsuitable type (" + first + ")", root.line))
                 return "end"
             return comp_res
         else:
@@ -270,9 +272,10 @@ def get_expression_result_type(root, errors):
                 return "end"
             comp_res = compare_expr(first, second, root.name)
             if comp_res == "error":
-                errors.append(wrap_error(
-                    "Expression error: operands have unsuitable types (" + first + ", " + second + ")",
-                    root.childs[0].line))
+                if collect_errors:
+                    errors.append(wrap_error(
+                        "Expression error: operands have unsuitable types (" + first + ", " + second + ")",
+                        root.childs[0].line))
                 return "end"
             return comp_res
     if is_node_atom(root):
@@ -384,10 +387,10 @@ def compare_expr(one, two, operation_type):
         if one == "boolean":
             return one
         return "error"
-    # if is_operation_logic(operation_type):
-    #     if one == two or (is_type_arithmetic(one) and is_type_arithmetic(two)):
-    #         return "boolean"
-    #     return "error"
+    if is_operation_logic(operation_type):
+        if one == two:
+            return "boolean"
+        return "error"
     # if is_operation_arithmetic(operation_type):
     #     if is_type_arithmetic(one) and is_type_arithmetic(two):
     #         return "float"
@@ -416,6 +419,7 @@ def check_array_things(tree):
             errors.append(wrap_error('You can\'t create an array with zero size.', alloc.line))
     return errors
 
+
 # check if there are not allocated array variables
 def check_array_allocation(tree):
     arr_defs = tree.get('VARIABLE_ARRAY', True)
@@ -426,5 +430,19 @@ def check_array_allocation(tree):
             errors.append(wrap_error('Array must be allocated.', d.line))
     
     return errors
+
+
+def check_conditions(root):
+    conds = root.get("CONDITION", nest=True)
+    res_errors = []
+    for cond in conds:
+        node = cond.childs[0]
+        errors = []
+        ret_type = get_expression_result_type(node, errors)
+        if len(errors) == 0:
+            if ret_type != "boolean":
+                res_errors.append(wrap_error('Condition must have only boolean type.', cond.line))
+
+    return res_errors
 
 #TODO: Add comments and check func params while calling
