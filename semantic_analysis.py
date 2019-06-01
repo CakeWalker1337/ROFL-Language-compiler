@@ -59,7 +59,7 @@ def check_var_definition(node, types=default_types,
                 else:
                     errors.append(wrap_error('Undefined type "'+type[1]+'" used.', d.line))
         elif ((d.name == 'VARIABLE' or d.name == 'VARIABLE_ARRAY') and d.parent.name != 'ASSIGN') \
-                 or d.name == 'ASSIGN' and d.childs[0].name != 'ID' and d.childs[0].name != 'CHAIN_CALL':
+                 or d.name == 'ASSIGN' and d.childs[0].name != 'ID' and d.childs[0].name != 'ARRAY_ELEMENT' and d.childs[0].name != 'CHAIN_CALL':
             # just check if there is a type and name in definitions
             # and add it to the variable dictionary if it isn't defined already
             if type[1] in types:

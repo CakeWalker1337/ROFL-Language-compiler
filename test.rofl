@@ -1,19 +1,2 @@
-struct aaa {
-    int bbb;
-}
-
-function func(int c, float max): int {
-    int a = 2;
-    int b = a+1;
-    return max;
-    if ('123') {
-        return b;
-    }
-}
-
-int a = 5;
-aaa ppp;
-ppp.bbb = 10;
-int[] b = int[](123);
-int c = b[12];
-a = func(a, 2.0);
+int[] a = int[](123);
+a[1] = 2;
