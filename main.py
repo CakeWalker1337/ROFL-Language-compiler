@@ -48,7 +48,7 @@ def llvm_prettify(code):
         if "define" in line:
             print(additive + line)
             additive = additive + "    "
-        elif "label" in line:
+        elif ":" in line:
             additive = additive[:-4]
             print(additive + line)
             additive += "    "

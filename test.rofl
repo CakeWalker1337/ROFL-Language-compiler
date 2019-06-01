@@ -1,18 +1,7 @@
-int c = 1;
-boolean a = (c>1);
-a = true;
-function aaaa() : int {
-int c = 2;
-return c;
-}
-<<<<<<< HEAD
-int b;
 int a;
-
-if ('123') {
-    a = 5;  
+int b;
+if (false) {
+a = 5;
 } else {
-    b = 3;
+b = 3;
 }
-=======
->>>>>>> a0460dca47c6c9558b9f8c2d3e7ef2d91db04afd
