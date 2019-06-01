@@ -111,6 +111,8 @@ def llvm_assign(ast, context=None):
         left_type, left_strs = llvm_variable(left)
     elif left.name == 'ID':
         left_type, left_strs = llvm_id(left, "ptr")
+    elif left.name == 'ARRAY_ELEMENT':
+        left_type, left_strs = llvm_array_el(left)
 
     right_type, right_strs = llvm_expression(right)
     left_ptr = left_strs[-1]
@@ -395,6 +397,8 @@ def llvm_chain_call(ast, context=None):
 
 
 def llvm_array_el(ast, context=None):
+    # context != None means that the function has been called from chain call.
+    # in this case context has a structure {"id": array_register, "type": array_type, "size": array_size}
     if context is None:
         var_id = ast.get("ID")[0].value
         array_var = find_array_by_id(arrays, var_id)
