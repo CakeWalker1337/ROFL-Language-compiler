@@ -381,6 +381,9 @@ def compare_expr(one, two, operation_type):
         return "error"
     if one == "void" or two == "void":
         return "error"
+    if is_operation_logic(operation_type):
+        if one == two:
+            return "boolean"
     if one == "string" or two == "string":
         return "error"
     if one is None:
@@ -391,9 +394,7 @@ def compare_expr(one, two, operation_type):
         if one == "boolean":
             return one
         return "error"
-    if is_operation_logic(operation_type):
-        if one == two:
-            return "boolean"
+
         return "error"
     # if is_operation_arithmetic(operation_type):
     #     if is_type_arithmetic(one) and is_type_arithmetic(two):

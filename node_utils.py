@@ -71,6 +71,13 @@ def find_array_by_id(list, id):
     return None
 
 
+def find_string_by_value(list, value):
+    for l in list:
+        if l["value"] == value:
+            return l
+    return None
+
+
 class Node:
     def __init__(self, name, value=None, parent=None, childs=[], line=0):
         self.name = name

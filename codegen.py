@@ -4,20 +4,21 @@
 ## генерация объявления внутренних переменных (после типов)
 ## TODO: генерация dowhile, while
 ## TODO: генерация if, else, elif
-## TODO: придумать что делать со string
+## придумать что делать со string
+## TODO: метки, break, skip
 ## генерация инициализации масива
-## TODO: транслировать булевы операции (<=,>=, ==, <, >, !=, |, &)
+## транслировать булевы операции (<=,>=, ==, <, >, !=, |, &)
 ## транслировать математические операции
 ## объявления функций и структур вне main
 
 from node_utils import *
 
-type_dict = {'int': 'i32', 'float': 'double', 'boolean': 'i1'}
+type_dict = {'int': 'i32', 'float': 'double', 'boolean': 'i1', 'string': 'i8*'}
 cmp_dict = {'LT': "slt", 'LE': "sle", 'GT': "sgt", 'GE': "sge", 'EQ': "eq", 'NE': "ne"}
 NL = '\n'
 TAB = '    '
 struct_types = []
-
+const_str_num = 1
 strings = []
 arrays = []
 variables = []
@@ -26,6 +27,7 @@ structs = []
 buffer_num = 1
 condition_counter = 0
 LABEL = 'lab.'
+
 
 def raiseError(x): raise Exception(x)
 
@@ -48,8 +50,9 @@ def TODO(x, y): return None, [f'TODO {x.name}']
 def llvm_load_value(register_ptr, register_type):
     res_register = register_ptr[:-4]
     global buffer_num
+    ll_type = llvm_type_from_string(register_type)
     result = [
-        f"{res_register}.{buffer_num} = load {type_dict[register_type]}, {type_dict[register_type]}* {res_register}.ptr",
+        f"{res_register}.{buffer_num} = load {ll_type}, {ll_type}* {res_register}.ptr",
         f"{res_register}.{buffer_num}"]
     buffer_num += 1
     return register_type, result
@@ -57,8 +60,8 @@ def llvm_load_value(register_ptr, register_type):
 
 def llvm_type(ast, context=None):
     ast.checked = True
-    if ast.value == 'string':
-        return ['string']  # TODO: придумать как поступать с этим кейсом
+    if ast.value in struct_types:
+        return [f'%struct.{ast.value}*']
     else:
         return [type_dict[ast.value]]
 
@@ -176,6 +179,16 @@ def llvm_struct(node, context=None):
     return None, [struct_decl, ""]
 
 
+def init_constants():
+    result = []
+    for s in strings:
+        id = s["id"]
+        size = s["size"]
+        value = s["value"]
+        result.append(f'{id} = private unnamed_addr constant [{size} x i8] c\"{value}\\00\", align 1')
+    return result
+
+
 def spread_nodes(root):
     if is_node(root):
         if root.name == "FUNCTION":
@@ -184,6 +197,7 @@ def spread_nodes(root):
             variables.append(root)
         elif root.name == "STRUCT":
             structs.append(root)
+            struct_types.append(root.get("ID")[0].value)
         elif root.name == "ASSIGN" and root.childs[1].name == "ARRAY_ALLOC":
             array_var = root.childs[0]
             array_alloc = root.childs[1]
@@ -196,7 +210,15 @@ def spread_nodes(root):
                 "size": array_size
             })
         elif root.name == "CONST" and root.get("TYPE")[0].value == "string":
-            strings.append("awdawd")
+            const_type = root.get("TYPE")[0].value
+            const_value = root.get("VALUE")[0].value
+            global const_str_num
+            strings.append({
+                "id": f"@.str.{const_str_num}",
+                "value": const_value,
+                "size": len(const_value) + 1
+            })
+            const_str_num += 1
         for child in root.childs:
             spread_nodes(child)
 
@@ -204,12 +226,19 @@ def spread_nodes(root):
 def llvm_return(node, context):
     node.checked = True
     node.childs[0].checked = True
-    name, type = get_info(node.childs[0])
-    if node.childs[0] != 'CONST':
-        type = context[name]
-        name = '%' + name
+    expr_type, expr_strs = llvm_expression(node.childs[0])
+    # if node.childs[0] != 'CONST':
+    #     type = context[name]
+    #     name = '%' + name
+    ll_type = llvm_type_from_string(expr_type)
+    return expr_type, expr_strs[:-1] + [f'ret {ll_type} {expr_strs[-1]}', expr_strs[-1]]
 
-    return type[0], [f'ret {type_dict[type[1]]} {name}', name]
+
+def llvm_type_from_string(str_type):
+    if str_type in struct_types:
+        return f"%struct.{str_type}*"
+    else:
+        return type_dict[str_type]
 
 
 def llvm_func_def(node, context=None):
@@ -225,9 +254,13 @@ def llvm_func_def(node, context=None):
         args += [f'{llvm_type(arg.childs[0])[0]} %{arg.childs[1].value}']
 
     commands = recursive_run(node.childs[3], [], context)
-
-    return type_dict[f_type[1]], (
-            [f'define {type_dict[f_type[1]]} @{f_name}({", ".join(args)}) {"{"}'] + commands + ['}', f'@{f_name}'])
+    if f_name == "main":
+        commands += ["ret i32 0"]
+    else:
+        f_name = f"func.{f_name}"
+    ll_type = llvm_type_from_string(f_type[1])
+    return f_type[1], (
+            [f'define {ll_type} @{f_name}({", ".join(args)}) {"{"}'] + commands + ['}', f'@{f_name}'])
 
 
 def set_checked(node):
@@ -334,13 +367,21 @@ def start_codegen(ast):
     body = []
 
     spread_nodes(ast)
-
     llvm_result = []
-    for function in functions:
-        llvm_result += recursive_run(function, [])
+
+    consts = init_constants()
+
+    llvm_result += consts + [""]
 
     for struct in structs:
         llvm_result += recursive_run(struct, [])
+
+    llvm_result += [""]
+
+    for function in functions:
+        llvm_result += recursive_run(function, [])
+
+    llvm_result += [""]
 
     main_func_node = create_main_node()
     ast.parent = main_func_node
@@ -494,7 +535,10 @@ def llvm_id(ast, context=None):
         var = find_node_by_id(variables, ast.value)
         var_type = var.get("TYPE")[0].value
         if context is None:
-            var_type, buffer_strs = llvm_load_value(f'%{ast.value}.ptr', var_type)
+            if var_type in struct_types:
+                buffer_strs = [f"%{ast.value}.ptr"]
+            else:
+                var_type, buffer_strs = llvm_load_value(f'%{ast.value}.ptr', var_type)
         else:
             buffer_strs = [f"%{ast.value}.ptr"]
         return var_type, buffer_strs
@@ -508,13 +552,18 @@ def llvm_const(ast, context=None):
         value = ast.get('VALUE')[0].value
         if type == "boolean":
             value = 1 if value == "true" else 0
+        elif type == "string":
+            str_info = find_string_by_value(strings, value)
+            t_type = f"[{str_info['size']} x i8]"
+            value = f"getelementptr inbounds ({t_type}, {t_type}* {str_info['id']}, i32 0, i32 0)"
         return type, [f"{value}"]
     else:
         raise Exception("llvm_const cannot process node with different type from CONST.")
 
 
+# TODO: Решить проблему с вызовом функции в чейнколе, например:  myfunc().memb = 1;
 def llvm_chain_call(ast, context=None):
-    var_id = ast.childs[0].value
+    var_id = ast.get("ID", nest=True)[0].value
     struct_member_name = ast.childs[1].value if (ast.childs[1].name == "ID") else ast.childs[1].get("ID")[0].value
     struct_var = find_node_by_id(variables + functions, var_id)
     struct_id = struct_var.get("TYPE")[0].value
@@ -630,7 +679,7 @@ fdict = {
     'ID': llvm_id,
     'ARRAY_ELEMENT': llvm_array_el,
     'VARIABLE': llvm_variable,
-    'VARIABLE_ARRAY': skip,  # TODO: убратть возможность определения массива без аллокации
+    'VARIABLE_ARRAY': skip,
     'ARRAY_ALLOC': skip,
     'ASSIGN': llvm_assign,
     'SCOPE': TODO,

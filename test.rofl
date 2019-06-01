@@ -1,9 +1,11 @@
-int[] c = int[](123);
-int a;
-int b;
-c[1];
-if (false) {
-a = 5; 
-} else {
-b = 3;
+struct bb {
+int c;
 }
+
+function a() : bb {
+    bb nn;
+    return nn;
+}
+
+bb sda;
+sda.c = 2;
