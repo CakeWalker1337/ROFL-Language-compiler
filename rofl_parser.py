@@ -308,11 +308,29 @@ def p_content_statement_error_1(p):
 
 def p_content_add(p):
     '''content : content variable_decl_primitive SEMI
-            | content variable_decl_array_primitive SEMI
     '''
     p[1].add_childs([p[2]])
     p[0] = p[1]
 
+def p_conent_arr_ptr_err(p):
+    '''content : content variable_decl_array_primitive SEMI'''
+    p[0] = err_node()
+    print(wrap_error(
+        'Array must be allocated.', p.lexer.lineno))
+
+def p_content_add_assign(p):
+    '''content : variable_decl_array_primitive ASSIGN array_type_primitive array_size SEMI
+            | content variable_decl_array_primitive ASSIGN array_type_primitive array_size SEMI'''
+    line = p.lexer.lineno
+    if (len(p) == 6):
+        p[1].add_childs([Node('ASSIGN', childs=[p[2], p[4]], line=line)])
+        p[0] = p[1]
+    else:
+        p[1].add_childs([
+            Node('ASSIGN', childs=[p[2],
+                                   Node('ARRAY_ALLOC', childs=[p[4], p[5]])
+                                   ], line=line)])
+        p[0] = p[1]
 
 def p_empty_content_error(p):
     'content : empty'
