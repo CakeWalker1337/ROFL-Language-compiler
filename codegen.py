@@ -205,6 +205,7 @@ def llvm_return(node, context):
 
     return type[0], [f'ret {type_dict[type[1]]} {name}', name]
 
+
 def llvm_func_def(node, context=None):
     f_name, f_type = get_info(node)
     node.checked = True
@@ -398,8 +399,10 @@ def llvm_array_el(ast, context=None):
         var_id = context["id"]
     ll_type = f"[{array_var['size']} x {type_dict[array_var['type']]}]"
     buff_type, strs = llvm_expression(ast.childs[1])
-    # TODO: рассмотреть кейс, когда индекс массива - константа 
-    loaded_type, loaded_strs = llvm_load_value(strs[-1], buff_type)
+    if "%" in strs[-1]:
+        loaded_type, loaded_strs = llvm_load_value(strs[-1], buff_type)
+    else:
+        loaded_strs = strs
     global buffer_num
     result = strs[:-1] + loaded_strs[:-1] + [
         f"%{var_id}.{buffer_num}.ptr = getelementptr inbounds {ll_type}, {ll_type}* %{var_id}.ptr, i32 0, i32 {loaded_strs[-1]}",
