@@ -235,12 +235,15 @@ def llvm_func_def(node, context=None):
         child.checked = True
 
     args = []
+    allocs, stores = [], []
     for arg in node.childs[1].childs:
         name, type = get_info(arg)
         context[name] = type
         args += [f'{llvm_type(arg.childs[0])[0]} %{arg.childs[1].value}']
+        allocs.append(f'%{name}.ptr = alloca {llvm_type(arg.childs[0])[0]}')
+        stores.append(f'store {llvm_type(arg.childs[0])[0]} %{name}, {llvm_type(arg.childs[0])[0]}* %{name}.ptr')
 
-    commands = recursive_run(node.childs[3], [], context)
+    commands = allocs + stores +recursive_run(node.childs[3], [], context)
     if f_name == "main":
         commands += ["ret i32 0"]
     else:
