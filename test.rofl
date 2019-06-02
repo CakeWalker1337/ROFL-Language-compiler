@@ -1,8 +1,10 @@
 struct c{
-int b;
+int[] b = int[](12);
 }
-function func(string a, int b): c {
+function func(int a, int b): c {
 c aa;
 return aa;
 }
-func('123', 1);
+
+c[] aaa = c[](13);
+aaa[1].b[1] = 10;

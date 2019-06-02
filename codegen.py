@@ -79,7 +79,6 @@ def llvm_array_alloc(ast, context=None):
     var_type = ast.childs[1].get("TYPE")[0].value
     var_size = ast.childs[1].get("VALUE", nest=True)[0].value
     ll_type = llvm_type_from_string(var_type)
-    ll_type = ll_type if ll_type[-1] != "*" else ll_type[:-1]
     return var_type, [
         f'%{var_id}.ptr = alloca [{var_size} x {ll_type}]',
         f'%{var_id}.ptr'
@@ -160,7 +159,8 @@ def llvm_struct(node, context=None):
             array_alloc = child.childs[1]
             array_type = array_alloc.get("TYPE")[0].value
             array_size = array_alloc.get("CONST")[0].get("VALUE")[0].value
-            struct_decl += f"[{array_size} x {type_dict[array_type]}], "
+            ll_array_type = f"[{array_size} x {type_dict[array_type]}]"
+            struct_decl += f"{ll_array_type}, "
         else:
             raise Exception("Unexpected value in structure translate function")
     if len(childs) != 0:
@@ -633,49 +633,47 @@ def llvm_const(ast, context=None):
         raise Exception("llvm_const cannot process node with different type from CONST.")
 
 
-# def llvm_chain_call_copy(ast, context=None):
-#     var
-
-
-# TODO: Решить проблему с вызовом функции в чейнколе, например:  myfunc().memb = 1;
 def llvm_chain_call(ast, context=None):
-    var_id = ast.get("ID", nest=True)[0].value
-    struct_member_name = ast.childs[1].value if (ast.childs[1].name == "ID") else ast.childs[1].get("ID")[0].value
-    struct_var = find_node_by_id(variables, var_id)
-    struct_id = struct_var.get("TYPE")[0].value
-    struct = find_node_by_id(structs, struct_id)
-    struct_members = struct.childs[1].childs
+    ast.checked = True
+    for child in ast.childs:
+        child.checked = True
+    left = ast.childs[0]
+    right = ast.childs[1]
+    right_id = right.value if (right.name == "ID") else right.get("ID")[0].value
+    left_type, left_strs = atom_funcs[left.name](left, True)
+    struct = find_node_by_id(structs, left_type)
+    struct_id = struct.get("ID")[0].value
     member_index = -1
     struct_member = None
-    for ind, member in enumerate(struct_members):
-        if member.get("ID", nest=True)[0].value == struct_member_name:
+    for ind, member in enumerate(struct.childs[1].childs):
+        if member.get("ID", nest=True)[0].value == right_id:
             member_index = ind
             struct_member = member
             break
     if member_index > -1:
         global buffer_num
-        result = [f"%{var_id}.{struct_member_name}.{buffer_num}.ptr = getelementptr inbounds %struct.{struct_id}, " +
-                  f"%struct.{struct_id}* %{var_id}.ptr, i32 0, i32 {member_index}"]
+        result_reg = f"%struct.{struct_id}.{member_index}.{buffer_num}.ptr"
+        result = left_strs[:-1] + [f"{result_reg} = getelementptr inbounds %struct.{struct_id}, " +
+                                   f"%struct.{struct_id}* {left_strs[-1]}, i32 0, i32 {member_index}"]
         if struct_member.name == "ASSIGN":
-            array_register = f"%{var_id}.{struct_member_name}.{buffer_num}"
+            array_register = f"struct.{struct_id}.{member_index}.{buffer_num}"
             array_alloc = struct_member.childs[1]
-            array_size = array_alloc.get("VALUE")[0].value
+            array_size = array_alloc.get("VALUE", nest=True)[0].value
             array_type = array_alloc.childs[0].value
             element_context = {"id": array_register,
                                "type": array_type,
                                "size": array_size}
-            element_type, strs = llvm_array_el(struct_member, element_context)
+            element_type, strs = llvm_array_el(right, element_context)
             result = result + strs
             buffer_num += 1
             return element_type, result
         elif struct_member.name == "VARIABLE":
             if context is None:
-                load_type, load_strs = llvm_load_value(f"%{var_id}.{struct_member_name}.{buffer_num}.ptr",
-                                                   struct_member.get("TYPE")[0].value)
+                load_type, load_strs = llvm_load_value(result_reg, struct_member.get("TYPE")[0].value)
                 result = result + load_strs
             else:
                 load_type = struct_member.get("TYPE")[0].value
-                result.append(f"%{var_id}.{struct_member_name}.{buffer_num}.ptr")
+                result.append(result_reg)
             buffer_num += 1
             return load_type, result
         else:
@@ -684,19 +682,21 @@ def llvm_chain_call(ast, context=None):
     else:
         print(f"Member of struct {struct_id} with id {struct_member_name} not found")
 
-    return None
-
 
 def llvm_array_el(ast, context=None):
     # context != None means that the function has been called from chain call.
     # in this case context has a structure {"id": array_register, "type": array_type, "size": array_size}
-    if context is None or type(context).__name__ is not "dict" or not "size" in context:
-        var_id = ast.get("ID")[0].value
-        array_var = find_array_by_id(arrays, var_id)
-    else:
+    ast.checked = True
+    for child in ast.childs:
+        child.checked = True
+    if context is not None and type(context).__name__ == "dict" and "size" in context:
         array_var = context
         var_id = context["id"]
-    ll_type = f"[{array_var['size']} x {type_dict[array_var['type']]}]"
+    else:
+        var_id = ast.get("ID")[0].value
+        array_var = find_array_by_id(arrays, var_id)
+    pre_type = llvm_type_from_string(array_var['type'])
+    ll_type = f"[{array_var['size']} x {pre_type}]"
     buff_type, strs = llvm_expression(ast.childs[1])
     if "%" in strs[-1]:
         loaded_type, loaded_strs = llvm_load_value(strs[-1], buff_type)
@@ -727,8 +727,10 @@ def llvm_func_call(ast, context=None):
     if len(call_args) != 0:
         ll_call_args = ll_call_args[:-2]
     ll_type = llvm_type_from_string(func_type)
+    global buffer_num
     call_result = [f"%{func_id}.{buffer_num} = call {ll_type} @func.{func_id}({ll_call_args})"]
     result_strs = result_strs + call_result + [f"%{func_id}.{buffer_num}"]
+    buffer_num += 1
     return func_type, result_strs
 
 

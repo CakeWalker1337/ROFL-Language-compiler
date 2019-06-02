@@ -239,7 +239,10 @@ def get_atom_type(atom):
                 desired_id = second.value
             else:
                 desired_id = second.get("ID")[0].value
-            return get_atom_type(find_element_by_id(desired_id, fst_struct.get("CONTENT")[0]))
+            result_type = get_atom_type(find_element_by_id(desired_id, fst_struct.get("CONTENT")[0]))
+            if second.name == "ARRAY_ELEMENT":
+                result_type = result_type.replace("[]", '')
+            return result_type
         else:
             raise Exception("First element hasn\'t got return type of structure")
     looked_id = None
