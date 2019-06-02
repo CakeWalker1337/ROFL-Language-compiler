@@ -527,7 +527,7 @@ def llvm_and_func(expr_type, left, right):
     result = [f'%buffer{buffer_num} = and {ll_type} {left}, {right}',
               f'%buffer{buffer_num}']
     buffer_num += 1
-    return expr_type, result
+    return 'boolean', result
 
 
 def llvm_or_func(expr_type, left, right):
@@ -536,7 +536,7 @@ def llvm_or_func(expr_type, left, right):
     result = [f'%buffer{buffer_num} = or {ll_type} {left}, {right}',
               f'%buffer{buffer_num}']
     buffer_num += 1
-    return expr_type, result
+    return 'boolean', result
 
 
 def llvm_gt_func(expr_type, left, right):
@@ -546,7 +546,7 @@ def llvm_gt_func(expr_type, left, right):
     result = [f'%buffer{buffer_num} = {operator} sgt {ll_type} {left}, {right}',
               f'%buffer{buffer_num}']
     buffer_num += 1
-    return expr_type, result
+    return 'boolean', result
 
 
 def llvm_ge_func(expr_type, left, right):
@@ -556,7 +556,7 @@ def llvm_ge_func(expr_type, left, right):
     result = [f'%buffer{buffer_num} = {operator} sge {ll_type} {left}, {right}',
               f'%buffer{buffer_num}']
     buffer_num += 1
-    return expr_type, result
+    return 'boolean', result
 
 
 def llvm_lt_func(expr_type, left, right):
@@ -566,7 +566,7 @@ def llvm_lt_func(expr_type, left, right):
     result = [f'%buffer{buffer_num} = {operator} slt {ll_type} {left}, {right}',
               f'%buffer{buffer_num}']
     buffer_num += 1
-    return expr_type, result
+    return 'boolean', result
 
 
 def llvm_le_func(expr_type, left, right):
@@ -576,7 +576,7 @@ def llvm_le_func(expr_type, left, right):
     result = [f'%buffer{buffer_num} = {operator} sle {ll_type} {left}, {right}',
               f'%buffer{buffer_num}']
     buffer_num += 1
-    return expr_type, result
+    return 'boolean', result
 
 
 def llvm_eq_func(expr_type, left, right):
@@ -586,7 +586,7 @@ def llvm_eq_func(expr_type, left, right):
     result = [f'%buffer{buffer_num} = {operator} eq {ll_type} {left}, {right}',
               f'%buffer{buffer_num}']
     buffer_num += 1
-    return expr_type, result
+    return 'boolean', result
 
 
 def llvm_ne_func(expr_type, left, right):
@@ -596,7 +596,7 @@ def llvm_ne_func(expr_type, left, right):
     result = [f'%buffer{buffer_num} = {operator} ne {ll_type} {left}, {right}',
               f'%buffer{buffer_num}']
     buffer_num += 1
-    return expr_type, result
+    return 'boolean', result
 # ########################  ATOM FUNCS ########################## #
 
 # Atoms are the nodes with types: ID, CHAIN_CALL, FUNC_CALL, CONST, ARRAY_ELEMENT
