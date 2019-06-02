@@ -1,6 +1,5 @@
-mark:
-function func(int a, int b): int {
-    return b;
+struct c {
+int n;
 }
 do {
     int d = 1 + 1;
@@ -16,4 +15,7 @@ do {
     
 } while(true)
 
-goto mark;
+function func(int a, int b): c {
+    c aa;
+    return aa;
+}

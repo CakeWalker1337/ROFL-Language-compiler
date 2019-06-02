@@ -325,10 +325,10 @@ def p_content_add_assign(p):
     if (len(p) == 6):
         p[0] = Node('CONTENT',
                     line=line,
-                    childs = [Node('ASSIGN',
-                                childs=[p[1],
-                                        Node('ARRAY_ALLOC', childs=[p[3], p[4]])],
-                                line=line)])
+                    childs=[Node('ASSIGN',
+                                 childs=[p[1],
+                                         Node('ARRAY_ALLOC', childs=[p[3], p[4]])],
+                                 line=line)])
     else:
         p[1].add_childs([
             Node('ASSIGN', childs=[p[2],
