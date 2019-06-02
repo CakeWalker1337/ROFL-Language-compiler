@@ -323,8 +323,12 @@ def p_content_add_assign(p):
             | content variable_decl_array_primitive ASSIGN array_type_primitive array_size SEMI'''
     line = p.lexer.lineno
     if (len(p) == 6):
-        p[1].add_childs([Node('ASSIGN', childs=[p[2], p[4]], line=line)])
-        p[0] = p[1]
+        p[0] = Node('CONTENT',
+                    line=line,
+                    childs = [Node('ASSIGN',
+                                childs=[p[1],
+                                        Node('ARRAY_ALLOC', childs=[p[3], p[4]])],
+                                line=line)])
     else:
         p[1].add_childs([
             Node('ASSIGN', childs=[p[2],

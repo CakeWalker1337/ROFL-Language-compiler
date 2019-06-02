@@ -1,11 +1,18 @@
-struct b {
-int a;
+mark:
+function func(int a, int b): int {
+    return b;
 }
+do {
+    int d = 1 + 1;
+    while (d > 2) {
+        d = d - 1;
+        if (d > 5) {
+            d = d + 5;
+        } else {
+            d = 0;
+        }
+    }
+    
+} while(true)
 
-function aa() : int {
-    b cc;
-    return cc.a;
-}
-b c;
-c.a = 1;
-
+goto mark;

@@ -1,16 +1,3 @@
-## генерация struct
-## генерация function
-## транслировать дефолтные типы переменных (int -> i32, ...) кроме string
-## генерация объявления внутренних переменных (после типов)
-## TODO: генерация dowhile, while
-## TODO: генерация if, else, elif
-## придумать что делать со string
-## TODO: метки, break, skip
-## генерация инициализации масива
-## транслировать булевы операции (<=,>=, ==, <, >, !=, |, &)
-## транслировать математические операции
-## объявления функций и структур вне main
-
 from node_utils import *
 
 type_dict = {'int': 'i32', 'float': 'double', 'boolean': 'i1', 'string': 'i8*'}
@@ -248,12 +235,15 @@ def llvm_func_def(node, context=None):
         child.checked = True
 
     args = []
+    allocs, stores = [], []
     for arg in node.childs[1].childs:
         name, type = get_info(arg)
         context[name] = type
         args += [f'{llvm_type(arg.childs[0])[0]} %{arg.childs[1].value}']
+        allocs.append(f'%{name}.ptr = alloca {llvm_type(arg.childs[0])[0]}')
+        stores.append(f'store {llvm_type(arg.childs[0])[0]} %{name}, {llvm_type(arg.childs[0])[0]}* %{name}.ptr')
 
-    commands = recursive_run(node.childs[3], [], context)
+    commands = allocs + stores +recursive_run(node.childs[3], [], context)
     if f_name == "main":
         commands += ["ret i32 0"]
     else:
@@ -376,6 +366,25 @@ def llvm_do_while(node, context):
 
     condition_counter += 2
     return ret
+
+
+def llvm_mark(node, context=None):
+    set_checked(node)
+    name = node.childs[0].value
+    return 'label', [
+        f'br label %{name}',
+        f'{name}:',
+        name
+    ]
+
+
+def llvm_goto(node, context=None):
+    set_checked(node)
+    name = node.value
+    return None, [
+        f'br label %{name}',
+        None
+    ]
 
 
 def recursive_run(node, res, context={}):
@@ -716,7 +725,7 @@ atom_funcs = {'ID': llvm_id,
 fdict = {
     'ERROR': lambda x, y: raiseError('error in ast'),
     'FUNCTION': llvm_func_def,
-    'STRUCT': llvm_struct, 'CONTENT': TODO,  # ?
+    'STRUCT': llvm_struct, 'CONTENT': skip,  # ?
     'VALUE': skip,
     'TYPE': skip,
     'CONST': llvm_const,
@@ -727,7 +736,7 @@ fdict = {
     'ARRAY_ALLOC': skip,
     'ASSIGN': llvm_assign,
     'SCOPE': TODO,
-    'FUNC_ARGS': TODO,
+    'FUNC_ARGS': skip,
     'RETURN': llvm_return,
     'EMPTY_STATEMENT': skip,
     'PLUS': llvm_expression,
@@ -754,8 +763,9 @@ fdict = {
     'ELSE': llvm_cond_else,
     'DO_WHILE': llvm_do_while,
     'WHILE': llvm_while,
-    'MARK': TODO,
-    'GOTO': TODO,
+    'MARK': llvm_mark,
+    'GOTO': llvm_goto,
     'CALL_ARGS': TODO,
     'FUNC_CALL': llvm_expression
 }
+# TODO: сделать проверку на повторяющиеся MARK в семантике

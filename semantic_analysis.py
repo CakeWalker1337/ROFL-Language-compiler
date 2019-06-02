@@ -73,7 +73,7 @@ def check_var_definition(node, types=default_types,
             # also check if there is a usage of struct name as a variable
             if name in types:
                 errors.append(wrap_error('Variable name expected.', d.line))
-            elif not name in variables:
+            elif not name in variables and d.parent.name != 'MARK':
                 errors.append(wrap_error('Usage of undefined variable "'+name+'"', d.line))
             if d.parent.name == 'ARRAY_ELEMENT':
                 if (variables[name][0] != 'VARIABLE_ARRAY'):
