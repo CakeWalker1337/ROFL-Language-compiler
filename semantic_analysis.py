@@ -460,5 +460,17 @@ def check_conditions(root):
 #                 if struct.get("ID")[0].value == elem.parent.childs[0].get("ID")[0]
 #         scope = get_nearest_scope(elem)
 
+def check_repeated_marks(node):
+    marks = node.get('MARK', True)
+    mark_names = []
+    errors = []
+    for mark in marks:
+        name = mark.childs[0].value
+        if name in mark_names:
+            errors.append(wrap_error(f'Repeated mark "{name}" definition.', mark.line))
+        else:
+            mark_names.append(name)
+
+    return errors
 
 #TODO: Add comments and check func params while calling
