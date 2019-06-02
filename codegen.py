@@ -635,9 +635,11 @@ def llvm_chain_call(ast, context=None):
             buffer_num += 1
             return element_type, result
         elif struct_member.name == "VARIABLE":
-            result.append(f"%{var_id}.{struct_member_name}.{buffer_num}.ptr")
+            load_type, load_strs = llvm_load_value(f"%{var_id}.{struct_member_name}.{buffer_num}.ptr",
+                                                   struct_member.get("TYPE")[0].value)
+            result = result + load_strs
             buffer_num += 1
-            return struct_member.get("TYPE")[0].value, result
+            return load_type, result
         else:
             print(f"Incorrect member of struct {struct_id}")
 
@@ -683,7 +685,7 @@ def llvm_func_call(ast, context=None):
         ll_call_args += f"{type_dict[arg_type]} {arg_strs[-1]}, "
     if len(call_args) != 0:
         ll_call_args = ll_call_args[:-2]
-    call_result = [f"%{func_id}.{buffer_num} = call {type_dict[func_type]} @{func_id}({ll_call_args})"]
+    call_result = [f"%{func_id}.{buffer_num} = call {type_dict[func_type]} @func.{func_id}({ll_call_args})"]
     result_strs = result_strs + call_result + [f"%{func_id}.{buffer_num}"]
     return func_type, result_strs
 
