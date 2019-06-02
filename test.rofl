@@ -1,18 +1,9 @@
-mark:
-function func(int a, int b): int {
-    return b;
+struct c {
+int n;
 }
-do {
-    int d = 1 + 1;
-    while (d > 2) {
-        d = d - 1;
-        if (d > 5) {
-            d = d + 5;
-        } else {
-            d = 0;
-        }
-    }
-    
-} while(true)
 
-goto mark;
+
+function func(int a, int b): c {
+    c aa;
+    return aa;
+}

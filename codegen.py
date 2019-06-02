@@ -48,7 +48,7 @@ def llvm_load_value(register_ptr, register_type):
 def llvm_type(ast, context=None):
     ast.checked = True
     if ast.value in struct_types:
-        return [f'%struct.{ast.value}*']
+        return [f'%struct.{ast.value}']
     else:
         return [type_dict[ast.value]]
 
@@ -78,9 +78,10 @@ def llvm_array_alloc(ast, context=None):
     var_id = ast.childs[0].get("ID")[0].value
     var_type = ast.childs[1].get("TYPE")[0].value
     var_size = ast.childs[1].get("VALUE", nest=True)[0].value
-
+    ll_type = llvm_type_from_string(var_type)
+    ll_type = ll_type if ll_type[-1] != "*" else ll_type[:-1]
     return var_type, [
-        f'%{var_id}.ptr = alloca [{var_size} x {var_type}]',
+        f'%{var_id}.ptr = alloca [{var_size} x {ll_type}]',
         f'%{var_id}.ptr'
     ]
 
@@ -98,7 +99,7 @@ def llvm_assign(ast, context=None):
         arr_type, arr_strs = llvm_array_alloc(ast)
         return arr_type, arr_strs
     if left.name == 'CHAIN_CALL':
-        left_type, left_strs = llvm_chain_call(left)
+        left_type, left_strs = llvm_chain_call(left, True)
     elif left.name == 'VARIABLE':
         left_type, left_strs = llvm_variable(left)
     elif left.name == 'ID':
@@ -109,10 +110,12 @@ def llvm_assign(ast, context=None):
     right_type, right_strs = llvm_expression(right)
     left_ptr = left_strs[-1]
     right_ptr = right_strs[-1]
+    left_ll_type = llvm_type_from_string(left_type)
+    right_ll_type = llvm_type_from_string(right_type)
     return left_type, \
            left_strs[:-1] + \
            right_strs[:-1] + \
-           [f"store {type_dict[right_type]} {right_ptr}, {type_dict[left_type]}* {left_ptr}", left_ptr]
+           [f"store {right_ll_type} {right_ptr}, {left_ll_type}* {left_ptr}", left_ptr]
 
 
 def llvm_expression(ast, context=None):
@@ -223,7 +226,7 @@ def llvm_return(node, context):
 
 def llvm_type_from_string(str_type):
     if str_type in struct_types:
-        return f"%struct.{str_type}*"
+        return f"%struct.{str_type}"
     else:
         return type_dict[str_type]
 
@@ -243,7 +246,7 @@ def llvm_func_def(node, context=None):
         allocs.append(f'%{name}.ptr = alloca {llvm_type(arg.childs[0])[0]}')
         stores.append(f'store {llvm_type(arg.childs[0])[0]} %{name}, {llvm_type(arg.childs[0])[0]}* %{name}.ptr')
 
-    commands = allocs + stores +recursive_run(node.childs[3], [], context)
+    commands = allocs + stores + recursive_run(node.childs[3], [], context)
     if f_name == "main":
         commands += ["ret i32 0"]
     else:
@@ -586,10 +589,7 @@ def llvm_id(ast, context=None):
         var = find_node_by_id(variables, ast.value)
         var_type = var.get("TYPE")[0].value
         if context is None:
-            if var_type in struct_types:
-                buffer_strs = [f"%{ast.value}.ptr"]
-            else:
-                var_type, buffer_strs = llvm_load_value(f'%{ast.value}.ptr', var_type)
+            var_type, buffer_strs = llvm_load_value(f'%{ast.value}.ptr', var_type)
         else:
             buffer_strs = [f"%{ast.value}.ptr"]
         return var_type, buffer_strs
@@ -616,7 +616,7 @@ def llvm_const(ast, context=None):
 def llvm_chain_call(ast, context=None):
     var_id = ast.get("ID", nest=True)[0].value
     struct_member_name = ast.childs[1].value if (ast.childs[1].name == "ID") else ast.childs[1].get("ID")[0].value
-    struct_var = find_node_by_id(variables + functions, var_id)
+    struct_var = find_node_by_id(variables, var_id)
     struct_id = struct_var.get("TYPE")[0].value
     struct = find_node_by_id(structs, struct_id)
     struct_members = struct.childs[1].childs
@@ -644,9 +644,13 @@ def llvm_chain_call(ast, context=None):
             buffer_num += 1
             return element_type, result
         elif struct_member.name == "VARIABLE":
-            load_type, load_strs = llvm_load_value(f"%{var_id}.{struct_member_name}.{buffer_num}.ptr",
+            if context is None:
+                load_type, load_strs = llvm_load_value(f"%{var_id}.{struct_member_name}.{buffer_num}.ptr",
                                                    struct_member.get("TYPE")[0].value)
-            result = result + load_strs
+                result = result + load_strs
+            else:
+                load_type = struct_member.get("TYPE")[0].value
+                result.append(f"%{var_id}.{struct_member_name}.{buffer_num}.ptr")
             buffer_num += 1
             return load_type, result
         else:
@@ -694,7 +698,8 @@ def llvm_func_call(ast, context=None):
         ll_call_args += f"{type_dict[arg_type]} {arg_strs[-1]}, "
     if len(call_args) != 0:
         ll_call_args = ll_call_args[:-2]
-    call_result = [f"%{func_id}.{buffer_num} = call {type_dict[func_type]} @func.{func_id}({ll_call_args})"]
+    ll_type = llvm_type_from_string(func_type)
+    call_result = [f"%{func_id}.{buffer_num} = call {ll_type} @func.{func_id}({ll_call_args})"]
     result_strs = result_strs + call_result + [f"%{func_id}.{buffer_num}"]
     return func_type, result_strs
 
