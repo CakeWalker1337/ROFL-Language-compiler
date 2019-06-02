@@ -4,14 +4,15 @@ function func(int a, int b): int {
 }
 do {
     int d = 1 + 1;
-    while (d > 2) {
-        d = d - 1;
-        if (d > 5) {
-            d = d + 5;
+    while(d == 2) {
+        d = 3;
+        if (d != 3) {
+            skip;
         } else {
-            d = 0;
+            break;
         }
     }
+    break;
     
 } while(true)
 

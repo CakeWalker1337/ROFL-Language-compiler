@@ -260,19 +260,21 @@ def set_checked(node):
             set_checked(child)
 
 
-def llvm_condition(node, context=None):
+def llvm_condition(node, context={}):
     global condition_counter    
     result = []
 
-    type, cond_results = llvm_cond_if(node.childs[0], None)
+    type, cond_results = llvm_cond_if(node.childs[0], context)
     condition_counter += 3
     result += cond_results[:-1]
     cond_close_label = cond_results[-1]
+    context['#cond.close'] = cond_close_label
 
     if len(node.childs) > 1:
         for i in range(1, len(node.childs)):
             child = node.childs[i]
-            type, cond_results = fdict[child.name](child, cond_close_label)
+            # вместо context был cond_close_label, возможна ошибка
+            type, cond_results = fdict[child.name](child, context) 
             condition_counter += 2
             result += cond_results[:-1]
 
@@ -281,12 +283,12 @@ def llvm_condition(node, context=None):
     return None, result + [f'br label %{cond_close_label}', f'{cond_close_label}:', None]
 
 
-def llvm_cond_if(node, context=None):
+def llvm_cond_if(node, context={}):
     res_type, result = llvm_expression(node.childs[0].childs[0])
     expr_result = result[-1]
-    inner_commands = result[:-1] + recursive_run(node.childs[1], [])
+    inner_commands = recursive_run(node.childs[1], [], context)
 
-    return 'label', [
+    return 'label', result[:-1] + [
         f'br {type_dict[res_type]} {expr_result} label %{LABEL}{condition_counter}, label %{LABEL}{condition_counter+1}', 
         f'{LABEL}{condition_counter}:'
     ] + inner_commands + [
@@ -296,31 +298,33 @@ def llvm_cond_if(node, context=None):
     ]
 
 
-def llvm_cond_elif(node, context=None):
-    # context is the last label in condition
+def llvm_cond_elif(node, context={}):
+    # context is the dictionary with '#cond.close' name
+    cond_close_label = context['#cond.close']
     res_type, result = llvm_expression(node.childs[0].childs[0])
     expr_result = result[-1]
-    inner_commands = result[:-1] + recursive_run(node.childs[1], [])
+    inner_commands = recursive_run(node.childs[1], [], context)
 
-    return 'label', [
+    return 'label', result[:-1] + [
         f'br {type_dict[res_type]} {expr_result} label %{LABEL}{condition_counter}, label %{LABEL}{condition_counter+1}', 
         f'{LABEL}{condition_counter}:'
     ] + inner_commands + [
-        f'br label %{context}',
+        f'br label %{cond_close_label}',
         f'{LABEL}{condition_counter+1}:',
         None
     ]
 
 
-def llvm_cond_else(node, context=None):
-    # context is the last label in condition
-    inner_commands = recursive_run(node.childs[0], [])
+def llvm_cond_else(node, context={}):
+    # context is the dictionary with '#cond.close' name
+    cond_close_label = context['#cond.close']
+    inner_commands = recursive_run(node.childs[0], [], context)
 
     return 'label', [
         f'br label %{LABEL}{condition_counter}', 
         f'{LABEL}{condition_counter}:'
     ] + inner_commands + [
-        f'br label %{context}',
+        f'br label %{cond_close_label}',
         f'{LABEL}{condition_counter+1}:',
         None
     ]
@@ -330,20 +334,24 @@ def llvm_while(node, context):
     global condition_counter
     res_type, result = llvm_expression(node.childs[0].childs[0])
     expr_result = result[-1]
-    inner_commands = result[:-1] + recursive_run(node.childs[1], [])
+    start_label_num, end_label_num = condition_counter, condition_counter+1
+    condition_counter += 2
+    context = {'#begin': f'{LABEL}{start_label_num}',
+                '#end': f'{LABEL}{end_label_num}'}
+    inner_commands = recursive_run(node.childs[1], [], context)
     set_checked(node)
-    cycle_cond = f'br {type_dict[res_type]} {expr_result} label %{LABEL}{condition_counter}, label %{LABEL}{condition_counter+1}'
+    cycle_cond = f'br {type_dict[res_type]} {expr_result} label %{LABEL}{start_label_num}, label %{LABEL}{end_label_num}'
 
-    ret = 'label', [
+    ret = 'label', result[:-1] + [
         cycle_cond,
-        f'{LABEL}{condition_counter}:'
+        f'{LABEL}{start_label_num}:'
     ] + inner_commands + [
         cycle_cond,
-        f'{LABEL}{condition_counter+1}:',
+        f'{LABEL}{end_label_num}:',
         None
     ]
-    condition_counter += 2
 
+    condition_counter += 2
     return ret
 
 
@@ -351,21 +359,34 @@ def llvm_do_while(node, context):
     global condition_counter
     res_type, result = llvm_expression(node.childs[1].childs[0])
     expr_result = result[-1]
-    inner_commands = result[:-1] + recursive_run(node.childs[0], [])
+    start_label_num, end_label_num = condition_counter, condition_counter+1
+    condition_counter += 2
+    context = {'#begin': f'{LABEL}{start_label_num}',
+                '#end': f'{LABEL}{end_label_num}'}
+    inner_commands = recursive_run(node.childs[0], [], context)
     set_checked(node)
-    cycle_cond = f'br {type_dict[res_type]} {expr_result} label %{LABEL}{condition_counter}, label %{LABEL}{condition_counter+1}'
+    cycle_cond = f'br {type_dict[res_type]} {expr_result} label %{LABEL}{start_label_num}, label %{LABEL}{end_label_num}'
 
-    ret = 'label', [
-        f'br label %{LABEL}{condition_counter}',
-        f'{LABEL}{condition_counter}:'
+    ret = 'label', result[:-1] + [
+        f'br label %{LABEL}{start_label_num}',
+        f'{LABEL}{start_label_num}:'
     ] + inner_commands + [
         cycle_cond,
-        f'{LABEL}{condition_counter+1}:',
+        f'{LABEL}{end_label_num}:',
         None
     ]
 
-    condition_counter += 2
     return ret
+
+
+def llvm_skip(node, context=None):
+    # context = {'#begin': start_label, '#end': end_label}
+    return None, [f'br label %{context["#begin"]}', None]
+
+
+def llvm_break(node, context=None):
+    # context = {'#begin': start_label, '#end': end_label}
+    return None, [f'br label %{context["#end"]}', None]
 
 
 def llvm_mark(node, context=None):
@@ -764,6 +785,8 @@ fdict = {
     'MARK': llvm_mark,
     'GOTO': llvm_goto,
     'CALL_ARGS': TODO,
-    'FUNC_CALL': llvm_expression
+    'FUNC_CALL': llvm_expression,
+    'BREAK': llvm_break,
+    'SKIP': llvm_skip
 }
 # TODO: сделать проверку на повторяющиеся MARK в семантике
