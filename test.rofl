@@ -1,5 +1,7 @@
-
-
+mark:
+function func(int a, int b): int {
+    return b;
+}
 do {
     int d = 1 + 1;
     while (d > 2) {
@@ -12,3 +14,5 @@ do {
     }
     
 } while(true)
+
+goto mark;
