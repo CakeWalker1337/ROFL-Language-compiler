@@ -292,7 +292,7 @@ def llvm_cond_if(node, context={}):
     inner_commands = recursive_run(node.childs[1], [], context)
 
     return 'label', result[:-1] + [
-        f'br {type_dict[res_type]} {expr_result} label %{LABEL}{condition_counter}, label %{LABEL}{condition_counter+1}', 
+        f'br {type_dict[res_type]} {expr_result}, label %{LABEL}{condition_counter}, label %{LABEL}{condition_counter+1}', 
         f'{LABEL}{condition_counter}:'
     ] + inner_commands + [
         f'br label %{LABEL}{condition_counter+2}',
@@ -309,7 +309,7 @@ def llvm_cond_elif(node, context={}):
     inner_commands = recursive_run(node.childs[1], [], context)
 
     return 'label', result[:-1] + [
-        f'br {type_dict[res_type]} {expr_result} label %{LABEL}{condition_counter}, label %{LABEL}{condition_counter+1}', 
+        f'br {type_dict[res_type]} {expr_result}, label %{LABEL}{condition_counter}, label %{LABEL}{condition_counter+1}', 
         f'{LABEL}{condition_counter}:'
     ] + inner_commands + [
         f'br label %{cond_close_label}',
@@ -343,7 +343,7 @@ def llvm_while(node, context):
                 '#end': f'{LABEL}{end_label_num}'}
     inner_commands = recursive_run(node.childs[1], [], context)
     set_checked(node)
-    cycle_cond = f'br {type_dict[res_type]} {expr_result} label %{LABEL}{start_label_num}, label %{LABEL}{end_label_num}'
+    cycle_cond = f'br {type_dict[res_type]} {expr_result}, label %{LABEL}{start_label_num}, label %{LABEL}{end_label_num}'
 
     ret = 'label', result[:-1] + [
         cycle_cond,
@@ -368,7 +368,7 @@ def llvm_do_while(node, context):
                 '#end': f'{LABEL}{end_label_num}'}
     inner_commands = recursive_run(node.childs[0], [], context)
     set_checked(node)
-    cycle_cond = f'br {type_dict[res_type]} {expr_result} label %{LABEL}{start_label_num}, label %{LABEL}{end_label_num}'
+    cycle_cond = f'br {type_dict[res_type]} {expr_result}, label %{LABEL}{start_label_num}, label %{LABEL}{end_label_num}'
 
     ret = 'label', result[:-1] + [
         f'br label %{LABEL}{start_label_num}',
