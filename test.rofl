@@ -1,21 +1,8 @@
-struct c {
-int n;
+struct c{
+int b;
 }
-do {
-    int d = 1 + 1;
-    while(d == 2) {
-        d = 3;
-        if (d != 3) {
-            skip;
-        } else {
-            break;
-        }
-    }
-    break;
-    
-} while(true)
-
-function func(int a, int b): c {
-    c aa;
-    return aa;
+function func(string a, int b): c {
+c aa;
+return aa;
 }
+func('123', 1);

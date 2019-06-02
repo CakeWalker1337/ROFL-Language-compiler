@@ -633,6 +633,10 @@ def llvm_const(ast, context=None):
         raise Exception("llvm_const cannot process node with different type from CONST.")
 
 
+# def llvm_chain_call_copy(ast, context=None):
+#     var
+
+
 # TODO: Решить проблему с вызовом функции в чейнколе, например:  myfunc().memb = 1;
 def llvm_chain_call(ast, context=None):
     var_id = ast.get("ID", nest=True)[0].value
@@ -707,6 +711,9 @@ def llvm_array_el(ast, context=None):
 
 
 def llvm_func_call(ast, context=None):
+    ast.checked = True
+    for child in ast.childs:
+        child.checked = True
     func_id = ast.get("ID")[0].value
     func_decl = find_node_by_id(functions, func_id)
     func_type = func_decl.get("TYPE")[0].value
