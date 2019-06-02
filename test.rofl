@@ -1,11 +1,14 @@
-struct bb {
-int c;
-}
 
-function a() : bb {
-    bb nn;
-    return nn;
-}
 
-bb sda;
-sda.c = 2;
+do {
+    int d = 1 + 1;
+    while (d > 2) {
+        d = d - 1;
+        if (d > 5) {
+            d = d + 5;
+        } else {
+            d = 0;
+        }
+    }
+    
+} while(true)
