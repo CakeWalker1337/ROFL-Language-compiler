@@ -1,20 +1,30 @@
 
-%struct.a = type {i32}
 
-define %struct.a @func.ss() {
-    %c.ptr = alloca %struct.a
-    %c.1 = load %struct.a, %struct.a* %c.ptr
-    ret %struct.a %c.1
+define i32 @func.f1(i32 %a) {
+    %a.ptr = alloca i32
+    store i32 %a, i32* %a.ptr
+    %a.1 = load i32, i32* %a.ptr
+    %buffer3 = getelementptr inbounds [4 x i8], [4 x i8]* @.str.1, i32 0, i32 0 
+    call i32 (i8*, ...) @printf(i8* %buffer3, i32 %a.1)
+    %a.4 = load i32, i32* %a.ptr
+    %buffer5 = icmp slt i32 %a.4, 5
+    br i1 %buffer5, label %lab.0, label %lab.1
+lab.0:
+    %a.6 = load i32, i32* %a.ptr
+    %a.7 = load i32, i32* %a.ptr
+    %buffer8 = add i32 %a.7, 1
+    %f1.9 = call i32 @func.f1(i32 %buffer8)
+    %buffer10 = add i32 %a.6, %f1.9
+    ret i32 %buffer10
+    br label %lab.2
+lab.1:
+    br label %lab.2
+lab.2:
+    ret i32 5
 }
 
 define i32 @main() {
-    %ss.2 = call %struct.a @func.ss()
-    %ss.3.ptr = alloca %struct.a
-    %store a %ss.2, a* ss.3.ptr
-    %struct.a.0.4.ptr = getelementptr inbounds %struct.a, %struct.a* %ss.3.ptr, i32 0, i32 0
-    %struct.a.0.4.4 = load i32, i32* %struct.a.0.4.ptr
-    %buffer7 = getelementptr inbounds [4 x i8], [4 x i8]* @.str.1, i32 0, i32 0 
-    call i32 (i8*, ...) @printf(i8* %buffer7, i32 %struct.a.0.4.4)
+    %f1.11 = call i32 @func.f1(i32 1)
     ret i32 0
 }
 

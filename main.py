@@ -8,6 +8,7 @@ from semantic_analysis import *
 from syntax_analysis import *
 from codegen import start_codegen
 import argparse 
+import copy
 
 import xml.etree.ElementTree as etree
 from xml.dom import minidom
@@ -86,6 +87,7 @@ if __name__ == "__main__":
         text = f.read()
         ply_parser = yacc.yacc(debug=0)
         result = ply_parser.parse(text)
+        result_translate = copy.deepcopy(result)
         print_xml_to_file = True
         print_xml_to_console = True
 
@@ -114,7 +116,7 @@ if __name__ == "__main__":
                         xmlfile = open(join(getcwd(), "program.xml"), "w+")
                         xmlfile.write(prettify(xml_result))
 
-                    code = llvm_prettify(start_codegen(result))
+                    code = llvm_prettify(start_codegen(result_translate))
                     print(code)
                     llfile = open(join(getcwd(), "test.ll"), "w+")
                     llfile.write(code)
@@ -122,7 +124,7 @@ if __name__ == "__main__":
                     print(result)
                     print("\n")
 
-                    code = llvm_prettify(start_codegen(result))
+                    code = llvm_prettify(start_codegen(result_translate))
                     print(code)
                     llfile = open(join(getcwd(), "test.ll"), "w+")
                     llfile.write(code)

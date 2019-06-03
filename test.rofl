@@ -1,10 +1,46 @@
-struct a{
-int b;
+struct str {
+    int a;
+}
+str[] s = str[](8);
+
+s[0].a = 0;
+s[1].a = 3;
+s[2].a = 4;
+s[3].a = 6;
+s[4].a = 7;
+s[5].a = 1;
+s[6].a = 2;
+s[7].a = 0;
+
+function partition(str[] s, int low, int high): int {
+ 
+    int pivot = s[high].a;
+    int i = low;
+    int j = high;
+    while(i < (high - 1)) {
+        int num = s[j].a;
+        if (num <= pivot) {
+            str tmp = s[j];
+            s[j] = s[i];
+            s[i] = tmp;
+            i = i + 1;
+        }
+    }
+    str tmp1 = s[i];
+    s[i] = s[high];
+    s[high] = tmp1;
+    return i;
 }
 
-function ss() : a {
-    a c;
-    return c;
+function quicksort(str[] s, int low, int high): int {
+    if (low < high) {
+        int p = partition(s, low, high);
+        quicksort(s, low, p - 1);
+        quicksort(s, p + 1, high);
+    }
+
+    return 0;
 }
 
-print(ss().b);
+
+quicksort(s, 0, 7);

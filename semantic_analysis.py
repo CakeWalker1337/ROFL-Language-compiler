@@ -435,7 +435,8 @@ def check_array_allocation(tree):
 
     for d in arr_defs:
         if d.parent.name != 'ASSIGN':
-            errors.append(wrap_error('Array must be allocated.', d.line))
+            if not d.parent and d.parent.parent and d.parent.parent.name == 'FUNCTION' and d in d.parent.parent.get('FUNC_ARGS').childs:
+                errors.append(wrap_error('Array must be allocated.', d.line))
     
     return errors
 
