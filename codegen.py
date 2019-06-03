@@ -126,7 +126,7 @@ def llvm_expression(ast, context=None):
             expr_type, strs = atom_funcs[node.name](node, context)
             if len(strs[-1]) >= 4 and strs[-1][-4:] == ".ptr":
                 expr_type, load_strs = llvm_load_value(strs[-1], expr_type)
-                strs = strs[:-1] + load_strs 
+                strs = strs[:-1] + load_strs
             return expr_type, strs
         elif is_expression(node):
             left_type, left_strs = recursive_run(node.childs[0])
@@ -274,7 +274,7 @@ def set_checked(node):
 
 
 def llvm_condition(node, context={}):
-    global condition_counter    
+    global condition_counter
     result = []
 
     type, cond_results = llvm_cond_if(node.childs[0], context)
@@ -287,7 +287,7 @@ def llvm_condition(node, context={}):
         for i in range(1, len(node.childs)):
             child = node.childs[i]
             # вместо context был cond_close_label, возможна ошибка
-            type, cond_results = fdict[child.name](child, context) 
+            type, cond_results = fdict[child.name](child, context)
             condition_counter += 2
             result += cond_results[:-1]
 
@@ -302,13 +302,13 @@ def llvm_cond_if(node, context={}):
     inner_commands = recursive_run(node.childs[1], [], context)
 
     return 'label', result[:-1] + [
-        f'br {type_dict[res_type]} {expr_result}, label %{LABEL}{condition_counter}, label %{LABEL}{condition_counter+1}', 
+        f'br {type_dict[res_type]} {expr_result}, label %{LABEL}{condition_counter}, label %{LABEL}{condition_counter+1}',
         f'{LABEL}{condition_counter}:'
     ] + inner_commands + [
-        f'br label %{LABEL}{condition_counter+2}',
-        f'{LABEL}{condition_counter+1}:',
-        f'{LABEL}{condition_counter+2}'
-    ]
+               f'br label %{LABEL}{condition_counter+2}',
+               f'{LABEL}{condition_counter+1}:',
+               f'{LABEL}{condition_counter+2}'
+           ]
 
 
 def llvm_cond_elif(node, context={}):
@@ -319,13 +319,13 @@ def llvm_cond_elif(node, context={}):
     inner_commands = recursive_run(node.childs[1], [], context)
 
     return 'label', result[:-1] + [
-        f'br {type_dict[res_type]} {expr_result}, label %{LABEL}{condition_counter}, label %{LABEL}{condition_counter+1}', 
+        f'br {type_dict[res_type]} {expr_result}, label %{LABEL}{condition_counter}, label %{LABEL}{condition_counter+1}',
         f'{LABEL}{condition_counter}:'
     ] + inner_commands + [
-        f'br label %{cond_close_label}',
-        f'{LABEL}{condition_counter+1}:',
-        None
-    ]
+               f'br label %{cond_close_label}',
+               f'{LABEL}{condition_counter+1}:',
+               None
+           ]
 
 
 def llvm_cond_else(node, context={}):
@@ -334,20 +334,20 @@ def llvm_cond_else(node, context={}):
     inner_commands = recursive_run(node.childs[0], [], context)
 
     return 'label', [
-        f'br label %{LABEL}{condition_counter}', 
+        f'br label %{LABEL}{condition_counter}',
         f'{LABEL}{condition_counter}:'
     ] + inner_commands + [
-        f'br label %{cond_close_label}',
-        f'{LABEL}{condition_counter+1}:',
-        None
-    ]
+               f'br label %{cond_close_label}',
+               f'{LABEL}{condition_counter+1}:',
+               None
+           ]
 
 
 def llvm_while(node, context):
     global condition_counter
     res_type, result = llvm_expression(node.childs[0].childs[0])
     expr_result = result[-1]
-    condition_label_num, start_label_num, end_label_num = condition_counter,condition_counter+1, condition_counter+2
+    condition_label_num, start_label_num, end_label_num = condition_counter, condition_counter + 1, condition_counter + 2
     condition_counter += 3
     context['#begin'] = f'{LABEL}{start_label_num}'
     context['#end'] = f'{LABEL}{end_label_num}'
@@ -355,16 +355,16 @@ def llvm_while(node, context):
     set_checked(node)
     cycle_cond = f'br {type_dict[res_type]} {expr_result}, label %{LABEL}{start_label_num}, label %{LABEL}{end_label_num}'
 
-    ret = 'label',  [
-        f'br label %{LABEL}{condition_label_num}',        
-        f'{LABEL}{condition_label_num}:'] + result[:-1] + [
-        cycle_cond,
-        f'{LABEL}{start_label_num}:'
-    ] + inner_commands + [
+    ret = 'label', [
         f'br label %{LABEL}{condition_label_num}',
-        f'{LABEL}{end_label_num}:',
-        None
-    ]
+        f'{LABEL}{condition_label_num}:'] + result[:-1] + [
+              cycle_cond,
+              f'{LABEL}{start_label_num}:'
+          ] + inner_commands + [
+              f'br label %{LABEL}{condition_label_num}',
+              f'{LABEL}{end_label_num}:',
+              None
+          ]
 
     condition_counter += 2
     return ret
@@ -374,7 +374,7 @@ def llvm_do_while(node, context):
     global condition_counter
     res_type, result = llvm_expression(node.childs[1].childs[0])
     expr_result = result[-1]
-    start_label_num, end_label_num = condition_counter, condition_counter+1
+    start_label_num, end_label_num = condition_counter, condition_counter + 1
     condition_counter += 2
     context['#begin'] = f'{LABEL}{start_label_num}'
     context['#end'] = f'{LABEL}{end_label_num}'
@@ -386,10 +386,10 @@ def llvm_do_while(node, context):
         f'br label %{LABEL}{start_label_num}',
         f'{LABEL}{start_label_num}:'
     ] + inner_commands + result[:-1] + [
-        cycle_cond,
-        f'{LABEL}{end_label_num}:',
-        None
-    ]
+              cycle_cond,
+              f'{LABEL}{end_label_num}:',
+              None
+          ]
 
     return ret
 
@@ -455,7 +455,6 @@ def start_codegen(ast):
 
     spread_nodes(ast)
     llvm_result = []
-
 
     llvm_result += [""]
 
@@ -611,6 +610,8 @@ def llvm_ne_func(expr_type, left, right):
               f'%buffer{buffer_num}']
     buffer_num += 1
     return 'boolean', result
+
+
 # ########################  ATOM FUNCS ########################## #
 
 # Atoms are the nodes with types: ID, CHAIN_CALL, FUNC_CALL, CONST, ARRAY_ELEMENT
@@ -645,6 +646,7 @@ def llvm_const(ast, context=None):
 
 
 def llvm_chain_call(ast, context=None):
+    global buffer_num
     ast.checked = True
     for child in ast.childs:
         child.checked = True
@@ -652,8 +654,14 @@ def llvm_chain_call(ast, context=None):
     right = ast.childs[1]
     right_id = right.value if (right.name == "ID") else right.get("ID")[0].value
     left_type, left_strs = atom_funcs[left.name](left, True)
+
     struct = find_node_by_id(structs, left_type)
     struct_id = struct.get("ID")[0].value
+    if left.name == "FUNC_CALL":
+        left_strs = left_strs[:-1] + [f"%{left.get('ID')[0].value}.{buffer_num}.ptr = alloca %struct.{struct_id}",
+                                      f"%store {left_type} {left_strs[-1]}, {left_type}* {left.get('ID')[0].value}.{buffer_num}.ptr",
+                                      f"%{left.get('ID')[0].value}.{buffer_num}.ptr"]
+        buffer_num += 1
     member_index = -1
     struct_member = None
     for ind, member in enumerate(struct.childs[1].childs):
@@ -662,7 +670,6 @@ def llvm_chain_call(ast, context=None):
             struct_member = member
             break
     if member_index > -1:
-        global buffer_num
         result_reg = f"%struct.{struct_id}.{member_index}.{buffer_num}.ptr"
         result = left_strs[:-1] + [f"{result_reg} = getelementptr inbounds %struct.{struct_id}, " +
                                    f"%struct.{struct_id}* {left_strs[-1]}, i32 0, i32 {member_index}"]
@@ -778,23 +785,23 @@ def llvm_print(node, context):
                     result_str += str_val
                 except:
                     raise Exception(f'There is no string variable "{name}". ')
-    
+
     str_name = f'@.str.{const_str_num}'
     str_size = len(result_str) + 2
     strings.append({
-            "id": str_name,
-            "value": result_str + '\\0A',
-            "size": str_size,
-            'name': None
+        "id": str_name,
+        "value": result_str + '\\0A',
+        "size": str_size,
+        'name': None
     })
-    result.append(f'%buffer{buffer_num} = getelementptr inbounds [{str_size} x i8], [{str_size} x i8]* {str_name}, i32 0, i32 0 ')
+    result.append(
+        f'%buffer{buffer_num} = getelementptr inbounds [{str_size} x i8], [{str_size} x i8]* {str_name}, i32 0, i32 0 ')
     var_queue = [f'i8* %buffer{buffer_num}'] + var_queue
     buffer_num += 1
     const_str_num += 1
     result.append(f'call i32 (i8*, ...) @printf({", ".join(var_queue)})')
-    
-    return 'i32', result + ['1']
 
+    return 'i32', result + ['1']
 
 
 binary_op_funcs = {'PLUS': llvm_add_func,
@@ -868,4 +875,3 @@ fdict = {
     'BREAK': llvm_break,
     'SKIP': llvm_skip
 }
-
