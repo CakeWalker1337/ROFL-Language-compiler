@@ -761,16 +761,12 @@ def llvm_print(node, context):
             val = arg.get('VALUE')[0].value
             result_str += val
         else:
-            # name = arg.value
-            # type = type_dict[context[name][1]]
             type, elem_results = fdict[arg.name](arg)
             type = type_dict[type]
             name = elem_results[-1]
             if type != 'i8*':
-                buf_name = f'%buffer{buffer_num}'
                 result = result + elem_results[:-1]
-                result.append(f'{buf_name} = load {type}, {type}* {name}')
-                var_queue.append(f'{type} {buf_name}')
+                var_queue.append(f'{type} {name}')
                 result_str += out_format[type]
                 buffer_num += 1
             else:
