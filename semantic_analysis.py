@@ -76,7 +76,7 @@ def check_var_definition(node, types=default_types,
             elif not name in variables and d.parent.name != 'MARK':
                 errors.append(wrap_error('Usage of undefined variable "'+name+'"', d.line))
             if d.parent.name == 'ARRAY_ELEMENT':
-                if (variables[name][0] != 'VARIABLE_ARRAY'):
+                if variables[name][0] != 'VARIABLE_ARRAY' and d.parent.childs[0] == d:
                     errors.append(wrap_error(f'Variable "{name}" is not an array.', d.line))
                 print(d)
         elif (d.name == 'CHAIN_CALL' and d.parent.name != 'ASSIGN') or d.name == 'ASSIGN':

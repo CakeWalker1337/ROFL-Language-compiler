@@ -13,9 +13,9 @@ precedence = (
     ('left', 'ASSIGN'),
     ('left', 'LOR'),
     ('left', 'LAND'),
-    ('nonassoc', 'LT', 'GT', 'GE', 'LE', 'EQ', 'NE'),  # Nonassociative operators
     ('left', 'BOR'),
     ('left', 'BAND'),
+    ('nonassoc', 'LT', 'GT', 'GE', 'LE', 'EQ', 'NE'),  # Nonassociative operators
     ('left', 'PLUS', 'MINUS'),
     ('left', 'TIMES', 'DIVIDE', 'MODULO', 'IDIVIDE'),
     ('left', 'INCREMENT', 'DECREMENT'),
