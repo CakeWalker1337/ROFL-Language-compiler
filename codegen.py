@@ -36,7 +36,7 @@ def TODO(x, y): return None, [f'TODO {x.name}']
 
 def llvm_load_value(register_ptr, register_type):
     res_register = register_ptr
-    if register_ptr[:-4] == ".ptr":
+    if register_ptr[-4:] == ".ptr":
         res_register = register_ptr[:-4]
     global buffer_num
     ll_type = llvm_type_from_string(register_type)
@@ -706,12 +706,13 @@ def llvm_array_el(ast, context=None):
     pre_type = llvm_type_from_string(array_var['type'])
     ll_type = f"[{array_var['size']} x {pre_type}]"
     buff_type, strs = llvm_expression(ast.childs[1])
-    if "%" in strs[-1]:
+    global buffer_num
+    if ".ptr" in strs[-1]:
         loaded_type, loaded_strs = llvm_load_value(strs[-1], buff_type)
     else:
         loaded_strs = strs
-    global buffer_num
-    result = strs[:-1] + loaded_strs[:-1] + [
+
+    result = loaded_strs[:-1] + [
         f"%{var_id}.{buffer_num}.ptr = getelementptr inbounds {ll_type}, {ll_type}* %{var_id}.ptr, i32 0, i32 {loaded_strs[-1]}",
         f"%{var_id}.{buffer_num}.ptr"]
     buffer_num += 1
