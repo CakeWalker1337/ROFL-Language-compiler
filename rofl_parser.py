@@ -604,9 +604,9 @@ def p_logic_expressions(p):
     '''
     line = p.lexer.lineno
     if len(p) == 4:
-        if p[2] == '>':
+        if p[2] == '<':
             p[0] = Node('LT', childs=[p[1], p[3]], line=line)
-        elif p[2] == '<':
+        elif p[2] == '>':
             p[0] = Node('GT', childs=[p[1], p[3]], line=line)
         elif p[2] == '>=':
             p[0] = Node('GE', childs=[p[1], p[3]], line=line)

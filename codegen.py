@@ -342,19 +342,21 @@ def llvm_while(node, context):
     global condition_counter
     res_type, result = llvm_expression(node.childs[0].childs[0])
     expr_result = result[-1]
-    start_label_num, end_label_num = condition_counter, condition_counter+1
-    condition_counter += 2
-    context = {'#begin': f'{LABEL}{start_label_num}',
-                '#end': f'{LABEL}{end_label_num}'}
+    condition_label_num, start_label_num, end_label_num = condition_counter,condition_counter+1, condition_counter+2
+    condition_counter += 3
+    context['#begin'] = f'{LABEL}{start_label_num}'
+    context['#end'] = f'{LABEL}{end_label_num}'
     inner_commands = recursive_run(node.childs[1], [], context)
     set_checked(node)
     cycle_cond = f'br {type_dict[res_type]} {expr_result}, label %{LABEL}{start_label_num}, label %{LABEL}{end_label_num}'
 
-    ret = 'label', result[:-1] + [
+    ret = 'label',  [
+        f'br label %{LABEL}{condition_label_num}',        
+        f'{LABEL}{condition_label_num}:'] + result[:-1] + [
         cycle_cond,
         f'{LABEL}{start_label_num}:'
     ] + inner_commands + [
-        cycle_cond,
+        f'br label %{LABEL}{condition_label_num}',
         f'{LABEL}{end_label_num}:',
         None
     ]
@@ -369,16 +371,16 @@ def llvm_do_while(node, context):
     expr_result = result[-1]
     start_label_num, end_label_num = condition_counter, condition_counter+1
     condition_counter += 2
-    context = {'#begin': f'{LABEL}{start_label_num}',
-                '#end': f'{LABEL}{end_label_num}'}
+    context['#begin'] = f'{LABEL}{start_label_num}'
+    context['#end'] = f'{LABEL}{end_label_num}'
     inner_commands = recursive_run(node.childs[0], [], context)
     set_checked(node)
     cycle_cond = f'br {type_dict[res_type]} {expr_result}, label %{LABEL}{start_label_num}, label %{LABEL}{end_label_num}'
 
-    ret = 'label', result[:-1] + [
+    ret = 'label', [
         f'br label %{LABEL}{start_label_num}',
         f'{LABEL}{start_label_num}:'
-    ] + inner_commands + [
+    ] + inner_commands + result[:-1] + [
         cycle_cond,
         f'{LABEL}{end_label_num}:',
         None
