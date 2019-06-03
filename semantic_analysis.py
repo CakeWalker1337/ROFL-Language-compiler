@@ -239,7 +239,10 @@ def get_atom_type(atom):
                 desired_id = second.value
             else:
                 desired_id = second.get("ID")[0].value
-            return get_atom_type(find_element_by_id(desired_id, fst_struct.get("CONTENT")[0]))
+            result_type = get_atom_type(find_element_by_id(desired_id, fst_struct.get("CONTENT")[0]))
+            if second.name == "ARRAY_ELEMENT":
+                result_type = result_type.replace("[]", '')
+            return result_type
         else:
             raise Exception("First element hasn\'t got return type of structure")
     looked_id = None
@@ -460,5 +463,17 @@ def check_conditions(root):
 #                 if struct.get("ID")[0].value == elem.parent.childs[0].get("ID")[0]
 #         scope = get_nearest_scope(elem)
 
+def check_repeated_marks(node):
+    marks = node.get('MARK', True)
+    mark_names = []
+    errors = []
+    for mark in marks:
+        name = mark.childs[0].value
+        if name in mark_names:
+            errors.append(wrap_error(f'Repeated mark "{name}" definition.', mark.line))
+        else:
+            mark_names.append(name)
+
+    return errors
 
 #TODO: Add comments and check func params while calling
