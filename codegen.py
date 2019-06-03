@@ -124,6 +124,9 @@ def llvm_expression(ast, context=None):
         node.checked = True
         if is_node_atom(node):
             expr_type, strs = atom_funcs[node.name](node, context)
+            if len(strs[-1]) >= 4 and strs[-1][-4:] == ".ptr":
+                expr_type, load_strs = llvm_load_value(strs[-1], expr_type)
+                strs = strs[:-1] + load_strs 
             return expr_type, strs
         elif is_expression(node):
             left_type, left_strs = recursive_run(node.childs[0])
@@ -790,7 +793,7 @@ def llvm_print(node, context):
     const_str_num += 1
     result.append(f'call i32 (i8*, ...) @printf({", ".join(var_queue)})')
     
-    return 'i32', result + [None]
+    return 'i32', result + ['1']
 
 
 
