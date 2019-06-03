@@ -43,21 +43,27 @@ def prettify(elem):
 
 
 def llvm_prettify(code):
+    result = ""
     additive = ""
     for line in code:
         if "define" in line:
-            print(additive + line)
+            result += (additive + line) + '\n'
             additive = additive + "    "
         elif ":" in line:
             additive = additive[:-4]
-            print(additive + line)
+            # print(additive + line)
+            result += (additive + line) + '\n'
             additive += "    "
         elif "}" in line:
             additive = additive[:-4]
-            print(additive + line)
-        else:
-            print(additive + line)
+            # print(additive + line)
+            result += (additive + line) + '\n'
 
+        else:
+            # print(additive + line)
+            result += (additive + line) + '\n'
+
+    return result
 
 default_file = 'test.rofl'
 
@@ -107,11 +113,19 @@ if __name__ == "__main__":
                     if print_xml_to_file:
                         xmlfile = open(join(getcwd(), "program.xml"), "w+")
                         xmlfile.write(prettify(xml_result))
-                    llvm_prettify(start_codegen(result))
+
+                    code = llvm_prettify(start_codegen(result))
+                    print(code)
+                    llfile = open(join(getcwd(), "test.ll"), "w+")
+                    llfile.write(code)
                 elif len(errors) == 0 and show_tree_with_errors:
                     print(result)
                     print("\n")
-                    llvm_prettify(start_codegen(result))
+
+                    code = llvm_prettify(start_codegen(result))
+                    print(code)
+                    llfile = open(join(getcwd(), "test.ll"), "w+")
+                    llfile.write(code)
 
 
 

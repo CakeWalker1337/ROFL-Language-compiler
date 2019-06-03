@@ -1,10 +1,24 @@
-struct c{
-int[] b = int[](12);
+struct c {
+int n;
 }
-function func(int a, int b): c {
-c aa;
-return aa;
-}
+do {
+    int d = 1 + 1;
+    while(d == 2) {
+        d = 3;
+        if (d != 3) {
+            skip;
+        } else {
+            break;
+        }
+    }
+    break;
+    
+} while(true)
 
-c[] aaa = c[](13);
-aaa[1].b[1] = 10;
+function func(int a, int b): c {
+    c aa;
+    return aa;
+}
+string a = '123';
+float b = 2.2;
+print(b,' ', b,b,b,b);

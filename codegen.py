@@ -121,7 +121,7 @@ def llvm_expression(ast, context=None):
     def recursive_run(node):
         node.checked = True
         if is_node_atom(node):
-            expr_type, strs = atom_funcs[node.name](node)
+            expr_type, strs = atom_funcs[node.name](node, context)
             return expr_type, strs
         elif is_expression(node):
             left_type, left_strs = recursive_run(node.childs[0])
@@ -170,7 +170,7 @@ def llvm_struct(node, context=None):
 
 
 def init_constants():
-    result = []
+    result = ['declare i32 @printf(i8*, ...)']
     for s in strings:
         id = s["id"]
         size = s["size"]
@@ -203,10 +203,15 @@ def spread_nodes(root):
             const_type = root.get("TYPE")[0].value
             const_value = root.get("VALUE")[0].value
             global const_str_num
+            var_name = None
+            if root.parent.name == 'ASSIGN':
+                var_name = root.parent.get('VARIABLE')[0].get('ID')[0].value
+
             strings.append({
                 "id": f"@.str.{const_str_num}",
                 "value": const_value,
-                "size": len(const_value) + 1
+                "size": len(const_value) + 1,
+                "name": var_name
             })
             const_str_num += 1
         for child in root.childs:
@@ -444,9 +449,8 @@ def start_codegen(ast):
     spread_nodes(ast)
     llvm_result = []
 
-    consts = init_constants()
 
-    llvm_result += consts + [""]
+    llvm_result += [""]
 
     for struct in structs:
         llvm_result += recursive_run(struct, [])
@@ -465,7 +469,7 @@ def start_codegen(ast):
 
     llvm_result += recursive_run(ast, [])
 
-    return llvm_result
+    return llvm_result + [""] + init_constants()
 
 
 # ############## BINARY FUNCS ################# #
@@ -715,6 +719,10 @@ def llvm_func_call(ast, context=None):
     for child in ast.childs:
         child.checked = True
     func_id = ast.get("ID")[0].value
+
+    if (func_id == 'print'):
+        return llvm_print(ast, context)
+
     func_decl = find_node_by_id(functions, func_id)
     func_type = func_decl.get("TYPE")[0].value
     call_args = ast.get("CALL_ARGS")[0].childs
@@ -732,6 +740,53 @@ def llvm_func_call(ast, context=None):
     result_strs = result_strs + call_result + [f"%{func_id}.{buffer_num}"]
     buffer_num += 1
     return func_type, result_strs
+
+
+def llvm_print(node, context):
+    global buffer_num
+    global const_str_num
+    out_format = {'i32': '%d', 'double': '%lf'}
+    result_str = ''
+    result = []
+    args = node.get('CALL_ARGS')[0].childs
+    var_queue = []
+
+    for arg in args:
+        if arg.name == 'CONST':
+            val = arg.get('VALUE')[0].value
+            result_str += val
+        else:
+            name = arg.value
+            type = type_dict[context[name][1]]
+            if type != 'i8*':
+                buf_name = f'%buffer{buffer_num}'
+                result.append(f'{buf_name} = load {type}, {type}* %{name}.ptr')
+                var_queue.append(f'{type} {buf_name}')
+                result_str += out_format[type]
+                buffer_num += 1
+            else:
+                try:
+                    str_val = [x for x in strings if x['name'] == name][0]['value']
+                    result_str += str_val
+                except:
+                    raise Exception(f'There is no string variable "{name}". ')
+    
+    str_name = f'@.str.{const_str_num}'
+    str_size = len(result_str) + 2
+    strings.append({
+            "id": str_name,
+            "value": result_str + '\\0A',
+            "size": str_size,
+            'name': None
+    })
+    result.append(f'%buffer{buffer_num} = getelementptr inbounds [{str_size} x i8], [{str_size} x i8]* {str_name}, i32 0, i32 0 ')
+    var_queue = [f'i8* %buffer{buffer_num}'] + var_queue
+    buffer_num += 1
+    const_str_num += 1
+    result.append(f'call i32 (i8*, ...) @printf({", ".join(var_queue)})')
+    
+    return 'i32', result + [None]
+
 
 
 binary_op_funcs = {'PLUS': llvm_add_func,
@@ -805,4 +860,4 @@ fdict = {
     'BREAK': llvm_break,
     'SKIP': llvm_skip
 }
-# TODO: сделать проверку на повторяющиеся MARK в семантике
+
