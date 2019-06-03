@@ -712,6 +712,7 @@ def llvm_array_el(ast, context=None):
         var_id = context["id"]
     else:
         var_id = ast.get("ID")[0].value
+        # TODO: Решить проблему передачей массива в качестве аргумента функции
         array_var = find_array_by_id(arrays, var_id)
     pre_type = llvm_type_from_string(array_var['type'])
     ll_type = f"[{array_var['size']} x {pre_type}]"
@@ -746,7 +747,8 @@ def llvm_func_call(ast, context=None):
     for arg in call_args:
         arg_type, arg_strs = llvm_expression(arg)
         result_strs = result_strs + arg_strs[:-1]
-        ll_call_args += f"{type_dict[arg_type]} {arg_strs[-1]}, "
+        ll_type = llvm_type_from_string(arg_type)
+        ll_call_args += f"{ll_type} {arg_strs[-1]}, "
     if len(call_args) != 0:
         ll_call_args = ll_call_args[:-2]
     ll_type = llvm_type_from_string(func_type)

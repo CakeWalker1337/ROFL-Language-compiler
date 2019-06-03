@@ -1,30 +1,35 @@
 
 
-define i32 @func.f1(i32 %a) {
-    %a.ptr = alloca i32
-    store i32 %a, i32* %a.ptr
-    %a.1 = load i32, i32* %a.ptr
-    %buffer3 = getelementptr inbounds [4 x i8], [4 x i8]* @.str.1, i32 0, i32 0 
-    call i32 (i8*, ...) @printf(i8* %buffer3, i32 %a.1)
-    %a.4 = load i32, i32* %a.ptr
-    %buffer5 = icmp slt i32 %a.4, 5
-    br i1 %buffer5, label %lab.0, label %lab.1
-lab.0:
-    %a.6 = load i32, i32* %a.ptr
-    %a.7 = load i32, i32* %a.ptr
-    %buffer8 = add i32 %a.7, 1
-    %f1.9 = call i32 @func.f1(i32 %buffer8)
-    %buffer10 = add i32 %a.6, %f1.9
-    ret i32 %buffer10
-    br label %lab.2
-lab.1:
-    br label %lab.2
-lab.2:
-    ret i32 5
+define i32 @func.aa(i32 %b, i32 %n) {
+    %b.ptr = alloca i32
+    %n.ptr = alloca i32
+    store i32 %b, i32* %b.ptr
+    store i32 %n, i32* %n.ptr
+    %n.1 = load i32, i32* %n.ptr
+    ret i32 %n.1
 }
 
 define i32 @main() {
-    %f1.11 = call i32 @func.f1(i32 1)
+    %d.ptr = alloca [3 x i32]
+    %n.ptr = alloca i32
+    store i32 3, i32* %n.ptr
+    %d.2.ptr = getelementptr inbounds [3 x i32], [3 x i32]* %d.ptr, i32 0, i32 0
+    store i32 1, i32* %d.2.ptr
+    %d.3.ptr = getelementptr inbounds [3 x i32], [3 x i32]* %d.ptr, i32 0, i32 1
+    %d.4.ptr = getelementptr inbounds [3 x i32], [3 x i32]* %d.ptr, i32 0, i32 0
+    %d.4.5 = load i32, i32* %d.4.ptr
+    %buffer6 = add i32 %d.4.5, 1
+    store i32 %buffer6, i32* %d.3.ptr
+    %d.7.ptr = getelementptr inbounds [3 x i32], [3 x i32]* %d.ptr, i32 0, i32 2
+    store i32 3, i32* %d.7.ptr
+    %res.ptr = alloca i32
+    %d.8 = load i32, i32* %d.ptr
+    %n.9 = load i32, i32* %n.ptr
+    %aa.10 = call i32 @func.aa(i32 %d.8, i32 %n.9)
+    store i32 %aa.10, i32* %res.ptr
+    %res.11 = load i32, i32* %res.ptr
+    %buffer13 = getelementptr inbounds [4 x i8], [4 x i8]* @.str.1, i32 0, i32 0 
+    call i32 (i8*, ...) @printf(i8* %buffer13, i32 %res.11)
     ret i32 0
 }
 

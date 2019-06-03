@@ -147,7 +147,8 @@ def check_arguments_of_func_calls(root) :
     func_calls = root.get("FUNC_CALL", nest=True)
     for call in func_calls:
         if call.get("ID")[0].value in exceptions: continue
-        func = find_element_by_id(call.get("ID")[0].value, get_nearest_scope(call))
+        nearest_scope, scope_parts = get_nearest_scope(call)
+        func = find_element_by_id(call.get("ID")[0].value, nearest_scope, scope_parts)
         func_args = func.get("FUNC_ARGS")[0].childs
         call_args = call.get("CALL_ARGS")[0].childs
         if len(func_args) != len(call_args):
@@ -185,7 +186,7 @@ def check_unexpected_keywords(root):
 
 
 # gets first defined function, struct or variable consider scopes
-def find_element_by_id(id, scope):
+def find_element_by_id(id, scope, parts):
     if scope is None:
         return None
     for elem in scope.childs:
@@ -196,7 +197,16 @@ def find_element_by_id(id, scope):
             current = elem
         if is_node_has_id(current) and current.get("ID")[0].value == id:
             return current
-    return find_element_by_id(id, get_nearest_scope(scope))
+    for elem in parts:
+        current = None
+        if elem.name == "ASSIGN":
+            current = elem.childs[0]
+        else:
+            current = elem
+        if is_node_has_id(current) and current.get("ID")[0].value == id:
+            return current
+    nearest_scope, scope_args = get_nearest_scope(scope)
+    return find_element_by_id(id, nearest_scope, scope_args)
 
 
 # can be used when is needed to get closest scope from node
@@ -205,16 +215,15 @@ def find_element_by_id(id, scope):
 # Use it if you sure that the definitions are correct.
 def get_nearest_scope(node):
     if node.parent is None:
-        return None
+        return None, []
     if node.parent.name == "SCOPE" or node.parent.name == "CONTENT":
         scope = node.parent
-        modified_scope = scope
+        func_args = []
         if scope.parent is not None and scope.parent.name == "FUNCTION":
             func_args = scope.parent.get("FUNC_ARGS")[0].childs
-            modified_scope = copy.deepcopy(scope)
-            modified_scope.add_childs(func_args)
-        return modified_scope
-    return get_nearest_scope(node.parent)
+        return scope, func_args
+    new_scope, scope_parts = get_nearest_scope(node.parent)
+    return new_scope, scope_parts
 
 
 def get_atom_type(atom):
@@ -224,7 +233,8 @@ def get_atom_type(atom):
         return atom.get("TYPE")[0].value+"[]"
     if atom.name == "ARRAY_ELEMENT":
         elem_id = atom.childs[0].value
-        arr = find_element_by_id(elem_id, get_nearest_scope(atom))
+        new_scope, additive_parts = get_nearest_scope(atom)
+        arr = find_element_by_id(elem_id, new_scope, additive_parts)
         if arr is not None:
             return arr.get("TYPE")[0].value
     if atom.name == "CHAIN_CALL":
@@ -232,14 +242,15 @@ def get_atom_type(atom):
         second = atom.childs[1]
         type = get_atom_type(first)
         type = type.replace("[]", '')
-        fst_struct = find_element_by_id(type, get_nearest_scope(first))
+        new_scope, additive_parts = get_nearest_scope(first)
+        fst_struct = find_element_by_id(type, new_scope, additive_parts)
         if fst_struct.name == "STRUCT":
             desired_id = None
             if second.name == "ID":
                 desired_id = second.value
             else:
                 desired_id = second.get("ID")[0].value
-            result_type = get_atom_type(find_element_by_id(desired_id, fst_struct.get("CONTENT")[0]))
+            result_type = get_atom_type(find_element_by_id(desired_id, fst_struct.get("CONTENT")[0], []))
             if second.name == "ARRAY_ELEMENT":
                 result_type = result_type.replace("[]", '')
             return result_type
@@ -250,7 +261,8 @@ def get_atom_type(atom):
         looked_id = atom.get("ID")[0].value
     elif atom.name == "ID":
         looked_id = atom.value
-    found_elem = find_element_by_id(looked_id, get_nearest_scope(atom))
+    new_scope, additive_parts = get_nearest_scope(atom)
+    found_elem = find_element_by_id(looked_id, new_scope, additive_parts)
     if found_elem is None:
         return None
     else:
