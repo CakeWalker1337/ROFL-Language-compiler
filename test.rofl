@@ -1,6 +1,3 @@
-int i = 0;
-while (i < 30)  {
-    i = i + 3;
-    
-    print(i, 'iter - ', i);
-}
+int n = 5;
+int[] arr = int[](123);
+arr[n] = 1;

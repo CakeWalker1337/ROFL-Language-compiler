@@ -35,7 +35,9 @@ def TODO(x, y): return None, [f'TODO {x.name}']
 
 
 def llvm_load_value(register_ptr, register_type):
-    res_register = register_ptr[:-4]
+    res_register = register_ptr
+    if register_ptr[:-4] == ".ptr":
+        res_register = register_ptr[:-4]
     global buffer_num
     ll_type = llvm_type_from_string(register_type)
     result = [
