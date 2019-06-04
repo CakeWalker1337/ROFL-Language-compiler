@@ -258,13 +258,17 @@ def llvm_return(node, context):
 
 
 def llvm_type_from_string(str_type):
-    if str_type in struct_types:
-        return f"%struct.{str_type}"
-    elif "[]" in str_type:
+    if "[]" in str_type:
         str_type = str_type.replace("[]", '')
-        return f"{type_dict[str_type]}*"
+        if str_type in struct_types:
+            return f"%struct.{str_type}*"
+        else:
+            return f"{type_dict[str_type]}*"
     else:
-        return type_dict[str_type]
+        if str_type in struct_types:
+            return f"%struct.{str_type}"
+        else:
+            return f"{type_dict[str_type]}"
 
 
 def llvm_func_def(node, context=None):
@@ -687,7 +691,7 @@ def llvm_id(ast, context=None):
                     ltype = llvm_type_from_string(arr['type'])
                     var_type = arr['type'] + "[]"
                     array_load = [
-                        f"%{ast.value}.{buffer_num}.ptr = getelementptr inbounds {ltype}, {ltype}* %{ast.value}.ptr, i32 0, i32 0",
+                        f"%{ast.value}.{buffer_num}.ptr = getelementptr inbounds {ltype}, {ltype}* %{ast.value}.ptr, i32 0",
                         f"%{ast.value}.{buffer_num}.ptr"]
                     buffer_num += 1
                     pass
@@ -803,7 +807,7 @@ def llvm_array_el(ast, context=None):
         loaded_strs = strs
 
     result = loaded_strs[:-1] + [
-        f"%{var_id}.{buffer_num}.ptr = getelementptr inbounds {ll_type}, {ll_type}* %{var_id}.ptr, i32 0, i32 {loaded_strs[-1]}",
+        f"%{var_id}.{buffer_num}.ptr = getelementptr inbounds {ll_type}, {ll_type}* %{var_id}.ptr, {'i32 0, ' if '[' in ll_type else ''}i32 {loaded_strs[-1]}",
         f"%{var_id}.{buffer_num}.ptr"]
     buffer_num += 1
     return array_var["type"], result
@@ -853,6 +857,9 @@ def llvm_print(node, context):
             result_str += val
         else:
             type, elem_results = fdict[arg.name](arg)
+            if len(elem_results[-1]) >= 4 and elem_results[-1][-4:] == ".ptr":
+                type, loaded_strs = llvm_load_value(elem_results[-1], type)
+                elem_results = elem_results[:-1] + loaded_strs
             type = type_dict[type]
             name = elem_results[-1]
             if type != 'i8*':
