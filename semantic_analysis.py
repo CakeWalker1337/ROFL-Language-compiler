@@ -78,7 +78,6 @@ def check_var_definition(node, types=default_types,
             if d.parent.name == 'ARRAY_ELEMENT':
                 if variables[name][0] != 'VARIABLE_ARRAY' and d.parent.childs[0] == d:
                     errors.append(wrap_error(f'Variable "{name}" is not an array.', d.line))
-                print(d)
         elif (d.name == 'CHAIN_CALL' and d.parent.name != 'ASSIGN') or d.name == 'ASSIGN':
             # check if call of properties are ok
             # and name defined in scope

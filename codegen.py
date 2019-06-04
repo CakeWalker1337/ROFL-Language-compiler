@@ -14,6 +14,7 @@ structs = []
 buffer_num = 1
 condition_counter = 0
 LABEL = 'lab.'
+arrays_from_func = []
 
 
 def raiseError(x): raise Exception(x)
@@ -68,11 +69,13 @@ def llvm_variable(ast, context=None):
     if var_type in struct_types:
         return var_type, [f'%{var_id}.ptr = alloca %struct.{var_type}',
                           f'%{var_id}.ptr']
-    else:
-        return var_type, [
-            f'%{var_id}.ptr = alloca {type_dict[var_type]}',
-            f'%{var_id}.ptr'
-        ]
+    if ast.name == "VARIABLE_ARRAY":
+        var_type = var_type + "[]"
+    ll_type = llvm_type_from_string(var_type)
+    return var_type, [
+        f'%{var_id}.ptr = alloca {ll_type}',
+        f'%{var_id}.ptr'
+    ]
 
 
 def llvm_array_alloc(ast, context=None):
@@ -101,7 +104,7 @@ def llvm_assign(ast, context=None):
         return arr_type, arr_strs
     if left.name == 'CHAIN_CALL':
         left_type, left_strs = llvm_chain_call(left, True)
-    elif left.name == 'VARIABLE':
+    elif left.name == 'VARIABLE' or left.name == "VARIABLE_ARRAY":
         left_type, left_strs = llvm_variable(left)
     elif left.name == 'ID':
         left_type, left_strs = llvm_id(left, "ptr")
@@ -124,7 +127,8 @@ def llvm_expression(ast, context=None):
         node.checked = True
         if is_node_atom(node):
             expr_type, strs = atom_funcs[node.name](node, context)
-            if len(strs[-1]) >= 4 and strs[-1][-4:] == ".ptr":
+            # for cases where
+            if len(strs[-1]) >= 4 and strs[-1][-4:] == ".ptr" and "[]" not in expr_type:
                 expr_type, load_strs = llvm_load_value(strs[-1], expr_type)
                 strs = strs[:-1] + load_strs
             return expr_type, strs
@@ -184,6 +188,25 @@ def init_constants():
     return result
 
 
+def collect_local_nodes(root):
+    if is_node(root):
+        if root.name == "VARIABLE" or root.name == "VARIABLE_ARRAY":
+            variables.append(root)
+        elif root.name == "ASSIGN" and root.childs[1].name == "ARRAY_ALLOC":
+            array_var = root.childs[0]
+            array_alloc = root.childs[1]
+            array_id = array_var.get("ID")[0].value
+            array_type = array_alloc.get("TYPE")[0].value
+            array_size = array_alloc.get("VALUE", nest=True)[0].value
+            arrays.append({
+                "id": array_id,
+                "type": array_type,
+                "size": array_size
+            })
+        for child in root.childs:
+            collect_local_nodes(child)
+
+
 def spread_nodes(root):
     if is_node(root):
         if root.name == "FUNCTION":
@@ -237,6 +260,9 @@ def llvm_return(node, context):
 def llvm_type_from_string(str_type):
     if str_type in struct_types:
         return f"%struct.{str_type}"
+    elif "[]" in str_type:
+        str_type = str_type.replace("[]", '')
+        return f"{type_dict[str_type]}*"
     else:
         return type_dict[str_type]
 
@@ -249,12 +275,24 @@ def llvm_func_def(node, context=None):
 
     args = []
     allocs, stores = [], []
+    global arrays_from_func, arrays, variables
+    arrays = []
+    variables = []
+    arrays_from_func = []
+    collect_local_nodes(node)
     for arg in node.childs[1].childs:
         name, type = get_info(arg)
         context[name] = type
-        args += [f'{llvm_type(arg.childs[0])[0]} %{arg.childs[1].value}']
-        allocs.append(f'%{name}.ptr = alloca {llvm_type(arg.childs[0])[0]}')
-        stores.append(f'store {llvm_type(arg.childs[0])[0]} %{name}, {llvm_type(arg.childs[0])[0]}* %{name}.ptr')
+        additive_type = ""
+        additive_name = ""
+        if arg.name == "VARIABLE_ARRAY":
+            additive_type = "*"
+            additive_name = ".ptr"
+            arrays_from_func.append({"id": name, "type": type[1]})
+        else:
+            allocs.append(f'%{name}.ptr = alloca {llvm_type(arg.childs[0])[0]}')
+            stores.append(f'store {llvm_type(arg.childs[0])[0]} %{name}, {llvm_type(arg.childs[0])[0]}* %{name}.ptr')
+        args += [f'{llvm_type(arg.childs[0])[0]}{additive_type} %{arg.childs[1].value}{additive_name}']
 
     commands = allocs + stores + recursive_run(node.childs[3], [], context)
     if f_name == "main":
@@ -619,12 +657,43 @@ def llvm_ne_func(expr_type, left, right):
 def llvm_id(ast, context=None):
     # if context is None variable is needed to load (returns value, not ptr), else returns ptr of variable
     if is_node(ast) and ast.name == "ID":
-        var = find_node_by_id(variables, ast.value)
-        var_type = var.get("TYPE")[0].value
-        if context is None:
+        is_array = False
+
+        var = find_array_by_id(arrays, ast.value)
+        if var is not None:
+            var_type = var['type']
+            is_array = True
+        else:
+            var = find_node_by_id(variables, ast.value)
+            var_type = var.get("TYPE")[0].value
+            if var.name == "VARIABLE_ARRAY":
+                is_array = True
+                var_type = var_type + "[]"
+        if context is None and not is_array:
             var_type, buffer_strs = llvm_load_value(f'%{ast.value}.ptr', var_type)
         else:
-            buffer_strs = [f"%{ast.value}.ptr"]
+            if is_array:
+                arr = find_array_by_id(arrays_from_func, ast.value)
+                global buffer_num
+                if arr is None:
+                    lltype = llvm_type_from_string(var['type'])
+                    var_type = var['type'] + "[]"
+                    final_type = f"[{var['size']} x {lltype}]"
+                    array_load = [
+                        f"%{ast.value}.{buffer_num}.ptr = getelementptr inbounds {final_type}, {final_type}* %{ast.value}.ptr, i32 0, i32 0",
+                        f"%{ast.value}.{buffer_num}.ptr"]
+                    buffer_num += 1
+                else:
+                    ltype = llvm_type_from_string(arr['type'])
+                    var_type = arr['type'] + "[]"
+                    array_load = [
+                        f"%{ast.value}.{buffer_num}.ptr = getelementptr inbounds {ltype}, {ltype}* %{ast.value}.ptr, i32 0, i32 0",
+                        f"%{ast.value}.{buffer_num}.ptr"]
+                    buffer_num += 1
+                    pass
+                buffer_strs = array_load
+            else:
+                buffer_strs = [f"%{ast.value}.ptr"]
         return var_type, buffer_strs
     else:
         raise Exception("llvm_id cannot process node with different type from ID.")
@@ -710,12 +779,22 @@ def llvm_array_el(ast, context=None):
     if context is not None and type(context).__name__ == "dict" and "size" in context:
         array_var = context
         var_id = context["id"]
+        pre_type = llvm_type_from_string(array_var['type'])
+        ll_type = f"[{array_var['size']} x {pre_type}]"
     else:
         var_id = ast.get("ID")[0].value
-        # TODO: Решить проблему передачей массива в качестве аргумента функции
         array_var = find_array_by_id(arrays, var_id)
-    pre_type = llvm_type_from_string(array_var['type'])
-    ll_type = f"[{array_var['size']} x {pre_type}]"
+        if array_var is None:
+            array_var = find_array_by_id(arrays_from_func, var_id)
+            if array_var is not None:
+                pre_type = llvm_type_from_string(array_var['type'])
+                ll_type = f"{pre_type}"
+            else:
+                raise Exception(f"Array {var_id} is not exist.")
+        else:
+            pre_type = llvm_type_from_string(array_var['type'])
+            ll_type = f"[{array_var['size']} x {pre_type}]"
+
     buff_type, strs = llvm_expression(ast.childs[1])
     global buffer_num
     if ".ptr" in strs[-1]:
