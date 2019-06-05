@@ -842,7 +842,7 @@ def llvm_func_call(ast, context=None):
 def llvm_print(node, context):
     global buffer_num
     global const_str_num
-    out_format = {'i32': '%d', 'double': '%lf', 'i8*': '%s'}
+    out_format = {'i32': '%d', 'double': '%lf', 'i8*': '%s', 'i1': '%d'}
     result_str = ''
     result = []
     args = node.get('CALL_ARGS')[0].childs
