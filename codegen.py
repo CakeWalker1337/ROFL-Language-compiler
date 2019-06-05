@@ -231,15 +231,11 @@ def spread_nodes(root):
             const_type = root.get("TYPE")[0].value
             const_value = root.get("VALUE")[0].value
             global const_str_num
-            var_name = None
-            if root.parent.name == 'ASSIGN':
-                var_name = root.parent.get('VARIABLE')[0].get('ID')[0].value
 
             strings.append({
                 "id": f"@.str.{const_str_num}",
                 "value": const_value,
                 "size": len(const_value) + 1,
-                "name": var_name
             })
             const_str_num += 1
         for child in root.childs:
