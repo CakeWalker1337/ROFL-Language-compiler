@@ -1,7 +1,13 @@
+struct b {
+int[] a = int[](23);
+}
 string str = '123';
 
-function f(string str, int a): string {
-return str;
+
+function f(b c, int a): b {
+c.a[2] = 3;
+return c;
 }
-string s = f('12312', 2);
-print(s, 4);
+b ss;
+ss.a[2] = 5;
+print(f(ss, 2).a[2]);

@@ -727,8 +727,9 @@ def llvm_chain_call(ast, context=None):
     struct = find_node_by_id(structs, left_type)
     struct_id = struct.get("ID")[0].value
     if left.name == "FUNC_CALL":
+        lltype = llvm_type_from_string(left_type)
         left_strs = left_strs[:-1] + [f"%{left.get('ID')[0].value}.{buffer_num}.ptr = alloca %struct.{struct_id}",
-                                      f"%store {left_type} {left_strs[-1]}, {left_type}* {left.get('ID')[0].value}.{buffer_num}.ptr",
+                                      f"store {lltype} {left_strs[-1]}, {lltype}* %{left.get('ID')[0].value}.{buffer_num}.ptr",
                                       f"%{left.get('ID')[0].value}.{buffer_num}.ptr"]
         buffer_num += 1
     member_index = -1
