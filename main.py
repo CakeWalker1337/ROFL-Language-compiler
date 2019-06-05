@@ -66,24 +66,28 @@ def llvm_prettify(code):
 
     return result
 
-default_file = 'test.rofl'
+default_out_file = 'test.ll'
+default_in_file = 'test.rofl'
 
 if __name__ == "__main__":
 
     # handling of arguments
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument('--xml', action='store_true', help='An optional boolean argument for XML output')
-    arg_parser.add_argument('--file', type=str, nargs='?',
-                            help='An optional argument for filename')
+    arg_parser.add_argument('--input', type=str, nargs='?',
+                            help='An optional argument for input filename (default test.rofl)')
+    arg_parser.add_argument('--out', type=str, nargs='?',
+                            help='An optional argument for output filename (default test.ll)')
     args = arg_parser.parse_args()
 
     # parameter to show output in xml
     show_tree_with_errors = not args.xml
-    filename = args.file if args.file else default_file
+    in_file = args.input if args.input else default_in_file
+    out_file = args.out if args.out else default_out_file
 
     lexer = lex.lex()
 
-    with io.open(filename, "r", encoding="utf8") as f:
+    with io.open(in_file, "r", encoding="utf8") as f:
         text = f.read()
         ply_parser = yacc.yacc(debug=0)
         result = ply_parser.parse(text)
@@ -126,7 +130,7 @@ if __name__ == "__main__":
 
                     code = llvm_prettify(start_codegen(result_translate))
                     print(code)
-                    llfile = open(join(getcwd(), "test.ll"), "w+")
+                    llfile = open(join(getcwd(), out_file), "w+")
                     llfile.write(code)
 
 

@@ -102,6 +102,10 @@ def check_var_definition(node, types=default_types,
                     prev_name = name
                     prev_type = type
             pass
+        elif d.name == 'ID' and d.parent.name == 'ASSIGN':
+            if name in variables:
+                if variables[name][0] == 'VARIABLE_ARRAY' and d.parent.childs[0] == d:
+                    errors.append(wrap_error('You can\'t assign to array variable.', d.line))
     # start recursion for inner scopes
     for child in node.childs:
         if not child.name in def_names or child.name == 'ASSIGN':
