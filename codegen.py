@@ -841,7 +841,7 @@ def llvm_func_call(ast, context=None):
 def llvm_print(node, context):
     global buffer_num
     global const_str_num
-    out_format = {'i32': '%d', 'double': '%lf'}
+    out_format = {'i32': '%d', 'double': '%lf', 'i8*': '%s'}
     result_str = ''
     result = []
     args = node.get('CALL_ARGS')[0].childs
@@ -858,17 +858,10 @@ def llvm_print(node, context):
                 elem_results = elem_results[:-1] + loaded_strs
             type = type_dict[type]
             name = elem_results[-1]
-            if type != 'i8*':
-                result = result + elem_results[:-1]
-                var_queue.append(f'{type} {name}')
-                result_str += out_format[type]
-                buffer_num += 1
-            else:
-                try:
-                    str_val = [x for x in strings if x['name'] == name][0]['value']
-                    result_str += str_val
-                except:
-                    raise Exception(f'There is no string variable "{name}". ')
+            result = result + elem_results[:-1]
+            var_queue.append(f'{type} {name}')
+            result_str += out_format[type]
+            buffer_num += 1
 
     str_name = f'@.str.{const_str_num}'
     str_size = len(result_str) + 2
