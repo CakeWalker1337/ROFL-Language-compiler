@@ -835,8 +835,11 @@ def llvm_func_call(ast, context=None):
         ll_call_args = ll_call_args[:-2]
     ll_type = llvm_type_from_string(func_type)
     global buffer_num
-    call_result = [f"%{func_id}.{buffer_num} = call {ll_type} @func.{func_id}({ll_call_args})"]
-    result_strs = result_strs + call_result + [f"%{func_id}.{buffer_num}"]
+    reg_buffer = ""
+    if func_type != "void":
+        reg_buffer = f'%{func_id}.{buffer_num} ='
+    call_result = [f"{reg_buffer} call {ll_type} @func.{func_id}({ll_call_args})"]
+    result_strs = result_strs + call_result + [f"{reg_buffer}"]
     buffer_num += 1
     return func_type, result_strs
 
