@@ -1,13 +1,4 @@
-struct b {
-int[] a = int[](23);
+if (1 < 2){
+int lab = 1;
+int b = lab + 1;
 }
-string str = '123';
-
-
-function f(b c, int a): b {
-c.a[2] = 3;
-return c;
-}
-b ss;
-ss.a[2] = 5;
-print(f(ss, 2).a[2]);

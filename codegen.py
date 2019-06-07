@@ -1,6 +1,6 @@
 from node_utils import *
 
-type_dict = {'int': 'i32', 'float': 'double', 'boolean': 'i1', 'string': 'i8*'}
+type_dict = {'int': 'i32', 'float': 'double', 'boolean': 'i1', 'string': 'i8*', 'void': 'void'}
 cmp_dict = {'LT': "slt", 'LE': "sle", 'GT': "sgt", 'GE': "sge", 'EQ': "eq", 'NE': "ne"}
 NL = '\n'
 TAB = '    '
@@ -13,7 +13,7 @@ functions = []
 structs = []
 buffer_num = 1
 condition_counter = 0
-LABEL = 'lab.'
+LABEL = 'lab..'
 arrays_from_func = []
 
 
@@ -244,6 +244,8 @@ def spread_nodes(root):
 
 def llvm_return(node, context):
     node.checked = True
+    if len(node.childs) == 0 and node.value is None:
+        return "void", ['ret void', "remove_it"]
     node.childs[0].checked = True
     expr_type, expr_strs = llvm_expression(node.childs[0])
     # if node.childs[0] != 'CONST':
