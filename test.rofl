@@ -1,1 +1,13 @@
-int a = scan();
+float a;
+print('Enter a: ');
+scan(a);
+print(a);
+
+int b = 5;
+scan(b);
+print(b);
+
+while (b == 5) {
+    scan(b);
+}
+print('Success');

@@ -111,7 +111,7 @@ def llvm_assign(ast, context=None):
     elif left.name == 'ARRAY_ELEMENT':
         left_type, left_strs = llvm_array_el(left)
 
-    right_type, right_strs = llvm_expression(right)
+    right_type, right_strs = llvm_expression(right, context)
     left_ptr = left_strs[-1]
     right_ptr = right_strs[-1]
     left_ll_type = llvm_type_from_string(left_type)
@@ -247,7 +247,7 @@ def llvm_return(node, context):
     if len(node.childs) == 0 and node.value is None:
         return "void", ['ret void', "remove_it"]
     node.childs[0].checked = True
-    expr_type, expr_strs = llvm_expression(node.childs[0])
+    expr_type, expr_strs = llvm_expression(node.childs[0], context)
     # if node.childs[0] != 'CONST':
     #     type = context[name]
     #     name = '%' + name
@@ -337,7 +337,7 @@ def llvm_condition(node, context={}):
 
 
 def llvm_cond_if(node, context={}):
-    res_type, result = llvm_expression(node.childs[0].childs[0])
+    res_type, result = llvm_expression(node.childs[0].childs[0], context)
     expr_result = result[-1]
     inner_commands = recursive_run(node.childs[1], [], context)
 
@@ -354,7 +354,7 @@ def llvm_cond_if(node, context={}):
 def llvm_cond_elif(node, context={}):
     # context is the dictionary with '#cond.close' name
     cond_close_label = context['#cond.close']
-    res_type, result = llvm_expression(node.childs[0].childs[0])
+    res_type, result = llvm_expression(node.childs[0].childs[0], context)
     expr_result = result[-1]
     inner_commands = recursive_run(node.childs[1], [], context)
 
@@ -385,7 +385,7 @@ def llvm_cond_else(node, context={}):
 
 def llvm_while(node, context):
     global condition_counter
-    res_type, result = llvm_expression(node.childs[0].childs[0])
+    res_type, result = llvm_expression(node.childs[0].childs[0], context)
     expr_result = result[-1]
     condition_label_num, start_label_num, end_label_num = condition_counter, condition_counter + 1, condition_counter + 2
     condition_counter += 3
@@ -412,7 +412,7 @@ def llvm_while(node, context):
 
 def llvm_do_while(node, context):
     global condition_counter
-    res_type, result = llvm_expression(node.childs[1].childs[0])
+    res_type, result = llvm_expression(node.childs[1].childs[0], context)
     expr_result = result[-1]
     start_label_num, end_label_num = condition_counter, condition_counter + 1
     condition_counter += 2
@@ -798,7 +798,7 @@ def llvm_array_el(ast, context=None):
             pre_type = llvm_type_from_string(array_var['type'])
             ll_type = f"[{array_var['size']} x {pre_type}]"
 
-    buff_type, strs = llvm_expression(ast.childs[1])
+    buff_type, strs = llvm_expression(ast.childs[1], context)
     global buffer_num
     if ".ptr" in strs[-1]:
         loaded_type, loaded_strs = llvm_load_value(strs[-1], buff_type)
@@ -829,7 +829,7 @@ def llvm_func_call(ast, context=None):
     ll_call_args = ""
     result_strs = []
     for arg in call_args:
-        arg_type, arg_strs = llvm_expression(arg)
+        arg_type, arg_strs = llvm_expression(arg, context)
         result_strs = result_strs + arg_strs[:-1]
         ll_type = llvm_type_from_string(arg_type)
         ll_call_args += f"{ll_type} {arg_strs[-1]}, "
@@ -894,14 +894,8 @@ def llvm_scan(node, context):
     global const_str_num
     result = []
     out_format = {'int': '%d', 'float': '%lf', 'string': '%s'}
-    parent = node.parent
-    while(parent and parent.name != 'ASSIGN'):
-        parent = parent.parent
-
-    if (parent is None):
-        raise Exception('llvm_scan issue (parent is None')
-
-    name, type = context[parent.get('ID', True)[0].value]
+    name = node.get('CALL_ARGS')[0].get('ID')[0].value
+    type = context[name]
     str_name = f'@.str.{const_str_num}'
     str_size = len(out_format[type[1]]) + 1
     strings.append({
@@ -911,10 +905,8 @@ def llvm_scan(node, context):
         'name': None
     })
     result = [
-        f'%buffer{buffer_num} = alloca {type_dict[type[1]]}',
-        f'call i32 (i8*, ...) @scanf(i8* getelementptr inbounds ([{str_size} x i8], [{str_size} x i8]* {str_name}, i32 0, i32 0), {type_dict[type[1]]}* %buffer{buffer_num})',
-        f'%buffer{buffer_num+1} = load {type_dict[type[1]]}, {type_dict[type[1]]}* %buffer{buffer_num}',
-        f'%buffer{buffer_num+1}'
+        f'call i32 (i8*, ...) @scanf(i8* getelementptr inbounds ([{str_size} x i8], [{str_size} x i8]* {str_name}, i32 0, i32 0), {type_dict[type[1]]}* %{name}.ptr)',
+        f'%{name}.ptr'
     ]
     buffer_num += 2
     const_str_num += 1

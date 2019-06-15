@@ -23,7 +23,19 @@ def check_var_definition(node, types=default_types,
     defs = node.get(def_names)
     for d in defs:
         name, type = get_info(d)
-        if d.name == 'STRUCT': # add struct to types dictionary 
+        # crutch for scan
+        if d.name == 'ID' and d.value == 'scan':
+            func = d.parent
+            args = func.get('CALL_ARGS')[0]
+
+            if len(args.childs) != 1:
+                errors.append(wrap_error('Scan have only one argument.', d.line))
+            elif (args.childs[0].name != 'ID'):
+                errors.append(wrap_error('Scan argument must be an ID.', d.line))
+            elif (variables[args.childs[0].value][1] == 'string'):
+                errors.append(wrap_error('You can\'t scan strings.', d.line))
+
+        elif d.name == 'STRUCT': # add struct to types dictionary 
             if not name in types:
                 variables[name] = type
                 new_dict = {}
