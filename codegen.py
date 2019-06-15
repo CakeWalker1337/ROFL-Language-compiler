@@ -901,19 +901,19 @@ def llvm_scan(node, context):
     if (parent is None):
         raise Exception('llvm_scan issue (parent is None')
 
-    name, type = get_info(parent)
+    name, type = context[parent.get('ID', True)[0].value]
     str_name = f'@.str.{const_str_num}'
-    str_size = len(out_format[type[1]]) + 2
+    str_size = len(out_format[type[1]]) + 1
     strings.append({
         "id": str_name,
-        "value": out_format[type[1]] + '\\0A',
+        "value": out_format[type[1]],
         "size": str_size,
         'name': None
     })
     result = [
-        f'%buffer{buffer_num} = alloca {out_format[type[1]]}',
-        f'call i32 (i8*, ...) @scanf(getlementptr inbounds [{str_size} x i8], [{str_size} x i8]* {str_name}, {out_format[type[1]]}* %buffer{buffer_num})',
-        f'%buffer{buffer_num+1} = load {out_format[type[1]]}, {out_format[type[1]]}* %buffer{buffer_num}',
+        f'%buffer{buffer_num} = alloca {type_dict[type[1]]}',
+        f'call i32 (i8*, ...) @scanf(i8* getelementptr inbounds ([{str_size} x i8], [{str_size} x i8]* {str_name}, i32 0, i32 0), {type_dict[type[1]]}* %buffer{buffer_num})',
+        f'%buffer{buffer_num+1} = load {type_dict[type[1]]}, {type_dict[type[1]]}* %buffer{buffer_num}',
         f'%buffer{buffer_num+1}'
     ]
     buffer_num += 2
