@@ -179,7 +179,7 @@ def llvm_struct(node, context=None):
 
 
 def init_constants():
-    result = ['declare i32 @printf(i8*, ...)']
+    result = ['declare i32 @printf(i8*, ...)', 'declare i32 @scanf(i8*, ...)']
     for s in strings:
         id = s["id"]
         size = s["size"]
@@ -820,6 +820,8 @@ def llvm_func_call(ast, context=None):
 
     if (func_id == 'print'):
         return llvm_print(ast, context)
+    elif (func_id == 'scan'):
+        return llvm_scan(ast, context)
 
     func_decl = find_node_by_id(functions, func_id)
     func_type = func_decl.get("TYPE")[0].value
@@ -885,6 +887,38 @@ def llvm_print(node, context):
     result.append(f'call i32 (i8*, ...) @printf({", ".join(var_queue)})')
 
     return 'i32', result + ['1']
+
+
+def llvm_scan(node, context):
+    global buffer_num
+    global const_str_num
+    result = []
+    out_format = {'int': '%d', 'float': '%lf', 'string': '%s'}
+    parent = node.parent
+    while(parent and parent.name != 'ASSIGN'):
+        parent = parent.parent
+
+    if (parent is None):
+        raise Exception('llvm_scan issue (parent is None')
+
+    name, type = get_info(parent)
+    str_name = f'@.str.{const_str_num}'
+    str_size = len(out_format[type[1]]) + 2
+    strings.append({
+        "id": str_name,
+        "value": out_format[type[1]] + '\\0A',
+        "size": str_size,
+        'name': None
+    })
+    result = [
+        f'%buffer{buffer_num} = alloca {out_format[type[1]]}',
+        f'call i32 (i8*, ...) @scanf(getlementptr inbounds [{str_size} x i8], [{str_size} x i8]* {str_name}, {out_format[type[1]]}* %buffer{buffer_num})',
+        f'%buffer{buffer_num+1} = load {out_format[type[1]]}, {out_format[type[1]]}* %buffer{buffer_num}',
+        f'%buffer{buffer_num+1}'
+    ]
+    buffer_num += 2
+    const_str_num += 1
+    return type[1], result
 
 
 binary_op_funcs = {'PLUS': llvm_add_func,

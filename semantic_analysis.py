@@ -11,10 +11,12 @@ default_types = {'int':[],
                 'float':[],
                 'boolean':[]}
 
+
 # checks if there is errors with repeat definitions, usage of undefined variables, incorrect calls of properties of struct
 # returns array of wrap_error() objects
-def check_var_definition(node, types=default_types, 
-            variables={'print' : ('FUNCTION', 'void')}):
+def check_var_definition(node, types=default_types,
+            variables={'print': ('FUNCTION', 'void'),
+                       'scan': ('FUNCTION', 'void')}):
     errors = []
     cur_scope_vars = []
     def_names = ['FUNCTION', 'STRUCT', 'VARIABLE', 'VARIABLE_ARRAY', 'ID', 'CHAIN_CALL', 'ASSIGN']
@@ -146,7 +148,7 @@ def check_funcs_returns(root):
 
 def check_arguments_of_func_calls(root) :
     errors = []
-    exceptions = ['print']
+    exceptions = ['print', 'scan']
     func_calls = root.get("FUNC_CALL", nest=True)
     for call in func_calls:
         if call.get("ID")[0].value in exceptions: continue
@@ -321,6 +323,8 @@ def check_expression_results(root):
                             is_correct = True
                         if expr1 == expr2:
                             is_correct = True
+                        if expr2 is None:
+                            is_correct = True # used for scan
                         if not is_correct:
                             errors.append(wrap_error(
                                 "Type cast exception: cannot cast type \"" + expr2 + "\" to \"" + expr1 + "\"",
