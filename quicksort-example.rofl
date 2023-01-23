@@ -1,0 +1,64 @@
+/////////////// QSORT
+struct str{
+  int b;
+}
+
+function quicksort(str[] s, int left, int right) : int {
+  int tmp;
+  int i = left;
+  int j = right;
+  int pivot = s[(left+right)/2].b;
+  while(i <= j){
+    while(s[i].b < pivot) {
+      i = i + 1;
+    }
+    while(s[j].b > pivot) {
+      j = j - 1;
+    }
+    if(left <= j){
+      tmp = s[i].b;
+      s[i].b = s[j].b;
+      s[j].b = tmp;
+      
+      i = i + 1;
+      j = j - 1;
+    }
+  }
+
+  if(left < j){
+    quicksort(s, left, j);
+  }
+  if(i < right){
+    quicksort(s, i, right);
+  }
+  return 1;
+}
+
+str[] s = str[](10);
+s[0].b = 3;
+s[1].b = 2;
+s[2].b = 4;
+s[3].b = 9;
+s[4].b = 5;
+s[5].b = 7;
+s[6].b = 6;
+s[7].b = 8;
+s[8].b = 1;
+s[9].b = 10;
+
+print("Input");
+int count = 0;
+
+while(count < 9){
+  print(s[count].b);
+  count = count + 1;
+}
+
+quicksort(s, 0, 9);
+print("Result");
+count = 0;
+
+while(count < 9){
+  print(s[count].b);
+  count = count + 1;
+}
